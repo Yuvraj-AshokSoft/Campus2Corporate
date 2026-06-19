@@ -21,7 +21,7 @@ import {
   Target,
   Sparkles,
   Zap,
-  Mic
+  Mic,
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
@@ -56,19 +56,58 @@ export const LandingPage: React.FC = () => {
             </div>
             <div>
               <span className="font-bold text-lg tracking-tight text-white">C2C – Campus to Corporate</span>
-              <span className="block text-[10px] text-slate-400 uppercase tracking-widest font-semibold leading-none">by Ashoksoft Technologies</span>
+              <span className="block text-[10px] mt-1 text-slate-400 uppercase tracking-widest font-semibold leading-none">by Ashoksoft Technologies</span>
             </div>
           </div>
-          
+          {/* //// navbar.... */}
           <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-300">
-            <a href="#problem" className="hover:text-blue-400 transition-colors">Problem</a>
-            <a href="#solution" className="hover:text-blue-400 transition-colors">Solution</a>
-            <a href="#features" className="hover:text-blue-400 transition-colors">Core Features</a>
-            <a href="#ecosystem" className="hover:text-blue-400 transition-colors">Ecosystem</a>
-            <a href="#ai" className="hover:text-blue-400 transition-colors">AI Engine</a>
-            <a href="#previews" className="hover:text-blue-400 transition-colors">Dashboards</a>
-            <a href="#roadmap" className="hover:text-blue-400 transition-colors">Roadmap</a>
-          </nav>
+  <a href="#problem" className="hover:text-blue-400 transition-colors">
+    Problem
+  </a>
+
+  <a href="#solution" className="hover:text-blue-400 transition-colors">
+    Solution
+  </a>
+
+  {/* Core Features Dropdown */}
+  <div className="relative group">
+    <button className="hover:text-blue-400 transition-colors">
+      Core Features
+    </button>
+
+    <div className="absolute top-full left-0 mt-2 w-60 bg-slate-900 border border-slate-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+      <a href="#" className="block px-4 py-2 hover:bg-slate-800">Resume Analyzer</a>
+      <a href="#" className="block px-4 py-2 hover:bg-slate-800">AI Mock Interviews</a>
+      <a href="#" className="block px-4 py-2 hover:bg-slate-800">Skill Assessments</a>
+      <a href="#" className="block px-4 py-2 hover:bg-slate-800">Placement Monitoring</a>
+      <a href="#" className="block px-4 py-2 hover:bg-slate-800">Learning Roadmaps</a>
+    
+    </div>
+  </div>
+
+  <a href="#ecosystem" className="hover:text-blue-400 transition-colors">
+    Ecosystem
+  </a>
+
+  <a href="#ai" className="hover:text-blue-400 transition-colors">
+    AI Engine
+  </a>
+
+  {/* Dashboards Dropdown */}
+  <div className="relative group">
+    <button className="hover:text-blue-400 transition-colors">
+      Dashboards
+    </button>
+
+    <div className="absolute top-full left-0 mt-2 w-60 bg-slate-900 border border-slate-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+      <a href="#" className="block px-4 py-2 hover:bg-slate-800">Student Dashboard</a>
+      <a href="#" className="block px-4 py-2 hover:bg-slate-800">College Dashboard</a>
+      <a href="#" className="block px-4 py-2 hover:bg-slate-800">Recruiter Dashboard</a>
+      <a href="#" className="block px-4 py-2 hover:bg-slate-800">Mentor Dashboard</a>
+      <a href="#" className="block px-4 py-2 hover:bg-slate-800">Admin Dashboard</a>
+    </div>
+  </div>
+</nav>
 
           <div className="flex items-center space-x-4">
             <button className="hidden sm:inline-flex text-sm text-slate-300 hover:text-white transition-colors font-medium">
@@ -567,8 +606,24 @@ export const LandingPage: React.FC = () => {
             <p className="text-xs text-slate-400 leading-relaxed">
               Practice real interview questions, get instant feedback, improve communication skills, and boost confidence before actual interviews.
             </p>
+
+              {/* Feature 10*/}
             
           </div>
+          <div className="bg-slate-950 border border-slate-900 hover:border-blue-500/20 rounded-2xl p-6 group transition-all">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 mb-5 group-hover:bg-blue-600 group-hover:text-white transition-all">
+              < Calendar  className="w-5 h-5" />
+            </div>
+            <h3 className="text-base font-semibold text-white mb-2">Book A Demo</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Schedule a personalized demo to see how our platform can help you achieve your career goals.
+            </p>
+            
+          </div>
+
+
+          
+          
 
         </div>
       </section>
@@ -1234,7 +1289,7 @@ export const LandingPage: React.FC = () => {
               </div>
               <div>
                 <span className="font-bold text-sm tracking-tight text-white">C2C – Campus to Corporate</span>
-                <span className="block text-[8px] text-slate-400 uppercase tracking-widest font-semibold leading-none">by Ashoksoft Technologies</span>
+                <span className="block text-[8px] mt-1 text-slate-400 uppercase tracking-widest font-semibold leading-none">by Ashoksoft Technologies</span>
               </div>
             </div>
             
