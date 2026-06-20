@@ -1,12 +1,15 @@
+<<<<<<< HEAD
+import React, { useState, useEffect, useRef } from 'react';
+=======
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+>>>>>>> e26e572c082fc8a0a61ea7233110efd8410cc1cd
 import { 
   Briefcase, 
   GraduationCap, 
   Users, 
   UserCheck, 
   Brain, 
-  TrendingUp, 
   Calendar, 
   Cpu, 
   Award, 
@@ -58,9 +61,91 @@ const Twitter: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) =>
   </svg>
 );
 
+// Reusable Scroll Reveal component using IntersectionObserver
+const ScrollReveal: React.FC<{ children: React.ReactNode; className?: string; id?: string }> = ({ children, className = "", id }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const domRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const currentDom = domRef.current;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+            if (currentDom) observer.unobserve(currentDom);
+          }
+        });
+      },
+      { threshold: 0.05 }
+    );
+
+    if (currentDom) {
+      observer.observe(currentDom);
+    }
+
+    return () => {
+      if (currentDom) {
+        observer.unobserve(currentDom);
+      }
+    };
+  }, []);
+
+  return (
+    <div
+      ref={domRef}
+      id={id}
+      className={`transition-all duration-1000 ease-out transform ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
+};
+
 export const LandingPage: React.FC = () => {
   const [activeDashboardTab, setActiveDashboardTab] = useState<'student' | 'recruiter' | 'college'>('student');
   const [hoveredStakeholder, setHoveredStakeholder] = useState<string | null>(null);
+
+  // Hero phrase rotation state
+  const heroPhrases = ["Empower Students", "Accelerate Hiring", "Scale Placement"];
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isPhraseTransitioning, setIsPhraseTransitioning] = useState(false);
+
+  // Platform event activity ticker state
+  const tickerEvents = [
+    { text: "A sophomore from Tech University just cleared Advanced Coding Assessment", icon: "🟢" },
+    { text: "HR Manager from Horizon Corp opened 12 new corporate pipelines", icon: "💼" },
+    { text: "Mentor Sarah Jenkins approved 3 technical resume reviews", icon: "🎓" },
+    { text: "Placement cell synced 450 verified student profiles at Delhi Tech", icon: "⚡" },
+    { text: "Candidate from NIT Trichy unlocked Frontend Architecture badge", icon: "🏆" }
+  ];
+  const [tickerIndex, setTickerIndex] = useState(0);
+  const [isTickerTransitioning, setIsTickerTransitioning] = useState(false);
+
+  useEffect(() => {
+    const phraseInterval = setInterval(() => {
+      setIsPhraseTransitioning(true);
+      setTimeout(() => {
+        setPhraseIndex((prev) => (prev + 1) % heroPhrases.length);
+        setIsPhraseTransitioning(false);
+      }, 300);
+    }, 3000);
+
+    const tickerInterval = setInterval(() => {
+      setIsTickerTransitioning(true);
+      setTimeout(() => {
+        setTickerIndex((prev) => (prev + 1) % tickerEvents.length);
+        setIsTickerTransitioning(false);
+      }, 400);
+    }, 4000);
+
+    return () => {
+      clearInterval(phraseInterval);
+      clearInterval(tickerInterval);
+    };
+  }, []);
 
   const stakeholders = [
     { id: 'student', name: 'Student', desc: 'Builds skills, takes assessments, and matches with ideal corporate opportunities.', color: 'from-blue-500 to-cyan-400' },
@@ -74,8 +159,8 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white text-slate-800 font-sans selection:bg-blue-50 selection:text-blue-700 overflow-x-hidden relative">
       
-      {/* Background decoration elements */}
-      <div className="absolute top-0 left-0 right-0 h-[650px] pointer-events-none overflow-hidden z-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] opacity-75">
+      {/* Background decoration elements (Sophomore Dot Matrix Canvas) */}
+      <div className="absolute top-0 left-0 right-0 h-[650px] pointer-events-none overflow-hidden z-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px] opacity-80">
         <div className="absolute top-[-10%] left-[20%] w-[600px] h-[600px] rounded-full bg-blue-50/40 blur-[130px]"></div>
         <div className="absolute top-[10%] right-[10%] w-[500px] h-[500px] rounded-full bg-slate-100/60 blur-[110px]"></div>
       </div>
@@ -155,37 +240,61 @@ export const LandingPage: React.FC = () => {
 
       {/* 1. Hero Section */}
       <section className="relative z-10 pt-16 pb-24 md:pt-24 md:pb-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        <div className="max-w-4xl mx-auto">
           
           {/* Left Column: Heading and copy */}
-          <div className="lg:col-span-7 flex flex-col space-y-6">
-            <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-xs font-semibold text-blue-700 w-fit">
+          <div className="flex flex-col space-y-6">
+            <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-xs font-semibold text-blue-700 w-fit animate-fade-in">
               <LogoSVG className="h-4.5 w-auto" iconColor="text-blue-600" textColor="text-blue-700" />
               <span className="border-l border-blue-200 pl-2">Next-Gen Employability Ecosystem</span>
             </div>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight">
-              Transforming Students into <span className="text-blue-600">Industry-Ready</span> Professionals
+              The Next-Gen System to <br className="hidden sm:inline" />
+              <span className="relative inline-block text-blue-600 overflow-hidden w-[280px] sm:w-[450px] lg:w-[520px] text-left align-bottom">
+                <span className={`inline-block transition-all duration-300 transform ${
+                  isPhraseTransitioning ? 'opacity-0 translate-y-3 blur-[2px]' : 'opacity-100 translate-y-0 blur-none'
+                }`}>
+                  {heroPhrases[phraseIndex]}
+                </span>
+              </span>
             </h1>
             
             <p className="text-lg text-slate-600 leading-relaxed max-w-2xl">
               An AI-powered employability ecosystem connecting students, colleges, mentors, recruiters, and companies through learning, assessment, mentorship, hiring, and placement.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <a 
-                href="#cta"
-                className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-blue-600 text-base font-semibold text-white hover:bg-blue-700 transition-all shadow-md shadow-blue-500/10 hover:scale-[1.01]"
-              >
-                Get Started
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </a>
-              <a 
-                href="#solution"
-                className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-white border border-slate-200 text-base font-semibold text-slate-700 hover:bg-slate-50 transition-all shadow-sm"
-              >
-                Explore Platform
-              </a>
+            <div className="flex flex-col sm:flex-row gap-4 pt-4 items-start sm:items-center">
+              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <a 
+                  href="#cta"
+                  className="group inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-base font-semibold text-white hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                >
+                  Get Started
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                </a>
+                <a 
+                  href="#solution"
+                  className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-white border border-slate-200 text-base font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-sm"
+                >
+                  Explore Platform
+                </a>
+              </div>
+            </div>
+
+            {/* Live-Simulated Ticker */}
+            <div className="pt-2 flex justify-start">
+              <div className="inline-flex items-center space-x-3 bg-slate-900/[0.03] backdrop-blur-md border border-slate-200/80 rounded-2xl px-4 py-2.5 shadow-sm hover:bg-slate-900/[0.05] transition-colors duration-200 max-w-full">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping shrink-0"></div>
+                <div className="h-5 overflow-hidden flex items-center">
+                  <span className={`text-xs font-semibold text-slate-700 transition-all duration-450 transform flex items-center gap-1.5 ${
+                    isTickerTransitioning ? 'opacity-0 -translate-y-2 blur-[1px]' : 'opacity-100 translate-y-0 blur-none'
+                  }`}>
+                    <span className="text-sm shrink-0">{tickerEvents[tickerIndex].icon}</span>
+                    <span>{tickerEvents[tickerIndex].text}</span>
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Quick Metrics banner */}
@@ -205,146 +314,11 @@ export const LandingPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Column: Visual Dashboard Preview Card */}
-          <div className="lg:col-span-5 relative">
-            <div className="absolute inset-0 bg-blue-50 rounded-2xl blur-2xl pointer-events-none"></div>
-            
-            {/* The main dashboard mockup */}
-            <div className="relative bg-white border border-slate-200 rounded-2xl p-6 shadow-xl overflow-hidden">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-slate-200"></div>
-                  <div className="w-3 h-3 rounded-full bg-slate-200"></div>
-                  <div className="w-3 h-3 rounded-full bg-slate-200"></div>
-                </div>
-                <div className="px-3 py-1 rounded bg-slate-50 border border-slate-200 text-[10px] font-mono text-slate-500">
-                  C2C-COGNITIVE-v1.4
-                </div>
-              </div>
-
-              {/* Student Profile Info */}
-              <div className="mt-6 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center">
-                    <span className="text-blue-700 font-semibold">YS</span>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-800">Yuvraj Singh</h3>
-                    <p className="text-xs text-slate-500">B.Tech CSE - Final Year</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                    Active Pipeline
-                  </span>
-                </div>
-              </div>
-
-              {/* Metrics Grid */}
-              <div className="grid grid-cols-2 gap-4 mt-6">
-                
-                {/* Profile score */}
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-sm">
-                  <span className="text-xs text-slate-500 font-semibold">Ready Score</span>
-                  <div className="flex items-end justify-between mt-2">
-                    <span className="text-2xl font-bold text-slate-800">94%</span>
-                    <span className="text-[10px] text-emerald-600 flex items-center font-bold">
-                      +4.2% <TrendingUp className="w-3 h-3 ml-0.5" />
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-200 h-1.5 rounded-full mt-2 overflow-hidden">
-                    <div className="bg-blue-600 h-full rounded-full" style={{ width: '94%' }}></div>
-                  </div>
-                </div>
-
-                {/* ATS score */}
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between shadow-sm">
-                  <span className="text-xs text-slate-500 font-semibold">ATS Resume Score</span>
-                  <div className="flex items-end justify-between mt-2">
-                    <span className="text-2xl font-bold text-slate-800">88<span className="text-xs text-slate-400">/100</span></span>
-                    <span className="text-[10px] text-blue-600 font-bold">High Match</span>
-                  </div>
-                  <div className="w-full bg-slate-200 h-1.5 rounded-full mt-2 overflow-hidden">
-                    <div className="bg-blue-500 h-full rounded-full" style={{ width: '88%' }}></div>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* AI Job Match Widget */}
-              <div className="mt-6 bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-                  <span className="text-xs text-slate-800 font-bold flex items-center">
-                    <Brain className="w-3.5 h-3.5 mr-1.5 text-blue-600" />
-                    AI Best Matches
-                  </span>
-                  <span className="text-[10px] text-slate-500">Real-time calculations</span>
-                </div>
-                <div className="mt-3 space-y-2.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-700 font-medium">Software Engineer (L4) - Stripe</span>
-                    <span className="font-bold text-emerald-700 px-2 py-0.5 rounded bg-emerald-50 border border-emerald-100">97% Match</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-700 font-medium">Full Stack Engineer - Notion</span>
-                    <span className="font-bold text-blue-700 px-2 py-0.5 rounded bg-blue-50 border border-blue-100">92% Match</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-700 font-medium">React Frontend Dev - Linear</span>
-                    <span className="font-bold text-indigo-700 px-2 py-0.5 rounded bg-indigo-50 border border-indigo-100">89% Match</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Placement progress tracker */}
-              <div className="mt-6">
-                <span className="text-xs text-slate-500 font-semibold block mb-3">Placement Milestone Progress</span>
-                <div className="relative pl-6 space-y-4 border-l-2 border-slate-200">
-                  
-                  {/* Step 1 */}
-                  <div className="relative">
-                    <div className="absolute -left-[31px] top-0.5 w-[14px] h-[14px] rounded-full bg-emerald-600 flex items-center justify-center border border-white">
-                      <Check className="w-2.5 h-2.5 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-800 leading-none">Assessment Complete</h4>
-                      <p className="text-[10px] text-slate-500 mt-1">Scored 92nd percentile in Technical Logic</p>
-                    </div>
-                  </div>
-
-                  {/* Step 2 */}
-                  <div className="relative">
-                    <div className="absolute -left-[31px] top-0.5 w-[14px] h-[14px] rounded-full bg-emerald-600 flex items-center justify-center border border-white">
-                      <Check className="w-2.5 h-2.5 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-slate-800 leading-none">AI Profile Matching</h4>
-                      <p className="text-[10px] text-slate-500 mt-1">Resume processed & keywords synchronized</p>
-                    </div>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className="relative">
-                    <div className="absolute -left-[31px] top-0.5 w-[14px] h-[14px] rounded-full bg-blue-600 flex items-center justify-center border border-white">
-                      <div className="w-1.5 h-1.5 rounded-full bg-white"></div>
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-blue-700 leading-none">Interview Pipeline</h4>
-                      <p className="text-[10px] text-slate-500 mt-1">2 technical rounds scheduled with Stripe team</p>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-
-            </div>
-          </div>
-
         </div>
       </section>
 
       {/* 2. Trusted Value Section */}
-      <section className="relative z-10 py-16 bg-slate-50 border-y border-slate-200">
+      <ScrollReveal className="relative z-10 py-16 bg-slate-50 border-y border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <h2 className="text-xs font-bold text-blue-600 uppercase tracking-widest">Multi-Stakeholder Architecture</h2>
@@ -354,30 +328,30 @@ export const LandingPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             
             {/* Student Card */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-md transition-all group shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 mb-4 group-hover:bg-blue-600 group-hover:text-white transition-all">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-blue-400 hover:shadow-md transition-all duration-300 group shadow-sm hover:-translate-y-1">
+              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 mb-4 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 transition-all duration-300">
                 <GraduationCap className="w-5 h-5" />
               </div>
               <h3 className="text-sm font-bold text-slate-900 mb-2">Students</h3>
-              <p className="text-xs text-slate-650 leading-relaxed">
+              <p className="text-xs text-slate-655 leading-relaxed">
                 Learn, Grow & Get Placed. Utilize AI maps to level up skills, build verified profiles, and lock down top roles.
               </p>
             </div>
 
             {/* College Card */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-indigo-400 hover:shadow-md transition-all group shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-indigo-400 hover:shadow-md transition-all duration-300 group shadow-sm hover:-translate-y-1">
+              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 mb-4 group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-110 transition-all duration-300">
                 <Building className="w-5 h-5" />
               </div>
               <h3 className="text-sm font-bold text-slate-900 mb-2">Colleges</h3>
-              <p className="text-xs text-slate-650 leading-relaxed">
+              <p className="text-xs text-slate-655 leading-relaxed">
                 Track Performance & Improve Outcomes. Aggregate student readiness scores and streamline placement drives.
               </p>
             </div>
 
             {/* Recruiter Card */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-cyan-400 hover:shadow-md transition-all group shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center text-cyan-600 mb-4 group-hover:bg-cyan-600 group-hover:text-white transition-all">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-cyan-400 hover:shadow-md transition-all duration-300 group shadow-sm hover:-translate-y-1">
+              <div className="w-10 h-10 rounded-lg bg-cyan-50 flex items-center justify-center text-cyan-600 mb-4 group-hover:bg-cyan-600 group-hover:text-white group-hover:scale-110 transition-all duration-300">
                 <Briefcase className="w-5 h-5" />
               </div>
               <h3 className="text-sm font-bold text-slate-900 mb-2">Recruiters</h3>
@@ -387,33 +361,33 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Mentor Card */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-pink-400 hover:shadow-md transition-all group shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-pink-50 flex items-center justify-center text-pink-605 text-pink-600 mb-4 group-hover:bg-pink-600 group-hover:text-white transition-all">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-pink-400 hover:shadow-md transition-all duration-300 group shadow-sm hover:-translate-y-1">
+              <div className="w-10 h-10 rounded-lg bg-pink-50 flex items-center justify-center text-pink-600 mb-4 group-hover:bg-pink-600 group-hover:text-white group-hover:scale-110 transition-all duration-300">
                 <Users className="w-5 h-5" />
               </div>
               <h3 className="text-sm font-bold text-slate-900 mb-2">Mentors</h3>
-              <p className="text-xs text-slate-650 leading-relaxed">
+              <p className="text-xs text-slate-655 leading-relaxed">
                 Guide Future Professionals. Review mock coding interviews, guide portfolios, and earn industry credits.
               </p>
             </div>
 
             {/* Company Card */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-amber-400 hover:shadow-md transition-all group shadow-sm">
-              <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 mb-4 group-hover:bg-amber-600 group-hover:text-white transition-all">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 hover:border-amber-400 hover:shadow-md transition-all duration-300 group shadow-sm hover:-translate-y-1">
+              <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 mb-4 group-hover:bg-amber-600 group-hover:text-white group-hover:scale-110 transition-all duration-300">
                 <Target className="w-5 h-5" />
               </div>
               <h3 className="text-sm font-bold text-slate-900 mb-2">Companies</h3>
-              <p className="text-xs text-slate-650 leading-relaxed">
+              <p className="text-xs text-slate-655 leading-relaxed">
                 Build Future Workforce. Anchor long-term campus programs, brand internships, and target matching cohorts.
               </p>
             </div>
 
           </div>
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* 3. Problem Section */}
-      <section id="problem" className="relative z-10 py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <ScrollReveal id="problem" className="relative z-10 py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="px-3 py-1.5 rounded-full bg-red-50 border border-red-100 text-xs font-semibold text-red-700">
             The Industry Bottleneck
@@ -429,8 +403,8 @@ export const LandingPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
           {/* Problem 1 */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full blur-xl pointer-events-none group-hover:bg-red-100/50 transition-all"></div>
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-md hover:border-red-200 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full blur-xl pointer-events-none group-hover:bg-red-100/50 transition-all duration-300"></div>
             <div className="text-red-700 text-xs font-mono font-bold mb-3">01 / DISORIENTATION</div>
             <h3 className="text-base font-bold text-slate-900 mb-2">Students lack career direction</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
@@ -439,8 +413,8 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Problem 2 */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full blur-xl pointer-events-none group-hover:bg-red-100/50 transition-all"></div>
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-md hover:border-red-200 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full blur-xl pointer-events-none group-hover:bg-red-100/50 transition-all duration-300"></div>
             <div className="text-red-700 text-xs font-mono font-bold mb-3">02 / DARK PIPELINE</div>
             <h3 className="text-base font-bold text-slate-900 mb-2">Colleges lack placement visibility</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
@@ -449,8 +423,8 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Problem 3 */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full blur-xl pointer-events-none group-hover:bg-red-100/50 transition-all"></div>
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-md hover:border-red-200 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full blur-xl pointer-events-none group-hover:bg-red-100/50 transition-all duration-300"></div>
             <div className="text-red-700 text-xs font-mono font-bold mb-3">03 / NOISE OVERHEAD</div>
             <h3 className="text-base font-bold text-slate-900 mb-2">Recruiters waste time screening</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
@@ -459,8 +433,8 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Problem 4 */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full blur-xl pointer-events-none group-hover:bg-red-100/50 transition-all"></div>
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-md hover:border-red-200 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-red-50 rounded-full blur-xl pointer-events-none group-hover:bg-red-100/50 transition-all duration-300"></div>
             <div className="text-red-700 text-xs font-mono font-bold mb-3">04 / DEFICIT GAP</div>
             <h3 className="text-base font-bold text-slate-900 mb-2">Companies face skill mismatch</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
@@ -469,10 +443,10 @@ export const LandingPage: React.FC = () => {
           </div>
 
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* 4. Solution Section */}
-      <section id="solution" className="relative z-10 py-20 bg-slate-50 border-t border-slate-200">
+      <ScrollReveal id="solution" className="relative z-10 py-20 bg-slate-50 border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-xs font-semibold text-blue-700">
@@ -502,10 +476,10 @@ export const LandingPage: React.FC = () => {
                 { step: '06', title: 'Interview', desc: 'Sync calendars and scheduling.', icon: Calendar },
                 { step: '07', title: 'Placement', desc: 'Final contract signing and onboard.', icon: Award }
               ].map((item, idx) => (
-                <div key={idx} className="relative flex flex-col items-center text-center bg-white border border-slate-200 hover:border-slate-300 rounded-xl p-5 hover:translate-y-[-4px] transition-all shadow-sm hover:shadow-md">
-                  <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-blue-600 shadow-sm relative z-10">
+                <div key={idx} className="relative flex flex-col items-center text-center bg-white border border-slate-200 hover:border-slate-350 hover:shadow-md rounded-xl p-5 hover:-translate-y-1 transition-all duration-300 shadow-sm group">
+                  <div className="w-12 h-12 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-blue-600 shadow-sm relative z-10 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
                     <item.icon className="w-5 h-5" />
-                    <span className="absolute -top-1 -right-1 text-[9px] bg-blue-50 border border-blue-100 text-blue-700 font-mono w-4.5 h-4.5 rounded-full flex items-center justify-center font-bold shadow-sm">
+                    <span className="absolute -top-1 -right-1 text-[9px] bg-blue-50 border border-blue-100 text-blue-700 font-mono w-4.5 h-4.5 rounded-full flex items-center justify-center font-bold shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
                       {item.step}
                     </span>
                   </div>
@@ -519,10 +493,10 @@ export const LandingPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </section>
+      </ScrollReveal>
 
-      {/* 5. Core Features Section */}
-      <section id="features" className="relative z-10 py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* 5. Core Features Section (Asymmetric Bento Grid Layout) */}
+      <ScrollReveal id="features" className="relative z-10 py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px]">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="px-3 py-1.5 rounded-full bg-cyan-50 border border-cyan-100 text-xs font-semibold text-cyan-700">
             Platform Capabilities
@@ -536,12 +510,12 @@ export const LandingPage: React.FC = () => {
         </div>
 
         {/* Bento Grid layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
           {/* Card 1 - ATS Analysis (Span 2) */}
-          <div className="bg-white border border-slate-200 hover:border-blue-400 hover:shadow-md rounded-2xl p-6 lg:p-8 group transition-all shadow-sm lg:col-span-2 flex flex-col justify-between min-h-[220px]">
+          <div className="bg-white border border-slate-200 hover:border-blue-400/50 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] rounded-2xl p-6 lg:p-8 group transition-all duration-300 md:col-span-2 flex flex-col justify-between min-h-[240px] hover:-translate-y-1">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-5 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-5 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
                 <FileText className="w-5 h-5" />
               </div>
               <h3 className="text-lg font-bold text-slate-900 mb-2">AI Resume ATS Analysis</h3>
@@ -552,24 +526,24 @@ export const LandingPage: React.FC = () => {
             <span className="text-[10px] font-semibold text-blue-600 mt-4 flex items-center gap-1">Advanced Parser • Standardized Audit Trail</span>
           </div>
 
-          {/* Card 2 - Skill Assessment (Span 1) */}
-          <div className="bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md rounded-2xl p-6 group transition-all shadow-sm lg:col-span-1 flex flex-col justify-between">
+          {/* Card 2 - Skill Assessment (Span 1, Tall Card / row-span-2) */}
+          <div className="bg-white border border-slate-200 hover:border-indigo-400/50 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] rounded-2xl p-6 group transition-all duration-300 md:row-span-2 flex flex-col justify-between hover:-translate-y-1">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-5 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-5 group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
                 <Brain className="w-5 h-5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2">Skill Assessment</h3>
               <p className="text-xs text-slate-650 leading-relaxed">
-                Standardized assessments covering technical stacks and behavioral frameworks with automated browser lock and proctor auditing.
+                Standardized assessments covering technical stacks and behavioral frameworks with automated browser lock and proctor auditing. Built to detect cognitive anomalies and verify technical competence with high-fidelity validation.
               </p>
             </div>
             <span className="text-[10px] font-semibold text-indigo-600 mt-4 block">Proctor Shield Enabled</span>
           </div>
 
           {/* Card 3 - Learning Roadmap (Span 1) */}
-          <div className="bg-white border border-slate-200 hover:border-cyan-400 hover:shadow-md rounded-2xl p-6 group transition-all shadow-sm lg:col-span-1 flex flex-col justify-between">
+          <div className="bg-white border border-slate-200 hover:border-cyan-400/50 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] rounded-2xl p-6 group transition-all duration-300 flex flex-col justify-between hover:-translate-y-1">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600 mb-5 group-hover:bg-cyan-600 group-hover:text-white transition-all shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600 mb-5 group-hover:bg-cyan-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
                 <BookOpen className="w-5 h-5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2">Learning Roadmap</h3>
@@ -580,38 +554,10 @@ export const LandingPage: React.FC = () => {
             <span className="text-[10px] font-semibold text-cyan-700 mt-4 block">Adaptive Curriculum</span>
           </div>
 
-          {/* Card 4 - Candidate Matching (Span 2) */}
-          <div className="bg-white border border-slate-200 hover:border-blue-400 hover:shadow-md rounded-2xl p-6 lg:p-8 group transition-all shadow-sm lg:col-span-2 flex flex-col justify-between min-h-[220px]">
-            <div>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-5 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
-                <Cpu className="w-5 h-5" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Candidate Vector Matching</h3>
-              <p className="text-xs text-slate-655 leading-relaxed max-w-2xl">
-                Vector matching filters out unqualified applications by scoring real-time technical logic indicators, bypassing keyword stuffing. Map candidate embeddings directly against structural requirements of modern enterprise roles.
-              </p>
-            </div>
-            <span className="text-[10px] font-semibold text-blue-600 mt-4 flex items-center gap-1">Cognitive Vectors • 99.4% Matching Accuracy</span>
-          </div>
-
-          {/* Card 5 - Recruiter Dashboard (Span 2) */}
-          <div className="bg-white border border-slate-200 hover:border-pink-400 hover:shadow-md rounded-2xl p-6 lg:p-8 group transition-all shadow-sm lg:col-span-2 flex flex-col justify-between min-h-[220px]">
-            <div>
-              <div className="w-10 h-10 rounded-xl bg-pink-50 flex items-center justify-center text-pink-600 mb-5 group-hover:bg-pink-600 group-hover:text-white transition-all shadow-sm">
-                <BarChart3 className="w-5 h-5" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Recruiter Hub</h3>
-              <p className="text-xs text-slate-655 leading-relaxed max-w-2xl">
-                Direct pipeline filtering, interview scheduling coordinates, background check status updates, and cohort communication suites. Simplify sourcing times by up to 10x with pre-screened talent listings.
-              </p>
-            </div>
-            <span className="text-[10px] font-semibold text-pink-600 mt-4 flex items-center gap-1">Structured Sourcing Pipeline</span>
-          </div>
-
           {/* Card 6 - College Analytics (Span 1) */}
-          <div className="bg-white border border-slate-200 hover:border-emerald-400 hover:shadow-md rounded-2xl p-6 group transition-all shadow-sm lg:col-span-1 flex flex-col justify-between">
+          <div className="bg-white border border-slate-200 hover:border-emerald-400/50 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] rounded-2xl p-6 group transition-all duration-300 flex flex-col justify-between hover:-translate-y-1">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-5 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-5 group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
                 <Database className="w-5 h-5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2">College Analytics</h3>
@@ -622,24 +568,52 @@ export const LandingPage: React.FC = () => {
             <span className="text-[10px] font-semibold text-emerald-700 mt-4 block">Systemic Audit Logs</span>
           </div>
 
-          {/* Card 7 - Mentorship Tracking (Span 1) */}
-          <div className="bg-white border border-slate-200 hover:border-amber-400 hover:shadow-md rounded-2xl p-6 group transition-all shadow-sm lg:col-span-1 flex flex-col justify-between">
+          {/* Card 7 - Mentorship Tracking (Span 1, Tall Card / row-span-2) */}
+          <div className="bg-white border border-slate-200 hover:border-amber-400/50 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] rounded-2xl p-6 group transition-all duration-300 md:row-span-2 flex flex-col justify-between hover:-translate-y-1">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-5 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-5 group-hover:bg-amber-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
                 <MessageSquare className="w-5 h-5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2">Mentorship Tracking</h3>
               <p className="text-xs text-slate-650 leading-relaxed">
-                Coordinate booking calendars, mock coding feedback sessions, and profile rating indicators within an integrated audit trail.
+                Coordinate booking calendars, mock coding feedback sessions, and profile rating indicators within an integrated audit trail. Connect with elite mentors who offer specialized, corporate-grade code reviews and architectural training.
               </p>
             </div>
             <span className="text-[10px] font-semibold text-amber-700 mt-4 block">Feedback Logs</span>
           </div>
 
-          {/* Card 8 - Placement Monitoring (Span 1) */}
-          <div className="bg-white border border-slate-200 hover:border-teal-400 hover:shadow-md rounded-2xl p-6 group transition-all shadow-sm lg:col-span-1 flex flex-col justify-between">
+          {/* Card 4 - Candidate Matching (Span 2) */}
+          <div className="bg-white border border-slate-200 hover:border-blue-400/50 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] rounded-2xl p-6 lg:p-8 group transition-all duration-300 md:col-span-2 flex flex-col justify-between min-h-[220px] hover:-translate-y-1">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600 mb-5 group-hover:bg-teal-600 group-hover:text-white transition-all shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-5 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
+                <Cpu className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Candidate Vector Matching</h3>
+              <p className="text-xs text-slate-655 leading-relaxed max-w-2xl">
+                Vector matching filters out unqualified applications by scoring real-time technical logic indicators, bypassing keyword stuffing. Map candidate embeddings directly against structural requirements of modern enterprise roles.
+              </p>
+            </div>
+            <span className="text-[10px] font-semibold text-blue-600 mt-4 flex items-center gap-1">Cognitive Vectors • 99.4% Matching Accuracy</span>
+          </div>
+
+          {/* Card 5 - Recruiter Hub (Span 2) */}
+          <div className="bg-white border border-slate-200 hover:border-pink-400/50 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] rounded-2xl p-6 lg:p-8 group transition-all duration-300 md:col-span-2 flex flex-col justify-between min-h-[220px] hover:-translate-y-1">
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-pink-50 flex items-center justify-center text-pink-650 text-pink-600 mb-5 group-hover:bg-pink-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Recruiter Hub</h3>
+              <p className="text-xs text-slate-655 leading-relaxed max-w-2xl">
+                Direct pipeline filtering, interview scheduling coordinates, background check status updates, and cohort communication suites. Simplify sourcing times by up to 10x with pre-screened talent listings.
+              </p>
+            </div>
+            <span className="text-[10px] font-semibold text-pink-600 mt-4 flex items-center gap-1">Structured Sourcing Pipeline</span>
+          </div>
+
+          {/* Card 8 - Placement Monitoring (Span 1) */}
+          <div className="bg-white border border-slate-200 hover:border-teal-400/50 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] rounded-2xl p-6 group transition-all duration-300 flex flex-col justify-between hover:-translate-y-1">
+            <div>
+              <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600 mb-5 group-hover:bg-teal-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
                 <Award className="w-5 h-5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2">Placement Monitoring</h3>
@@ -651,9 +625,9 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 9 - AI Mock Interviews (Span 2) */}
-          <div className="bg-white border border-slate-200 hover:border-blue-400 hover:shadow-md rounded-2xl p-6 lg:p-8 group transition-all shadow-sm lg:col-span-2 flex flex-col justify-between min-h-[220px]">
+          <div className="bg-white border border-slate-200 hover:border-blue-400/50 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] rounded-2xl p-6 lg:p-8 group transition-all duration-300 md:col-span-2 flex flex-col justify-between min-h-[220px] hover:-translate-y-1">
             <div>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-5 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-5 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
                 <Mic className="w-5 h-5" />
               </div>
               <h3 className="text-lg font-bold text-slate-900 mb-2">AI Mock Interviews</h3>
@@ -665,31 +639,31 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 10 - Book A Demo (Span 3 / Full Width Bento Bottom Banner) */}
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 lg:p-8 group transition-all shadow-sm lg:col-span-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 lg:p-8 group transition-all duration-300 md:col-span-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:shadow-xl hover:-translate-y-1">
             <div className="max-w-2xl">
-              <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-[10px] font-bold text-blue-700 mb-3">
-                <Calendar className="w-3 h-3 text-blue-600" />
+              <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-blue-950 border border-blue-900 text-[10px] font-bold text-blue-400 mb-3">
+                <Calendar className="w-3 h-3 text-blue-400" />
                 <span>Executive Presentation</span>
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-1">Book A Demo Session</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
+              <h3 className="text-lg font-bold text-white mb-1">Book A Demo Session</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
                 Schedule a customized enterprise demo with our solutions engineer to see how our platform can aggregate student verification details, automate placements, and optimize hiring timelines for your cohort.
               </p>
             </div>
             <a 
               href="#cta" 
-              className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm shrink-0 w-full md:w-auto"
+              className="group inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all duration-300 shadow-sm shrink-0 w-full md:w-auto hover:scale-[1.03] active:scale-[0.98]"
             >
               Schedule Review
-              <ArrowRight className="ml-2 w-4 h-4" />
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
             </a>
           </div>
 
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* 6. Stakeholder Ecosystem Section */}
-      <section id="ecosystem" className="relative z-10 py-20 bg-slate-50 border-y border-slate-200">
+      <ScrollReveal id="ecosystem" className="relative z-10 py-20 bg-slate-50 border-y border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
@@ -701,7 +675,7 @@ export const LandingPage: React.FC = () => {
               <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
                 A Unified Cognitive Network
               </h2>
-              <p className="text-slate-600 text-base leading-relaxed">
+              <p className="text-slate-655 text-slate-600 text-base leading-relaxed">
                 Campus recruitment is not a linear chain, it is a web. C2C serves as the central orchestration engine that connects students, colleges, mentors, recruiters, and companies seamlessly.
               </p>
               
@@ -709,10 +683,10 @@ export const LandingPage: React.FC = () => {
                 {stakeholders.map((sh) => (
                   <div 
                     key={sh.id}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                    className={`p-3 rounded-xl border transition-all duration-300 cursor-pointer ${
                       hoveredStakeholder === sh.id 
                         ? 'bg-white border-blue-400 shadow-md translate-x-1' 
-                        : 'bg-white/60 border-slate-200 hover:border-slate-300'
+                        : 'bg-white/60 border-slate-200 hover:border-slate-350'
                     }`}
                     onMouseEnter={() => setHoveredStakeholder(sh.id)}
                     onMouseLeave={() => setHoveredStakeholder(null)}
@@ -757,7 +731,7 @@ export const LandingPage: React.FC = () => {
                 ].map((node) => {
                   const isActive = hoveredStakeholder === node.id;
                   return (
-                    <div 
+                     <div 
                       key={node.id}
                       className={`absolute flex flex-col items-center ${node.pos} transition-all duration-300 z-10 ${
                         isActive ? 'scale-110' : 'opacity-70 scale-100'
@@ -765,7 +739,7 @@ export const LandingPage: React.FC = () => {
                       onMouseEnter={() => setHoveredStakeholder(node.id)}
                       onMouseLeave={() => setHoveredStakeholder(null)}
                     >
-                      <div className={`w-14 h-14 rounded-2xl bg-slate-50 border ${isActive ? 'border-blue-600 shadow-md bg-white border-blue-600' : 'border-slate-200'} flex items-center justify-center text-slate-655 transition-all`}>
+                      <div className={`w-14 h-14 rounded-2xl bg-slate-50 border ${isActive ? 'border-blue-600 shadow-md bg-white border-blue-650' : 'border-slate-200'} flex items-center justify-center text-slate-655 transition-all`}>
                         <node.icon className={`w-6 h-6 ${isActive ? 'text-blue-600' : 'text-slate-500'}`} />
                       </div>
                       <span className={`text-[10px] font-bold mt-1.5 px-2 py-0.5 rounded border shadow-sm transition-colors ${isActive ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-700'}`}>
@@ -783,10 +757,10 @@ export const LandingPage: React.FC = () => {
 
           </div>
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* 7. AI Intelligence Section */}
-      <section id="ai" className="relative z-10 py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <ScrollReveal id="ai" className="relative z-10 py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
           {/* Left Column: AI Visual Card */}
@@ -804,12 +778,12 @@ export const LandingPage: React.FC = () => {
               {/* Skill gap radar visualization mockup */}
               <div className="mt-6 p-4 rounded-xl bg-slate-50 border border-slate-200">
                 <div className="flex items-center justify-between text-xs mb-3">
-                  <span className="text-slate-650 text-slate-600 font-semibold">Cognitive Fitment Vector</span>
+                  <span className="text-slate-655 text-slate-600 font-semibold">Cognitive Fitment Vector</span>
                   <span className="text-blue-700 font-mono font-bold">Matched: 94.2%</span>
                 </div>
                 
                 {/* Clean reports / calculations logs */}
-                <div className="font-mono text-[9.5px] text-slate-600 space-y-1.5 bg-white p-3 rounded-lg border border-slate-200 max-h-[150px] overflow-hidden shadow-sm">
+                <div className="font-mono text-[9.5px] text-slate-605 text-slate-600 space-y-1.5 bg-white p-3 rounded-lg border border-slate-200 max-h-[150px] overflow-hidden shadow-sm">
                   <div>&gt; Loading candidate node YS-2026...</div>
                   <div>&gt; Extracting semantic experience embeddings...</div>
                   <div className="text-blue-600 font-semibold">&gt; Match weight: React [1.0], TS [0.95], System Design [0.82]</div>
@@ -852,7 +826,7 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
               AI That Understands Skills, Jobs and Career Readiness
             </h2>
-            <p className="text-slate-600 text-base leading-relaxed">
+            <p className="text-slate-655 text-slate-600 text-base leading-relaxed">
               C2C is powered by a proprietary matching model that evaluates students beyond keywords. We track technical logical thinking, real-time code audit assessments, and soft skills to map readiness.
             </p>
 
@@ -902,10 +876,10 @@ export const LandingPage: React.FC = () => {
           </div>
 
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* 8. Dashboard Preview Section */}
-      <section id="previews" className="relative z-10 py-20 bg-slate-50 border-t border-slate-200">
+      <ScrollReveal id="previews" className="relative z-10 py-20 bg-slate-50 border-t border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <span className="px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-xs font-semibold text-blue-700">
@@ -1309,10 +1283,10 @@ export const LandingPage: React.FC = () => {
 
           </div>
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* 9. Roadmap Section */}
-      <section id="roadmap" className="relative z-10 py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <ScrollReveal id="roadmap" className="relative z-10 py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-xs font-semibold text-blue-700">
             Development Timeline
@@ -1413,10 +1387,10 @@ export const LandingPage: React.FC = () => {
 
           </div>
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* 10. CTA Section */}
-      <section id="cta" className="relative z-10 py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <ScrollReveal id="cta" className="relative z-10 py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 p-8 md:p-16 text-center shadow-xl">
           
           {/* Subtle decoration gradients */}
@@ -1431,15 +1405,15 @@ export const LandingPage: React.FC = () => {
               From learning to earning, C2C creates a measurable path for every student, college, recruiter, and enterprise.
             </p>
             <div className="pt-6">
-              <button className="inline-flex items-center justify-center px-8 py-4 rounded-xl bg-blue-600 text-base font-semibold text-white hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 hover:scale-[1.02] cursor-pointer">
+              <button className="group inline-flex items-center justify-center px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-base font-semibold text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/20 hover:scale-[1.03] active:scale-[0.98] transition-all duration-300 cursor-pointer">
                 Start Building
-                <Zap className="ml-2 w-5 h-5" />
+                <Zap className="ml-2 w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
               </button>
             </div>
           </div>
 
         </div>
-      </section>
+      </ScrollReveal>
 
       {/* ENTERPRISE-GRADE DIRECTORY FOOTER */}
       <footer className="relative z-10 border-t border-slate-800 bg-slate-900 text-slate-400 py-16">
