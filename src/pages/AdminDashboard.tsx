@@ -215,11 +215,7 @@ const activity = [
   icon: IconName;
 }>;
 
-const healthMetrics = [
-  { label: 'API uptime', value: '99.98%', width: 'w-[99%]', color: 'bg-emerald-500' },
-  { label: 'Profile completion', value: '84%', width: 'w-[84%]', color: 'bg-sky-500' },
-  { label: 'Drive SLA', value: '91%', width: 'w-[91%]', color: 'bg-indigo-500' },
-];
+
 
           </div>
         </section>
