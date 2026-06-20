@@ -215,10 +215,76 @@ const activity = [
   icon: IconName;
 }>;
 
+export const AdminDashboard: React.FC = () => {
+  return (
+    <div className="p-6 bg-slate-50 min-h-screen">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <h1 className="text-2xl font-bold text-slate-900">Admin Dashboard</h1>
 
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {stats.map((stat, idx) => (
+            <div key={idx} className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{stat.label}</span>
+                <div className="text-2xl font-bold text-slate-900 mt-2">{stat.value}</div>
+              </div>
+              <span className={`mt-3 inline-block px-2.5 py-0.5 rounded text-[10px] font-bold w-fit ${stat.tone}`}>
+                {stat.change}
+              </span>
+            </div>
+          ))}
+        </div>
 
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Approvals (2 cols) */}
+          <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h2 className="text-base font-bold text-slate-900 mb-4">System Approvals</h2>
+            <div className="space-y-4">
+              {approvals.map((app, idx) => (
+                <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-805 text-slate-800">{app.title}</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">{app.meta}</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-0.5 rounded text-xs font-semibold">
+                      {app.count} pending
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                      app.severity === 'High' ? 'bg-red-50 text-red-700 border border-red-100' :
+                      app.severity === 'Medium' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
+                      'bg-slate-100 text-slate-700 border border-slate-200'
+                    }`}>
+                      {app.severity}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </section>
+
+          {/* Activity Feed (1 col) */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h2 className="text-base font-bold text-slate-900 mb-4">Recent System Logs</h2>
+            <div className="space-y-4">
+              {activity.map((act, idx) => (
+                <div key={idx} className="flex items-start space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                    <DashboardIcon name={act.icon} className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-xs font-bold text-slate-800 truncate">{act.title}</h3>
+                    <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed">{act.detail}</p>
+                    <span className="text-[9px] text-slate-400 font-mono mt-1 block">{act.time}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );

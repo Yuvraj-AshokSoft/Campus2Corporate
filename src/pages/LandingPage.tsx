@@ -1,9 +1,4 @@
-<<<<<<< HEAD
 import React, { useState, useEffect, useRef } from 'react';
-=======
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
->>>>>>> e26e572c082fc8a0a61ea7233110efd8410cc1cd
 import { 
   Briefcase, 
   GraduationCap, 
@@ -1285,109 +1280,7 @@ export const LandingPage: React.FC = () => {
         </div>
       </ScrollReveal>
 
-      {/* 9. Roadmap Section */}
-      <ScrollReveal id="roadmap" className="relative z-10 py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-xs font-semibold text-blue-700">
-            Development Timeline
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-4 tracking-tight">
-            Platform Development Roadmap
-          </h2>
-          <p className="text-slate-500 mt-3 text-base">
-            How we are evolving C2C into a comprehensive global ecosystem for employability verification.
-          </p>
-        </div>
 
-        {/* Timeline representation */}
-        <div className="relative">
-          {/* Central alignment line for timeline */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-0.5 bg-slate-200 pointer-events-none"></div>
-
-          <div className="space-y-12">
-            
-            {/* Phase 1 */}
-            <div className="relative flex flex-col md:flex-row md:items-center">
-              <div className="absolute left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-emerald-600 border-4 border-white flex items-center justify-center shadow-sm">
-                <Check className="w-3 h-3 text-white" />
-              </div>
-              <div className="w-full md:w-1/2 md:pr-12 md:text-right mt-6 md:mt-0">
-                <span className="inline-flex px-2 py-0.5 rounded bg-emerald-50 border border-emerald-100 text-[10px] font-bold text-emerald-700 shadow-sm">
-                  Phase 1: Completed
-                </span>
-                <h3 className="text-base font-bold text-slate-900 mt-2">Frontend MVP Setup</h3>
-                <p className="text-xs text-slate-505 text-slate-500 mt-1 leading-relaxed md:ml-auto max-w-md">
-                  Scaffolded React + Vite + TS framework. Installed Tailwind CSS and created stakeholder folder structures and placeholders.
-                </p>
-              </div>
-              <div className="hidden md:block w-1/2 pl-12"></div>
-            </div>
-
-            {/* Phase 2 */}
-            <div className="relative flex flex-col md:flex-row md:items-center">
-              <div className="absolute left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-blue-600 border-4 border-white flex items-center justify-center shadow-sm">
-                <div className="w-2 h-2 rounded-full bg-white"></div>
-              </div>
-              <div className="hidden md:block w-1/2 pr-12 text-right"></div>
-              <div className="w-full md:w-1/2 md:pl-12 mt-6 md:mt-0">
-                <span className="inline-flex px-2 py-0.5 rounded bg-blue-50 border border-blue-100 text-[10px] font-bold text-blue-700 shadow-sm animate-pulse">
-                  Phase 2: In Progress
-                </span>
-                <h3 className="text-base font-bold text-slate-900 mt-2">Backend & Authentication</h3>
-                <p className="text-xs text-slate-550 text-slate-500 mt-1 leading-relaxed max-w-md">
-                  Setting up API servers, user roles (Students, Recruiters, Colleges, Mentors, Admins), and secure login pipelines.
-                </p>
-              </div>
-            </div>
-
-            {/* Phase 3 */}
-            <div className="relative flex flex-col md:flex-row md:items-center">
-              <div className="absolute left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-slate-100 border-4 border-white flex items-center justify-center shadow-sm"></div>
-              <div className="w-full md:w-1/2 md:pr-12 md:text-right mt-6 md:mt-0">
-                <span className="inline-flex px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10px] font-bold text-slate-500 shadow-sm">
-                  Phase 3: Q3 2026
-                </span>
-                <h3 className="text-base font-bold text-slate-900 mt-2">AI Matching Engine</h3>
-                <p className="text-xs text-slate-505 text-slate-500 mt-1 leading-relaxed md:ml-auto max-w-md">
-                  Integrating semantic parsing engines, scoring indicators, cosine similarity vectors, and skill path suggestions.
-                </p>
-              </div>
-              <div className="hidden md:block w-1/2 pl-12"></div>
-            </div>
-
-            {/* Phase 4 */}
-            <div className="relative flex flex-col md:flex-row md:items-center">
-              <div className="absolute left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-slate-100 border-4 border-white flex items-center justify-center shadow-sm"></div>
-              <div className="hidden md:block w-1/2 pr-12 text-right"></div>
-              <div className="w-full md:w-1/2 md:pl-12 mt-6 md:mt-0">
-                <span className="inline-flex px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10px] font-bold text-slate-500 shadow-sm">
-                  Phase 4: Q4 2026
-                </span>
-                <h3 className="text-base font-bold text-slate-900 mt-2">College Pilot Launch</h3>
-                <p className="text-xs text-slate-550 text-slate-500 mt-1 leading-relaxed max-w-md">
-                  Deploying C2C to pilot institutions to sync drive schedules, verify profiles, and iterate recruiter matchmaking.
-                </p>
-              </div>
-            </div>
-
-            {/* Phase 5 */}
-            <div className="relative flex flex-col md:flex-row md:items-center">
-              <div className="absolute left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-slate-100 border-4 border-white flex items-center justify-center shadow-sm"></div>
-              <div className="w-full md:w-1/2 md:pr-12 md:text-right mt-6 md:mt-0">
-                <span className="inline-flex px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[10px] font-bold text-slate-500 shadow-sm">
-                  Phase 5: 2027
-                </span>
-                <h3 className="text-base font-bold text-slate-900 mt-2">Scale Across Institutions</h3>
-                <p className="text-xs text-slate-550 text-slate-500 mt-1 leading-relaxed md:ml-auto max-w-md">
-                  Opening open API schemas for direct ATS integrations and expanding learning content partnerships.
-                </p>
-              </div>
-              <div className="hidden md:block w-1/2 pl-12"></div>
-            </div>
-
-          </div>
-        </div>
-      </ScrollReveal>
 
       {/* 10. CTA Section */}
       <ScrollReveal id="cta" className="relative z-10 py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
