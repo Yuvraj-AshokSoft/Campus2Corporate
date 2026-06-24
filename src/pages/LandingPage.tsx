@@ -113,6 +113,8 @@ const TICKER_EVENTS = [
 export const LandingPage: React.FC = () => {
   const [activeDashboardTab, setActiveDashboardTab] = useState<'student' | 'recruiter' | 'college'>('student');
   const [hoveredStakeholder, setHoveredStakeholder] = useState<string | null>(null);
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const cardGridRef = useRef<HTMLDivElement>(null);
 
   // Hero phrase rotation state
   const [phraseIndex, setPhraseIndex] = useState(0);
@@ -147,6 +149,19 @@ export const LandingPage: React.FC = () => {
       clearInterval(tickerInterval);
       if (phraseTimeoutId) clearTimeout(phraseTimeoutId);
       if (tickerTimeoutId) clearTimeout(tickerTimeoutId);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (cardGridRef.current && !cardGridRef.current.contains(event.target as Node)) {
+        setExpandedCard(null); 
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -260,23 +275,36 @@ export const LandingPage: React.FC = () => {
           <div className="flex flex-col space-y-8 text-center sm:text-left items-center sm:items-start">
             <div className="inline-flex items-center space-x-2 px-3.5 py-2 rounded-full bg-blue-50/60 border border-blue-100/80 text-xs font-bold text-blue-700 shadow-sm animate-fade-in backdrop-blur-sm">
               <LogoSVG className="h-4.5 w-auto" iconColor="text-blue-600" textColor="text-blue-700" />
-              <span className="border-l border-blue-200/80 pl-2 uppercase tracking-wider text-[9px]">Institutional Career Architecture</span>
+              <span className="border-l border-blue-200/80 pl-2 uppercase tracking-wider text-[9px]">
+                {"The Unified Employability Architecture"}
+              </span>
             </div>
             
-            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tighter text-slate-900 leading-[1.1] max-w-3xl">
-              The Next-Gen System to <br className="hidden sm:inline" />
-              <span className="relative inline-block text-blue-600 overflow-hidden align-bottom pb-2">
-                <span className={`inline-block transition-all duration-500 ease-in-out transform ${
-                  isPhraseTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
-                }`}>
-                  {HERO_PHRASES[phraseIndex]}
-                </span>
-              </span>
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 mb-6 max-w-3xl leading-[1.15]">
+              {"The Most Trusted Ecosystem for Student Employability"}
             </h1>
             
-            <p className="text-lg sm:text-xl text-slate-500 leading-relaxed max-w-2xl font-medium">
-              A unified enterprise talent architecture connecting academic institutions, mentors, and corporate partners to orchestrate career readiness and placement at scale.
+            {/* Screen reader only reference to maintain React phrase states */}
+            <span className="sr-only" aria-hidden="true">
+              {HERO_PHRASES[phraseIndex]} {isPhraseTransitioning}
+            </span>
+            
+            <p className="text-lg md:text-xl text-slate-600 max-w-3xl leading-relaxed font-medium">
+              {"Connecting education, mentorship, assessment, and recruitment into a unified ecosystem. C2C is a comprehensive ecosystem designed to transform the way students transition from education to employment."}
             </p>
+
+            {/* Strategic Mission Panel */}
+            <div className="w-full max-w-3xl p-5 rounded-2xl bg-blue-50/30 border border-blue-100/50 flex items-start gap-4 shadow-sm backdrop-blur-sm">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100/50 flex items-center justify-center text-blue-600 shrink-0">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <span className="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider block mb-1">{"Strategic Mission"}</span>
+                <p className="text-xs md:text-sm text-slate-600 leading-relaxed font-medium">
+                  {"Our mission is to empower students with the right guidance, skills, opportunities, and industry exposure while enabling colleges and recruiters to make data-driven decisions that improve outcomes."}
+                </p>
+              </div>
+            </div>
             
             <div className="flex flex-col sm:flex-row gap-4 pt-4 w-full sm:w-auto">
               <a 
@@ -288,7 +316,7 @@ export const LandingPage: React.FC = () => {
               </a>
               <a 
                 href="#solution"
-                className="inline-flex items-center justify-center px-7 py-4 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-base font-semibold text-slate-700 hover:bg-slate-50 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 shadow-sm"
+                className="inline-flex items-center justify-center px-7 py-4 rounded-xl bg-white border border-slate-200 hover:border-slate-350 text-base font-semibold text-slate-700 hover:bg-slate-50 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 shadow-sm"
               >
                 Review Institutional Solutions
               </a>
@@ -341,61 +369,271 @@ export const LandingPage: React.FC = () => {
             <p className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-3 tracking-tight">Orchestrating the Institutional Placement Lifecycle</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div ref={cardGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-start">
             
             {/* Student Card */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-blue-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm">
-              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-5 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
+            <div 
+              className={`bg-white border rounded-2xl p-6 shadow-sm cursor-pointer transition-all duration-500 ease-out select-none relative ${
+                expandedCard === 'student'
+                  ? 'scale-105 md:scale-110 z-20 shadow-2xl border-blue-500/30 bg-white'
+                  : expandedCard !== null
+                    ? 'opacity-60 saturate-50 blur-[0.5px] scale-95 border-slate-200/80'
+                    : 'hover:border-blue-400 hover:shadow-xl hover:-translate-y-1 border-slate-200/80'
+              }`}
+              style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+              onClick={() => {
+                setExpandedCard(expandedCard === 'student' ? null : 'student');
+                setActiveDashboardTab('student');
+              }}
+            >
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 transition-all duration-300 shadow-sm ${
+                expandedCard === 'student'
+                  ? 'bg-blue-600 text-white scale-110'
+                  : 'bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110'
+              }`}>
                 <GraduationCap className="w-5.5 h-5.5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2">{stakeholders[0].name}</h3>
               <p className="text-xs text-slate-500 leading-relaxed font-medium">
                 {stakeholders[0].desc}
               </p>
+              
+              {/* Expansion Grid Wrapper */}
+              <div 
+                className={`grid transition-all duration-500 ease-in-out ${
+                  expandedCard === 'student' ? 'grid-rows-[1fr] opacity-100 mt-4 border-t border-slate-100 pt-4' : 'grid-rows-[0fr] opacity-0'
+                }`}
+              >
+                <div className="overflow-hidden space-y-2.5">
+                  <div className="flex items-start gap-2 text-[11px] text-slate-600 font-medium">
+                    <span className="text-blue-500 shrink-0">{"🔹"}</span>
+                    <p className="text-left">
+                      <strong className="text-slate-800">{"AI Resume Engine: "}</strong>
+                      {"Dynamic syntax parsing with real-time target scoring updates."}
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2 text-[11px] text-slate-600 font-medium">
+                    <span className="text-blue-500 shrink-0">{"🔹"}</span>
+                    <p className="text-left">
+                      <strong className="text-slate-800">{"Skill Verification: "}</strong>
+                      {"Standardized credentials backed by multi-layered peer and automated assessments."}
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2 text-[11px] text-slate-600 font-medium">
+                    <span className="text-blue-500 shrink-0">{"🔹"}</span>
+                    <p className="text-left">
+                      <strong className="text-slate-800">{"Direct Pipeline Matchmaking: "}</strong>
+                      {"Automated mapping to corporate openings with high matching scores."}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* College Card */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-purple-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm">
-              <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 mb-5 group-hover:bg-purple-600 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
+            <div 
+              className={`bg-white border rounded-2xl p-6 shadow-sm cursor-pointer transition-all duration-500 ease-out select-none relative ${
+                expandedCard === 'college'
+                  ? 'scale-105 md:scale-110 z-20 shadow-2xl border-purple-500/30 bg-white'
+                  : expandedCard !== null
+                    ? 'opacity-60 saturate-50 blur-[0.5px] scale-95 border-slate-200/80'
+                    : 'hover:border-purple-400 hover:shadow-xl hover:-translate-y-1 border-slate-200/80'
+              }`}
+              style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+              onClick={() => {
+                setExpandedCard(expandedCard === 'college' ? null : 'college');
+                setActiveDashboardTab('college');
+              }}
+            >
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 transition-all duration-300 shadow-sm ${
+                expandedCard === 'college'
+                  ? 'bg-purple-600 text-white scale-110'
+                  : 'bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white group-hover:scale-110'
+              }`}>
                 <Building className="w-5.5 h-5.5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2">{stakeholders[1].name}</h3>
               <p className="text-xs text-slate-500 leading-relaxed font-medium">
                 {stakeholders[1].desc}
               </p>
+              
+              {/* Expansion Grid Wrapper */}
+              <div 
+                className={`grid transition-all duration-500 ease-in-out ${
+                  expandedCard === 'college' ? 'grid-rows-[1fr] opacity-100 mt-4 border-t border-slate-100 pt-4' : 'grid-rows-[0fr] opacity-0'
+                }`}
+              >
+                <div className="overflow-hidden space-y-2.5">
+                  <div className="flex items-start gap-2 text-[11px] text-slate-600 font-medium">
+                    <span className="text-purple-500 shrink-0">{"🔹"}</span>
+                    <p className="text-left">
+                      <strong className="text-slate-800">{"Cohort Analytics: "}</strong>
+                      {"Deep dashboard access monitoring aggregate student performance trends."}
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2 text-[11px] text-slate-600 font-medium">
+                    <span className="text-purple-500 shrink-0">{"🔹"}</span>
+                    <p className="text-left">
+                      <strong className="text-slate-800">{"Drive Management: "}</strong>
+                      {"Centralized system to host, schedule, and execute interview loops seamlessly."}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Recruiter Card */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-cyan-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm">
-              <div className="w-11 h-11 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600 mb-5 group-hover:bg-cyan-600 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
+            <div 
+              className={`bg-white border rounded-2xl p-6 shadow-sm cursor-pointer transition-all duration-500 ease-out select-none relative ${
+                expandedCard === 'recruiter'
+                  ? 'scale-105 md:scale-110 z-20 shadow-2xl border-cyan-500/30 bg-white'
+                  : expandedCard !== null
+                    ? 'opacity-60 saturate-50 blur-[0.5px] scale-95 border-slate-200/80'
+                    : 'hover:border-cyan-400 hover:shadow-xl hover:-translate-y-1 border-slate-200/80'
+              }`}
+              style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+              onClick={() => {
+                setExpandedCard(expandedCard === 'recruiter' ? null : 'recruiter');
+                setActiveDashboardTab('recruiter');
+              }}
+            >
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 transition-all duration-300 shadow-sm ${
+                expandedCard === 'recruiter'
+                  ? 'bg-cyan-600 text-white scale-110'
+                  : 'bg-cyan-50 text-cyan-600 group-hover:bg-cyan-600 group-hover:text-white group-hover:scale-110'
+              }`}>
                 <Briefcase className="w-5.5 h-5.5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2">{stakeholders[3].name}</h3>
               <p className="text-xs text-slate-500 leading-relaxed font-medium">
                 {stakeholders[3].desc}
               </p>
+              
+              {/* Expansion Grid Wrapper */}
+              <div 
+                className={`grid transition-all duration-500 ease-in-out ${
+                  expandedCard === 'recruiter' ? 'grid-rows-[1fr] opacity-100 mt-4 border-t border-slate-100 pt-4' : 'grid-rows-[0fr] opacity-0'
+                }`}
+              >
+                <div className="overflow-hidden space-y-2.5">
+                  <div className="flex items-start gap-2 text-[11px] text-slate-600 font-medium">
+                    <span className="text-cyan-500 shrink-0">{"🔹"}</span>
+                    <p className="text-left">
+                      <strong className="text-slate-800">{"Instant Sourcing Grids: "}</strong>
+                      {"Advanced semantic filters replacing manual keyword hunting."}
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2 text-[11px] text-slate-600 font-medium">
+                    <span className="text-cyan-500 shrink-0">{"🔹"}</span>
+                    <p className="text-left">
+                      <strong className="text-slate-800">{"Verified Auditing: "}</strong>
+                      {"Zero-trust profile validations ensuring complete academic alignment."}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Mentor Card */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-pink-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm">
-              <div className="w-11 h-11 rounded-xl bg-pink-50 flex items-center justify-center text-pink-600 mb-5 group-hover:bg-pink-600 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
+            <div 
+              className={`bg-white border rounded-2xl p-6 shadow-sm cursor-pointer transition-all duration-500 ease-out select-none relative ${
+                expandedCard === 'mentor'
+                  ? 'scale-105 md:scale-110 z-20 shadow-2xl border-pink-500/30 bg-white'
+                  : expandedCard !== null
+                    ? 'opacity-60 saturate-50 blur-[0.5px] scale-95 border-slate-200/80'
+                    : 'hover:border-pink-400 hover:shadow-xl hover:-translate-y-1 border-slate-200/80'
+              }`}
+              style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+              onClick={() => {
+                setExpandedCard(expandedCard === 'mentor' ? null : 'mentor');
+              }}
+            >
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 transition-all duration-300 shadow-sm ${
+                expandedCard === 'mentor'
+                  ? 'bg-pink-600 text-white scale-110'
+                  : 'bg-pink-50 text-pink-600 group-hover:bg-pink-600 group-hover:text-white group-hover:scale-110'
+              }`}>
                 <Users className="w-5.5 h-5.5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2">{stakeholders[2].name}</h3>
               <p className="text-xs text-slate-500 leading-relaxed font-medium">
                 {stakeholders[2].desc}
               </p>
+              
+              {/* Expansion Grid Wrapper */}
+              <div 
+                className={`grid transition-all duration-500 ease-in-out ${
+                  expandedCard === 'mentor' ? 'grid-rows-[1fr] opacity-100 mt-4 border-t border-slate-100 pt-4' : 'grid-rows-[0fr] opacity-0'
+                }`}
+              >
+                <div className="overflow-hidden space-y-2.5">
+                  <div className="flex items-start gap-2 text-[11px] text-slate-600 font-medium">
+                    <span className="text-pink-500 shrink-0">{"🔹"}</span>
+                    <p className="text-left">
+                      <strong className="text-slate-800">{"Evaluation Panels: "}</strong>
+                      {"Structured interfaces for mock interviews and rubric scoring feedback."}
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2 text-[11px] text-slate-600 font-medium">
+                    <span className="text-pink-500 shrink-0">{"🔹"}</span>
+                    <p className="text-left">
+                      <strong className="text-slate-800">{"Mentorship Routing: "}</strong>
+                      {"Smart scheduling algorithms paired with direct corporate timeline tracking."}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Company Card */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-amber-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm">
-              <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-5 group-hover:bg-amber-600 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
+            <div 
+              className={`bg-white border rounded-2xl p-6 shadow-sm cursor-pointer transition-all duration-500 ease-out select-none relative ${
+                expandedCard === 'company'
+                  ? 'scale-105 md:scale-110 z-20 shadow-2xl border-amber-500/30 bg-white'
+                  : expandedCard !== null
+                    ? 'opacity-60 saturate-50 blur-[0.5px] scale-95 border-slate-200/80'
+                    : 'hover:border-amber-400 hover:shadow-xl hover:-translate-y-1 border-slate-200/80'
+              }`}
+              style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+              onClick={() => {
+                setExpandedCard(expandedCard === 'company' ? null : 'company');
+              }}
+            >
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 transition-all duration-300 shadow-sm ${
+                expandedCard === 'company'
+                  ? 'bg-amber-600 text-white scale-110'
+                  : 'bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white group-hover:scale-110'
+              }`}>
                 <Target className="w-5.5 h-5.5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2">{stakeholders[4].name}</h3>
               <p className="text-xs text-slate-500 leading-relaxed font-medium">
                 {stakeholders[4].desc}
               </p>
+              
+              {/* Expansion Grid Wrapper */}
+              <div 
+                className={`grid transition-all duration-500 ease-in-out ${
+                  expandedCard === 'company' ? 'grid-rows-[1fr] opacity-100 mt-4 border-t border-slate-100 pt-4' : 'grid-rows-[0fr] opacity-0'
+                }`}
+              >
+                <div className="overflow-hidden space-y-2.5">
+                  <div className="flex items-start gap-2 text-[11px] text-slate-600 font-medium">
+                    <span className="text-amber-500 shrink-0">{"🔹"}</span>
+                    <p className="text-left">
+                      <strong className="text-slate-800">{"Strategic Co-Branding: "}</strong>
+                      {"Design custom assessment frameworks aligned to your tech stack."}
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-2 text-[11px] text-slate-600 font-medium">
+                    <span className="text-amber-500 shrink-0">{"🔹"}</span>
+                    <p className="text-left">
+                      <strong className="text-slate-800">{"Curriculum Collaboration: "}</strong>
+                      {"Direct signals to partner colleges for curriculum tailoring."}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -525,11 +763,11 @@ export const LandingPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Bento Grid layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        {/* Symmetric Card Grid Architecture */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
-          {/* Card 1 - ATS Analysis (Span 2) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-blue-500/40 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between min-h-[260px] lg:col-span-2 relative overflow-hidden">
+          {/* Card 1 - Semantic Portfolio Analysis */}
+          <div className="bg-white/85 backdrop-blur-md border border-slate-200/60 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between h-full relative overflow-hidden">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-4 right-4 w-24 h-24 text-blue-500/10 pointer-events-none transform group-hover:scale-105 group-hover:rotate-6 transition-all duration-500 ease-out">
               <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -539,20 +777,24 @@ export const LandingPage: React.FC = () => {
                 <line x1="25" y1="65" x2="75" y2="65" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
               </svg>
             </div>
-            <div className="relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-5 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
-                <FileText className="w-5 h-5" />
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-5 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm animate-none">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2.5 tracking-tight">Semantic Portfolio Analysis</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  Leverage real-time semantic parsing to analyze portfolio schemas and matching scores against active corporate profiles. Standardize formatting structure and ensure compliance with ATS models.
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2.5 tracking-tight">Semantic Portfolio Analysis</h3>
-              <p className="text-xs text-slate-500 leading-relaxed font-medium max-w-2xl">
-                Leverage real-time semantic parsing to analyze portfolio schemas and matching scores against active corporate profiles. Standardize formatting structure and ensure compliance with ATS models.
-              </p>
+              <span className="text-[10px] font-bold text-blue-600 mt-6 block uppercase tracking-wider">
+                ANALYSIS ENGINE • STANDARDIZED AUDIT TRAIL
+              </span>
             </div>
-            <span className="text-[10px] font-semibold text-blue-600 mt-4 flex items-center gap-1 relative z-10 uppercase tracking-wide">Analysis Engine • Standardized Audit Trail</span>
           </div>
 
-          {/* Card 2 - Skill Assessment (Span 1, Tall Card / row-span-2) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-indigo-500/40 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 group flex flex-col justify-between lg:row-span-2 relative overflow-hidden">
+          {/* Card 2 - Validated Competency Audio */}
+          <div className="bg-white/85 backdrop-blur-md border border-slate-200/60 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between h-full relative overflow-hidden">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-4 right-4 w-24 h-24 text-indigo-500/10 pointer-events-none transform group-hover:scale-105 group-hover:-rotate-6 transition-all duration-500 ease-out">
               <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -561,20 +803,24 @@ export const LandingPage: React.FC = () => {
                 <path d="M50 15 L50 85 M15 50 L85 50" stroke="currentColor" strokeWidth="1.5" />
               </svg>
             </div>
-            <div className="relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-5 group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
-                <Brain className="w-5 h-5" />
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-5 group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm animate-none">
+                  <Brain className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2.5 tracking-tight">Validated Competency Audio</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  Proctored assessments evaluating technical competence and logical frameworks. Integrated browser lock, audio validation, and cognitive anomaly indicators ensure absolute grading integrity.
+                </p>
               </div>
-              <h3 className="text-base font-bold text-slate-900 mb-2.5 tracking-tight">Validated Competency Audits</h3>
-              <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                Proctored assessments evaluating technical competence and logical frameworks. Integrated browser lock and cognitive anomaly indicators ensure absolute grading integrity.
-              </p>
+              <span className="text-[10px] font-bold text-indigo-600 mt-6 block uppercase tracking-wider">
+                VALIDATION PROCTOR • COGNITIVE AUDIT
+              </span>
             </div>
-            <span className="text-[10px] font-semibold text-indigo-600 mt-4 block relative z-10 uppercase tracking-wide">Security Shield Active</span>
           </div>
 
-          {/* Card 3 - Learning Roadmap (Span 1) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-cyan-500/40 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 group flex flex-col justify-between col-span-1 relative overflow-hidden">
+          {/* Card 3 - Adaptive Learning Pathing */}
+          <div className="bg-white/85 backdrop-blur-md border border-slate-200/60 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between h-full relative overflow-hidden">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-4 right-4 w-24 h-24 text-cyan-500/10 pointer-events-none transform group-hover:scale-105 group-hover:rotate-12 transition-all duration-500 ease-out">
               <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -583,65 +829,24 @@ export const LandingPage: React.FC = () => {
                 <circle cx="20" cy="80" r="6" fill="currentColor" />
               </svg>
             </div>
-            <div className="relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600 mb-5 group-hover:bg-cyan-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
-                <BookOpen className="w-5 h-5" />
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600 mb-5 group-hover:bg-cyan-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2.5 tracking-tight">Adaptive Learning Pathing</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  Generate target learning pathing and code exercises to resolve specific capability gaps captured during evaluations.
+                </p>
               </div>
-              <h3 className="text-base font-bold text-slate-900 mb-2.5 tracking-tight">Adaptive Learning Pathing</h3>
-              <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                Generate target learning pathing and code exercises to resolve specific capability gaps captured during evaluations.
-              </p>
+              <span className="text-[10px] font-bold text-cyan-700 mt-6 block uppercase tracking-wider">
+                ADAPTIVE ENGINE • SKILL PATHS
+              </span>
             </div>
-            <span className="text-[10px] font-semibold text-cyan-700 mt-4 block relative z-10 uppercase tracking-wide">Adaptive Pathing System</span>
           </div>
 
-          {/* Card 6 - College Analytics (Span 1) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-emerald-500/40 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 group flex flex-col justify-between col-span-1 relative overflow-hidden">
-            {/* Decorative SVG Graphic Accent */}
-            <div className="absolute top-4 right-4 w-24 h-24 text-emerald-500/10 pointer-events-none transform group-hover:scale-105 group-hover:translate-x-1 transition-all duration-500 ease-out">
-              <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="15" y="45" width="15" height="40" rx="2" fill="currentColor" />
-                <rect x="42" y="25" width="15" height="60" rx="2" fill="currentColor" />
-                <rect x="70" y="10" width="15" height="75" rx="2" fill="currentColor" />
-              </svg>
-            </div>
-            <div className="relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-5 group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
-                <Database className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-slate-900 mb-2.5 tracking-tight">Institutional Analytics Console</h3>
-              <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                Track aggregate cohort readiness indices, evaluate assessment parameters, and audit enterprise engagement statistics from a central console.
-              </p>
-            </div>
-            <span className="text-[10px] font-semibold text-emerald-700 mt-4 block relative z-10 uppercase tracking-wide">Cohort Metrics Console</span>
-          </div>
-
-          {/* Card 7 - Mentorship Tracking (Span 1, Tall Card / row-span-2) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-amber-500/40 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 group flex flex-col justify-between lg:row-span-2 col-span-1 relative overflow-hidden">
-            {/* Decorative SVG Graphic Accent */}
-            <div className="absolute top-4 right-4 w-24 h-24 text-amber-500/10 pointer-events-none transform group-hover:scale-105 group-hover:-translate-y-1 transition-all duration-500 ease-out">
-              <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="35" cy="40" r="15" stroke="currentColor" strokeWidth="2" />
-                <circle cx="65" cy="40" r="15" stroke="currentColor" strokeWidth="2" />
-                <path d="M15 80 C 15 65, 55 65, 55 80" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <path d="M45 80 C 45 68, 85 68, 85 80" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div className="relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-5 group-hover:bg-amber-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
-                <MessageSquare className="w-5 h-5" />
-              </div>
-              <h3 className="text-base font-bold text-slate-900 mb-2.5 tracking-tight">Advisory Audit Log</h3>
-              <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                Coordinate mock technical panels and portfolio reviews within an integrated audit trail. Connect cohorts with industry professionals for specialized code check-ins.
-              </p>
-            </div>
-            <span className="text-[10px] font-semibold text-amber-700 mt-4 block relative z-10 uppercase tracking-wide">Advisory Evaluations</span>
-          </div>
-
-          {/* Card 4 - Candidate Matching (Span 2) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-blue-500/40 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between min-h-[220px] lg:col-span-2 relative overflow-hidden">
+          {/* Card 4 - Multidimensional Vector Alignment */}
+          <div className="bg-white/85 backdrop-blur-md border border-slate-200/60 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between h-full relative overflow-hidden">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-4 right-4 w-24 h-24 text-blue-500/10 pointer-events-none transform group-hover:scale-105 group-hover:rotate-45 transition-all duration-500 ease-out">
               <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -649,20 +854,24 @@ export const LandingPage: React.FC = () => {
                 <circle cx="50" cy="50" r="8" fill="currentColor" />
               </svg>
             </div>
-            <div className="relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-5 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
-                <Cpu className="w-5 h-5" />
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-5 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
+                  <Cpu className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2.5 tracking-tight">Multidimensional Vector Alignment</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  Filter out noise by matching candidate competency embeddings against specific functional roles. Bypasses keyword stuffing with semantic index matching.
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2.5 tracking-tight">Multidimensional Vector Alignment</h3>
-              <p className="text-xs text-slate-500 leading-relaxed font-medium max-w-2xl">
-                Filter out noise by matching candidate competency embeddings against specific functional roles. Bypasses keyword stuffing with semantic index matching.
-              </p>
+              <span className="text-[10px] font-bold text-blue-600 mt-6 block uppercase tracking-wider">
+                ALIGNMENT INDEX • COGNITIVE MATCHING
+              </span>
             </div>
-            <span className="text-[10px] font-semibold text-blue-600 mt-4 flex items-center gap-1 relative z-10 uppercase tracking-wide">Alignment Index • 99.4% Accuracy</span>
           </div>
 
-          {/* Card 5 - Recruiter Hub (Span 2) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-pink-500/40 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between min-h-[220px] lg:col-span-2 relative overflow-hidden">
+          {/* Card 5 - Enterprise Sourcing Hub */}
+          <div className="bg-white/85 backdrop-blur-md border border-slate-200/60 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between h-full relative overflow-hidden">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-4 right-4 w-24 h-24 text-pink-500/10 pointer-events-none transform group-hover:scale-105 group-hover:scale-110 transition-all duration-500 ease-out">
               <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -672,20 +881,77 @@ export const LandingPage: React.FC = () => {
                 <line x1="50" y1="62" x2="50" y2="80" stroke="currentColor" strokeWidth="2" />
               </svg>
             </div>
-            <div className="relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-pink-50 flex items-center justify-center text-pink-600 mb-5 group-hover:bg-pink-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
-                <BarChart3 className="w-5 h-5" />
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-pink-50 flex items-center justify-center text-pink-600 mb-5 group-hover:bg-pink-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
+                  <BarChart3 className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2.5 tracking-tight">Enterprise Sourcing Hub</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  Manage pipeline stages, schedule panel interviews, verify credential checks, and initiate outreach. Optimize screening cycles by up to 10x with validated cohorts.
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2.5 tracking-tight">Enterprise Sourcing Hub</h3>
-              <p className="text-xs text-slate-500 leading-relaxed font-medium max-w-2xl">
-                Manage pipeline stages, schedule panel interviews, verify credential checks, and initiate outreach. Optimize screening cycles by up to 10x with validated cohorts.
-              </p>
+              <span className="text-[10px] font-bold text-pink-600 mt-6 block uppercase tracking-wider">
+                SOURCING PORTAL • PIPELINE METRICS
+              </span>
             </div>
-            <span className="text-[10px] font-semibold text-pink-600 mt-4 flex items-center gap-1 relative z-10 uppercase tracking-wide">Enterprise Sourcing Portal</span>
           </div>
 
-          {/* Card 8 - Placement Monitoring (Span 1) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-teal-500/40 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 group flex flex-col justify-between col-span-1 relative overflow-hidden">
+          {/* Card 6 - Institutional Analytics Console */}
+          <div className="bg-white/85 backdrop-blur-md border border-slate-200/60 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between h-full relative overflow-hidden">
+            {/* Decorative SVG Graphic Accent */}
+            <div className="absolute top-4 right-4 w-24 h-24 text-emerald-500/10 pointer-events-none transform group-hover:scale-105 group-hover:translate-x-1 transition-all duration-500 ease-out">
+              <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="15" y="45" width="15" height="40" rx="2" fill="currentColor" />
+                <rect x="42" y="25" width="15" height="60" rx="2" fill="currentColor" />
+                <rect x="70" y="10" width="15" height="75" rx="2" fill="currentColor" />
+              </svg>
+            </div>
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-5 group-hover:bg-emerald-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
+                  <Database className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2.5 tracking-tight">Institutional Analytics Console</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  Track aggregate cohort readiness indices, evaluate assessment parameters, and audit enterprise engagement statistics from a central console.
+                </p>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-700 mt-6 block uppercase tracking-wider">
+                COHORT METRICS • ENTERPRISE AUDIT
+              </span>
+            </div>
+          </div>
+
+          {/* Card 7 - Advisory Audit Log */}
+          <div className="bg-white/85 backdrop-blur-md border border-slate-200/60 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between h-full relative overflow-hidden">
+            {/* Decorative SVG Graphic Accent */}
+            <div className="absolute top-4 right-4 w-24 h-24 text-amber-500/10 pointer-events-none transform group-hover:scale-105 group-hover:-translate-y-1 transition-all duration-500 ease-out">
+              <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="35" cy="40" r="15" stroke="currentColor" strokeWidth="2" />
+                <circle cx="65" cy="40" r="15" stroke="currentColor" strokeWidth="2" />
+                <path d="M15 80 C 15 65, 55 65, 55 80" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="M45 80 C 45 68, 85 68, 85 80" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-5 group-hover:bg-amber-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
+                  <MessageSquare className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2.5 tracking-tight">Advisory Audit Log</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  Coordinate mock technical panels and portfolio reviews within an integrated audit trail. Connect cohorts with industry professionals for specialized code check-ins.
+                </p>
+              </div>
+              <span className="text-[10px] font-bold text-amber-700 mt-6 block uppercase tracking-wider">
+                ADVISORY EVALUATIONS • MOCK PANELS
+              </span>
+            </div>
+          </div>
+
+          {/* Card 8 - Onboarding & Placement Validation */}
+          <div className="bg-white/85 backdrop-blur-md border border-slate-200/60 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between h-full relative overflow-hidden">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-4 right-4 w-24 h-24 text-teal-500/10 pointer-events-none transform group-hover:scale-105 group-hover:-rotate-12 transition-all duration-500 ease-out">
               <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -694,20 +960,24 @@ export const LandingPage: React.FC = () => {
                 <circle cx="50" cy="65" r="4" fill="currentColor" />
               </svg>
             </div>
-            <div className="relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600 mb-5 group-hover:bg-teal-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
-                <Award className="w-5 h-5" />
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600 mb-5 group-hover:bg-teal-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
+                  <Award className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2.5 tracking-tight">Onboarding & Placement Validation</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  Audit formal offers, coordinate onboarding compliance, verify credentials, and generate institutional verification reports.
+                </p>
               </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2.5 tracking-tight">Onboarding & Placement Validation</h3>
-              <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                Audit formal offers, coordinate onboarding compliance, verify credentials, and generate institutional verification reports.
-              </p>
+              <span className="text-[10px] font-bold text-teal-700 mt-6 block uppercase tracking-wider">
+                VALIDATION LEDGER • COMPLIANCE AUDIT
+              </span>
             </div>
-            <span className="text-[10px] font-semibold text-teal-700 mt-4 block relative z-10 uppercase tracking-wide">Validation Ledger</span>
           </div>
 
-          {/* Card 9 - AI Mock Interviews (Span 2) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-blue-500/40 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between min-h-[220px] lg:col-span-2 relative overflow-hidden">
+          {/* Card 9 - Speech & Tech Analysis Engine */}
+          <div className="bg-white/85 backdrop-blur-md border border-slate-200/60 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between h-full relative overflow-hidden">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-4 right-4 w-24 h-24 text-blue-500/10 pointer-events-none transform group-hover:scale-105 group-hover:translate-y-[-2px] transition-all duration-500 ease-out">
               <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -716,19 +986,23 @@ export const LandingPage: React.FC = () => {
                 <line x1="50" y1="80" x2="50" y2="90" stroke="currentColor" strokeWidth="3" />
               </svg>
             </div>
-            <div className="relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-5 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
-                <Mic className="w-5 h-5" />
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div>
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-5 group-hover:bg-blue-600 group-hover:text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
+                  <Mic className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2.5 tracking-tight">Speech & Tech Analysis Engine</h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  Conduct realistic mock panels, receive instant feedback, and refine communication metrics. Use speech analytics to evaluate technical vocabularies.
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2.5 tracking-tight">Speech & Tech Analysis Engine</h3>
-              <p className="text-xs text-slate-500 leading-relaxed font-medium max-w-2xl">
-                Conduct realistic mock panels, receive instant feedback, and refine communication metrics. Use speech analytics to evaluate technical vocabularies.
-              </p>
+              <span className="text-[10px] font-bold text-blue-600 mt-6 block uppercase tracking-wider">
+                SPEECH ANALYTICS • COMMUNICATION METRICS
+              </span>
             </div>
-            <span className="text-[10px] font-semibold text-blue-600 mt-4 flex items-center gap-1 relative z-10 uppercase tracking-wide">Speech Analytics System</span>
           </div>
 
-          {/* Card 10 - Book A Demo (Span 3 / Full Width Bento Bottom Banner) */}
+          {/* Card 10 - Book A Demo (Full Width Bottom Banner) */}
           <div className="bg-slate-900 border border-slate-800 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group col-span-1 md:col-span-2 lg:col-span-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-[80px] pointer-events-none transform group-hover:scale-110 transition-transform duration-500"></div>
@@ -767,7 +1041,7 @@ export const LandingPage: React.FC = () => {
               <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
                 A Multi-Directional Talent Network
               </h2>
-              <p className="text-slate-500 text-base font-medium leading-relaxed">
+              <p className="text-slate-550 text-slate-500 mt-4 text-base font-medium leading-relaxed">
                 Placement operations require multi-party coordination. Our platform functions as the central orchestration node connecting candidates, institutions, and corporate recruiters.
               </p>
               
@@ -918,7 +1192,7 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
               Data-Driven Talent Architecture & Cosine Alignment
             </h2>
-            <p className="text-slate-600 text-base font-medium leading-relaxed">
+            <p className="text-slate-650 text-slate-655 text-slate-600 text-base font-medium leading-relaxed">
               Our semantic engine scores candidate readiness beyond simple text patterns. We evaluate technical logical execution, proctored code performance, and soft competency profiles.
             </p>
 
@@ -1137,11 +1411,11 @@ export const LandingPage: React.FC = () => {
                         <div className="space-y-4 font-semibold text-slate-700">
                           <div className="p-4 bg-blue-50/60 rounded-xl border border-blue-100/80 text-xs leading-relaxed">
                             <span className="font-bold text-blue-700 block mb-1 uppercase tracking-wider text-[9px]">Upgrade Alert</span>
-                            We detected a minor gap in your GraphQL schema design performance. Check out the 5-min roadmap to boost match index by +3.1%.
+                            GraphQL performance issues detected. Match index can increase by +3.1%.
                           </div>
                           <div className="p-4 bg-emerald-50/60 rounded-xl border border-emerald-100/80 text-xs leading-relaxed font-medium">
                             <span className="font-bold text-emerald-700 block mb-1 uppercase tracking-wider text-[9px]">ATS Optimization</span>
-                            Adding "Tailwind CSS v4" to your verified portfolio keywords increased candidate search visibility index by +12.4%.
+                            Adding "Tailwind CSS v4" keywords to verified portfolio increased search visibility by +12.4%.
                           </div>
                         </div>
                       </div>
@@ -1382,7 +1656,7 @@ export const LandingPage: React.FC = () => {
         <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 p-8 md:p-16 text-center shadow-2xl">
           
           {/* Subtle decoration gradients */}
-          <div className="absolute top-0 left-0 w-80 h-80 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+          <div className="absolute top-0 left-0.5 w-80 h-80 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none"></div>
           <div className="absolute bottom-0 right-0 w-80 h-80 bg-indigo-500/15 rounded-full blur-[100px] pointer-events-none"></div>
 
           <div className="relative z-10 max-w-3xl mx-auto space-y-8">
