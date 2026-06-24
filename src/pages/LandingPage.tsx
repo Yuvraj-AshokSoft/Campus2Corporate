@@ -1678,6 +1678,7 @@ export const LandingPage: React.FC = () => {
       </ScrollReveal>
 
       {/* ENTERPRISE-GRADE DIRECTORY FOOTER */}
+<<<<<<< HEAD
       <footer className="relative z-10 border-t border-slate-800 bg-slate-900 text-slate-400 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
@@ -1735,9 +1736,30 @@ export const LandingPage: React.FC = () => {
                 <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
+=======
+     <footer className="relative z-10 border-t border-slate-800 bg-slate-900 text-slate-400 py-20">
+  <div className="w-full px-8 md:px-12 lg:px-16 xl:px-20">
 
-          </div>
+    {/* Footer Grid */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 pb-14">
 
+      {/* Brand Section */}
+      <div className="lg:col-span-5 xl:col-span-6 space-y-8">
+
+        <LogoSVG
+          className="h-12 w-auto"
+          iconColor="text-blue-500"
+          textColor="text-white"
+        />
+>>>>>>> 1c3dfa4 (khushboo)
+
+        <p className="text-base text-slate-400 leading-8 max-w-lg font-medium">
+          Bridging the gap between academic potential and corporate
+          excellence through verifiable skill metrics, AI proctored
+          assessments, and direct hiring pipelines.
+        </p>
+
+<<<<<<< HEAD
           {/* Footer Bottom Row */}
           <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
             
@@ -1749,17 +1771,168 @@ export const LandingPage: React.FC = () => {
                 <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
               </div>
             </div>
+=======
+        <div className="flex items-center space-x-5 pt-2">
+>>>>>>> 1c3dfa4 (khushboo)
 
-            {/* Language/Region selector */}
-            <div className="flex items-center space-x-2 bg-slate-800 border border-slate-700 px-3.5 py-2 rounded-xl text-xs text-slate-300 font-bold cursor-pointer hover:bg-slate-700 hover:text-white transition-all shadow-sm">
-              <Globe className="w-3.5 h-3.5 text-slate-400" />
-              <span>Global (English)</span>
-            </div>
+          <a
+            href="#"
+            className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white hover:bg-blue-600 hover:border-blue-600 transition-all duration-300"
+            aria-label="LinkedIn"
+          >
+            <Linkedin className="w-5 h-5" />
+          </a>
 
-          </div>
+          <a
+            href="#"
+            className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white hover:bg-sky-500 hover:border-sky-500 transition-all duration-300"
+            aria-label="Twitter"
+          >
+            <Twitter className="w-5 h-5" />
+          </a>
+
+          <a
+            href="#"
+            className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white hover:bg-emerald-600 hover:border-emerald-600 transition-all duration-300"
+            aria-label="Website"
+          >
+            <Globe className="w-5 h-5" />
+          </a>
 
         </div>
-      </footer>
+      </div>
+
+      {/* Platform */}
+      <div className="lg:col-span-2 space-y-5">
+        <h4 className="text-sm font-black text-white uppercase tracking-[0.2em]">
+          Platform
+        </h4>
+
+        <ul className="space-y-5 text-base font-medium text-slate-400">
+          <li>
+            <a href="#" className="hover:text-white transition-colors">
+              Features
+            </a>
+          </li>
+          <li>
+            <a href="#" className="hover:text-white transition-colors">
+              Solutions
+            </a>
+          </li>
+          <li>
+            <a href="#" className="hover:text-white transition-colors">
+              Enterprise
+            </a>
+          </li>
+          <li>
+            <a href="#" className="hover:text-white transition-colors">
+              Security
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      {/* Resources */}
+      <div className="lg:col-span-2 space-y-5">
+        <h4 className="text-sm font-black text-white uppercase tracking-[0.2em]">
+          Resources
+        </h4>
+
+        <ul className="space-y-5 text-base font-medium text-slate-400">
+          <li>
+            <a href="#" className="hover:text-white transition-colors">
+              Case Studies
+            </a>
+          </li>
+          <li>
+            <a href="#" className="hover:text-white transition-colors">
+              Whitepapers
+            </a>
+          </li>
+          <li>
+            <a href="#" className="hover:text-white transition-colors">
+              Documentation
+            </a>
+          </li>
+          <li>
+            <a href="#" className="hover:text-white transition-colors">
+              Blog
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      {/* Company */}
+      <div className="lg:col-span-2 space-y-5">
+        <h4 className="text-sm font-black text-white uppercase tracking-[0.2em]">
+          Company
+        </h4>
+
+        <ul className="space-y-5 text-base font-medium text-slate-400">
+          <li>
+            <a href="#" className="hover:text-white transition-colors">
+              About Us
+            </a>
+          </li>
+          <li>
+            <a href="#" className="hover:text-white transition-colors">
+              Careers
+            </a>
+          </li>
+          <li>
+            <a href="#" className="hover:text-white transition-colors">
+              Press
+            </a>
+          </li>
+          <li>
+            <a href="#" className="hover:text-white transition-colors">
+              Contact
+            </a>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    {/* Bottom Footer */}
+    <div className="border-t border-slate-800 pt-10">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+
+        <div className="flex flex-col md:flex-row items-center gap-4 text-sm font-medium text-slate-500">
+          <span>
+            © {new Date().getFullYear()} Ashoksoft Technologies.
+            All rights reserved.
+          </span>
+
+          <div className="flex items-center gap-4 md:border-l md:border-slate-700 md:pl-4">
+            <a
+              href="#"
+              className="hover:text-white transition-colors"
+            >
+              Privacy Policy
+            </a>
+
+            <span>•</span>
+
+            <a
+              href="#"
+              className="hover:text-white transition-colors"
+            >
+              Terms of Service
+            </a>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2 bg-slate-800 border border-slate-700 px-5 py-3 rounded-2xl text-sm text-slate-300 font-semibold hover:bg-slate-700 hover:text-white transition-all cursor-pointer">
+          <Globe className="w-4 h-4" />
+          <span>Global (English)</span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</footer> 
 
     </div>
   );
