@@ -1,2 +1,3 @@
 // Mentor feature entry point
-export {};
+export { MentorDashboard } from '../../pages/MentorDashboard';
+

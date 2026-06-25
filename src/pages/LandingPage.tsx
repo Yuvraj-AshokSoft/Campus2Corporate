@@ -381,7 +381,7 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Mentor Card */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-pink-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm">
+            <Link to="/mentor-dashboard" className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-pink-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm block text-left">
               <div className="w-11 h-11 rounded-xl bg-pink-50 flex items-center justify-center text-pink-600 mb-5 group-hover:bg-pink-600 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
                 <Users className="w-5.5 h-5.5" />
               </div>
@@ -389,7 +389,7 @@ export const LandingPage: React.FC = () => {
               <p className="text-xs text-slate-500 leading-relaxed font-medium">
                 Guide Future Professionals. Review mock coding interviews, guide portfolios, and earn industry credits.
               </p>
-            </div>
+            </Link>
 
             {/* Company Card */}
             <div className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-amber-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm">
