@@ -182,21 +182,21 @@ export const StudentDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 text-slate-800 antialiased font-sans">
+    <div className="min-h-screen bg-slate-50/50  text-slate-800 antialiased font-sans">
       
       {/* Toast Alert */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-[99999] flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-2xl border border-slate-850 animate-slide-in">
+        <div className=" p-4 md:p-8 fixed bottom-5 right-5 z-[99999] flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-2xl border border-slate-850 animate-slide-in">
           <Sparkles className="w-5 h-5 text-indigo-400" />
           <span className="text-sm font-semibold">{toastMessage}</span>
           <button onClick={() => setToastMessage(null)} className="text-slate-400 hover:text-white ml-2">
-            <X className="w-4 h-4" />
+            <X className="w-4  h-4" />
           </button>
         </div>
       )}
 
       {/* Header */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Student Dashboard
@@ -623,7 +623,7 @@ export const StudentDashboard: React.FC = () => {
       </div>
 
       
-      <footer className="relative z-10 border-t border-slate-800 bg-slate-900 text-slate-400 py-16 mt-12 rounded-2xl overflow-hidden">
+      <footer className=" w-full relative z-10 border-t border-slate-800 bg-slate-900 text-slate-400 py-16 mt-12  overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Footer Grid */}
