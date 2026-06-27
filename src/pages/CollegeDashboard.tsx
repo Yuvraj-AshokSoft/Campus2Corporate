@@ -4,6 +4,30 @@ import {
   UserCheck,
   Award,
   Building2,
+   CheckCircle2,
+  FileText,
+   CalendarDays,
+  Calendar,
+  Brain,
+
+  Upload,
+  Sparkles,
+  UserPlus,
+  ClipboardList,
+  FileBarChart2,
+   LayoutDashboard,
+  GraduationCap,
+
+  BookOpen,
+  ClipboardCheck,
+  Briefcase,
+  
+  BarChart3,
+  
+  Settings,
+  ChevronRight,
+    Clock,
+  
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -13,9 +37,286 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
+   RadarChart,
+  Radar,
+ PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
 } from "recharts";
 
 export const CollegeDashboard: React.FC = () => {
+
+
+  const upcomingDrives = [
+  {
+    company: "Google",
+    role: "Software Engineer",
+    date: "12 Jul",
+    branch: "CS • IT",
+    students: 420,
+  },
+  {
+    company: "Microsoft",
+    role: "SDE Intern",
+    date: "18 Jul",
+    branch: "All Branches",
+    students: 360,
+  },
+  {
+    company: "Amazon",
+    role: "Cloud Associate",
+    date: "24 Jul",
+    branch: "CS • IT • EC",
+    students: 285,
+  },
+  {
+    company: "Adobe",
+    role: "Frontend Developer",
+    date: "02 Aug",
+    branch: "CS • IT",
+    students: 198,
+  },
+];
+
+
+
+
+  const aiInsights = [
+  {
+    title: "Placement rate increased by 4.8%",
+    description: "Compared to the previous academic cycle.",
+    color: "emerald",
+  },
+  {
+    title: "Mechanical Department needs attention",
+    description: "Placement readiness is below the institutional average.",
+    color: "amber",
+  },
+  {
+    title: "184 students are interview ready",
+    description: "AI recommends scheduling recruiter interviews this week.",
+    color: "indigo",
+  },
+  {
+    title: "67 resumes require AI review",
+    description: "Resume quality score below recommended threshold.",
+    color: "violet",
+  },
+];
+
+
+
+
+  const recruiterActivity = [
+  {
+    company: "Google",
+    role: "Software Engineer",
+    students: 48,
+    status: "Interview",
+    color: "bg-indigo-500",
+  },
+  {
+    company: "Microsoft",
+    role: "SDE Intern",
+    students: 36,
+    status: "Assessment",
+    color: "bg-violet-500",
+  },
+  {
+    company: "Amazon",
+    role: "Cloud Associate",
+    students: 28,
+    status: "Shortlisted",
+    color: "bg-blue-500",
+  },
+  {
+    company: "Infosys",
+    role: "System Engineer",
+    students: 62,
+    status: "Campus Drive",
+    color: "bg-emerald-500",
+  },
+  {
+    company: "TCS",
+    role: "Digital Role",
+    students: 74,
+    status: "Hiring",
+    color: "bg-purple-500",
+  },
+];
+
+
+  const menuItems = [
+  {
+    title: "Dashboard",
+    icon: LayoutDashboard,
+    active: true,
+  },
+  {
+      title: "Mentorship",
+       icon: UserCheck 
+  },
+
+  {
+    title: "Departments",
+    icon: Building2,
+  },
+  {
+    title: "Students",
+    icon: GraduationCap,
+  },
+  {
+    title: "Courses",
+    icon: BookOpen,
+  },
+  {
+    title: "Assessments",
+    icon: ClipboardCheck,
+  },
+  {
+    title: "Placements",
+    icon: Briefcase,
+  },
+  {
+    title: "Recruiters",
+    icon: Users,
+  },
+   { title: "Scholarships", icon: Award },
+
+  { 
+      title: "Events", icon: Calendar
+  },
+
+  {
+    title: "Analytics",
+    icon: BarChart3,
+  },
+  {
+    title: "Reports",
+    icon: FileBarChart2,
+  },
+  {
+    title: "Settings",
+    icon: Settings,
+  },
+];
+
+
+const analyticsData = [
+  {
+    subject: "Admissions",
+    current: 92,
+    target: 100,
+  },
+  {
+    subject: "Academics",
+    current: 84,
+    target: 95,
+  },
+  {
+    subject: "Placements",
+    current: 88,
+    target: 96,
+  },
+  {
+    subject: "Research",
+    current: 62,
+    target: 90,
+  },
+  {
+    subject: "Infrastructure",
+    current: 79,
+    target: 94,
+  },
+  {
+    subject: "Industry",
+    current: 71,
+    target: 93,
+  },
+];
+
+
+
+
+
+
+
+  const activities = [
+  {
+    icon: CheckCircle2,
+    color: "bg-emerald-50 text-emerald-600",
+    title: "48 students completed Advanced Python Assessment",
+    time: "2 hours ago",
+  },
+  {
+    icon: FileText,
+    color: "bg-indigo-50 text-indigo-600",
+    title: "32 resumes reviewed and approved",
+    time: "4 hours ago",
+  },
+  {
+    icon: Building2,
+    color: "bg-blue-50 text-blue-600",
+    title: "Capgemini registered as a campus recruiter",
+    time: "6 hours ago",
+  },
+  {
+    icon: Calendar,
+    color: "bg-violet-50 text-violet-600",
+    title: "Campus drive scheduled for July 15",
+    time: "8 hours ago",
+  },
+  {
+    icon: Brain,
+    color: "bg-purple-50 text-purple-600",
+    title: "AI generated placement readiness report",
+    time: "12 hours ago",
+  },
+  {
+    icon: Award,
+    color: "bg-indigo-50 text-indigo-600",
+    title: "156 students earned AWS Certification",
+    time: "1 day ago",
+  },
+];
+
+
+
+const quickActions = [
+  {
+    icon: Upload,
+    title: "Upload Student Data",
+    color: "text-indigo-600 bg-indigo-50",
+  },
+  {
+    icon: Sparkles,
+    title: "Generate AI Report",
+    color: "text-violet-600 bg-violet-50",
+  },
+  {
+    icon: Calendar,
+    title: "Schedule Campus Drive",
+    color: "text-blue-600 bg-blue-50",
+  },
+  {
+    icon: UserPlus,
+    title: "Invite Recruiters",
+    color: "text-indigo-600 bg-indigo-50",
+  },
+  {
+    icon: ClipboardList,
+    title: "Publish Assessments",
+    color: "text-purple-600 bg-purple-50",
+  },
+  {
+    icon: FileBarChart2,
+    title: "Placement Report",
+    color: "text-emerald-600 bg-emerald-50",
+  },
+];
+
+
+
 
 const roadmapPipeline = [
   {
@@ -137,7 +438,130 @@ const departments = [
   
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 ">
+       <div className="h-screen bg-slate-50 flex overflow-hidden">
+
+
+{/* // sidebar  */}
+
+
+<div className="w-60 h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white flex flex-col">  
+
+  <div className="px-4 py-4 border-b border-white/10">
+
+    <div className="flex items-center gap-3">
+
+      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg">
+
+        <GraduationCap className="w-7 h-7 text-white"/>
+
+      </div>
+
+      <div>
+
+        <h2 className="text-2xl font-bold">
+          C2C
+        </h2>
+
+        <p className="text-sm text-indigo-200">
+          College Portal
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  {/* Navigation */}
+
+  <div className="flex-1 overflow-y-auto px-5 py-6 space-y-1">
+
+    {menuItems.map((item,index)=>{
+
+      const Icon=item.icon;
+
+      return(
+
+        <button
+          key={index}
+          className={`w-full flex items-center justify-between rounded-2xl px-3 py-2 transition-all duration-300
+
+          ${
+            item.active
+            ? "bg-gradient-to-r from-indigo-500/30 to-violet-500/20 border border-indigo-400/20 shadow-lg"
+            : "hover:bg-white/5"
+          }`}
+        >
+
+          <div className="flex items-center gap-4">
+
+            <Icon
+              className={`w-6 h-6 ${
+                item.active
+                ? "text-indigo-300"
+                : "text-slate-300"
+              }`}
+            />
+
+            <span
+              className={`font-medium text-lg ${
+                item.active
+                ? "text-white"
+                : "text-slate-300"
+              }`}
+            >
+              {item.title}
+            </span>
+
+          </div>
+
+          {item.active && (
+
+            <ChevronRight className="w-5 h-5 text-indigo-300"/>
+
+          )}
+
+        </button>
+
+      )
+
+    })}
+
+  </div>
+
+  {/* Bottom */}
+
+ <div className="p-4">
+
+    <div className="rounded-xl bg-white/5 border border-white/10 p-5">
+
+      <p className="text-sm text-slate-400">
+        Academic Year
+      </p>
+
+      <h3 className="text-2xl font-bold mt-2">
+        2025–26
+      </h3>
+
+      <div className="mt-4 h-2 rounded-full bg-slate-700">
+
+        <div className="h-2 rounded-full w-3/4 bg-gradient-to-r from-indigo-400 to-violet-500"/>
+
+      </div>
+
+      <p className="text-xs text-slate-400 mt-3">
+        Semester Progress • 75%
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-6">
    <div className=" relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 px-8 py-7 ">
 
   {/* Glow */}
@@ -153,15 +577,8 @@ const departments = [
           Academic Year 2025–26
         </div>
 
-        {/* Preview Badge */}
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] font-bold text-violet-400 tracking-wider uppercase mb-4">
-          <Sparkles className="w-3 h-3" />
-          Preview Version
-        </span>
-
-        {/* Title & Description */}
-        <h1 className="text-2xl font-black tracking-tight text-white mb-3">
-          College Dashboard
+        <h1 className="text-3xl font-bold text-white">
+          DIT University
         </h1>
 
         <p className="text-slate-400 mt-2 max-w-xl">
@@ -251,7 +668,7 @@ const departments = [
 
 </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mt-6 ">
         {stats.map((item, index) => {
           const Icon = item.icon;
 
@@ -525,6 +942,593 @@ const departments = [
 </div>
 
 
+
+<div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-8">
+
+  {/* Activity Feed */}
+
+  <div className="xl:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+
+    <h2 className="text-2xl font-bold text-slate-900">
+      Recent Activity
+    </h2>
+
+    <p className="text-slate-500 mt-1">
+      Latest updates across the institution
+    </p>
+
+    <div className="mt-8 space-y-6">
+
+      {activities.map((item, index) => {
+
+        const Icon = item.icon;
+
+        return (
+
+          <div
+            key={index}
+            className="flex items-start gap-4"
+          >
+
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.color}`}>
+
+              <Icon className="w-6 h-6" />
+
+            </div>
+
+            <div>
+
+              <h3 className="text-slate-800 font-medium">
+                {item.title}
+              </h3>
+
+              <p className="text-sm text-slate-400 mt-1">
+                {item.time}
+              </p>
+
+            </div>
+
+          </div>
+
+        );
+
+      })}
+
     </div>
+
+  </div>
+
+  {/* Quick Actions */}
+
+  <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+
+    <h2 className="text-2xl font-bold text-slate-900">
+      Quick Actions
+    </h2>
+
+    <p className="text-slate-500 mt-1">
+      Frequently used tools
+    </p>
+
+    <div className="grid grid-cols-2 gap-4 mt-8">
+
+      {quickActions.map((action, index) => {
+
+        const Icon = action.icon;
+
+        return (
+
+          <button
+            key={index}
+            className="rounded-3xl border border-slate-100 p-5 hover:shadow-md hover:-translate-y-1 transition-all duration-300"
+          >
+
+            <div className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center ${action.color}`}>
+
+              <Icon className="w-7 h-7" />
+
+            </div>
+
+            <p className="text-sm font-medium text-slate-700 mt-4 text-center leading-5">
+              {action.title}
+            </p>
+
+          </button>
+
+        );
+
+      })}
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+{/* recurter activity section */} 
+
+
+
+<div className="mt-8 bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
+
+  <div className="flex justify-between items-center mb-8">
+
+    <div>
+
+      <h2 className="text-2xl font-bold text-slate-900">
+        Recruiter Activity
+      </h2>
+
+      <p className="text-slate-500">
+        Live hiring updates from partnered companies
+      </p>
+
+    </div>
+
+    <button className="px-5 py-2 rounded-full bg-indigo-50 text-indigo-600 font-semibold hover:bg-indigo-100 transition">
+      View All
+    </button>
+
+  </div>
+
+  <div className="space-y-5">
+
+    {recruiterActivity.map((item, index) => (
+
+      <div
+        key={index}
+        className="flex items-center justify-between rounded-2xl border border-slate-100 p-5 hover:shadow-md transition-all"
+      >
+
+        <div className="flex items-center gap-5">
+
+          <div className={`w-14 h-14 rounded-2xl ${item.color} flex items-center justify-center`}>
+
+            <Building2 className="w-7 h-7 text-white"/>
+
+          </div>
+
+          <div>
+
+            <h3 className="text-lg font-semibold text-slate-900">
+              {item.company}
+            </h3>
+
+            <p className="text-slate-500">
+              {item.role}
+            </p>
+
+          </div>
+
+        </div>
+
+        <div className="hidden md:flex items-center gap-10">
+
+          <div className="text-center">
+
+            <Users className="w-5 h-5 mx-auto text-slate-400"/>
+
+            <p className="text-lg font-bold text-slate-900 mt-2">
+              {item.students}
+            </p>
+
+            <span className="text-xs text-slate-500">
+              Candidates
+            </span>
+
+          </div>
+
+          <div className="text-center">
+
+            <Clock className="w-5 h-5 mx-auto text-slate-400"/>
+
+            <div className="mt-2">
+
+              <span className="px-4 py-1 rounded-full bg-indigo-50 text-indigo-600 text-sm font-semibold">
+
+                {item.status}
+
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    ))}
+
+  </div>
+
+</div>
+
+
+  {/* // chart and analytics section */}
+<div className="mt-8 bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
+
+  <div className="flex justify-between items-center mb-8">
+
+    <div>
+
+      <h2 className="text-2xl font-bold text-slate-900">
+        Institution Analytics
+      </h2>
+
+      <p className="text-slate-500">
+        Current institutional performance vs target goals
+      </p>
+
+    </div>
+
+    <div className="px-5 py-2 rounded-full bg-violet-50 border border-violet-100">
+
+      <span className="text-violet-600 font-semibold">
+        AI Insights
+      </span>
+
+    </div>
+
+  </div>
+
+
+  
+
+
+  <div className="grid lg:grid-cols-2 gap-12">
+
+
+    {/* Radar Chart */}
+
+    <div className="h-[360px]">
+
+      <ResponsiveContainer width="100%" height="100%">
+
+        <RadarChart data={analyticsData}>
+
+          <PolarGrid />
+
+          <PolarAngleAxis dataKey="subject" />
+
+          <PolarRadiusAxis
+            angle={30}
+            domain={[0,100]}
+          />
+
+          <Radar
+            name="Current"
+            dataKey="current"
+            stroke="#4f46e5"
+            fill="#4f46e5"
+            fillOpacity={0.35}
+            strokeWidth={2}
+          />
+
+          <Radar
+            name="Target"
+            dataKey="target"
+            stroke="#8b5cf6"
+            fill="#8b5cf6"
+            fillOpacity={0.15}
+            strokeWidth={2}
+          />
+
+        </RadarChart>
+
+      </ResponsiveContainer>
+
+    </div>
+
+
+
+    {/* Right Side */}
+
+    <div className="space-y-10">
+
+
+      <div>
+
+        <h3 className="text-lg font-semibold text-slate-800 mb-5">
+          Strongest Areas
+        </h3>
+
+        {[
+          ["Student Satisfaction",94],
+          ["Faculty Quality",91],
+          ["Placement Support",88],
+          ["Campus Facilities",86],
+          ["Digital Learning",84],
+        ].map(([name,value],index)=>(
+
+          <div
+            key={index}
+            className="flex items-center justify-between mb-5"
+          >
+
+            <span className="text-slate-700">
+              {name}
+            </span>
+
+            <div className="flex items-center gap-4">
+
+              <div className="w-32 h-2 rounded-full bg-slate-100">
+
+                <div
+                  className="h-2 rounded-full bg-indigo-500"
+                  style={{width:`${value}%`}}
+                />
+
+              </div>
+
+              <span className="font-semibold text-slate-700">
+                {value}%
+              </span>
+
+            </div>
+
+          </div>
+
+        ))}
+
+      </div>
+
+
+
+      <div>
+
+        <h3 className="text-lg font-semibold text-slate-800 mb-5">
+          Needs Attention
+        </h3>
+
+        {[
+          ["Research Publications","42%"],
+          ["Industry Partnerships","38%"],
+          ["International Exchange","31%"],
+          ["Innovation Labs","27%"],
+          ["Startup Incubation","24%"],
+        ].map(([name,value],index)=>(
+
+          <div
+            key={index}
+            className="flex justify-between items-center mb-4"
+          >
+
+            <span className="text-slate-700">
+              {name}
+            </span>
+
+            <span className="px-4 py-1 rounded-full bg-red-50 text-red-500 font-semibold text-sm border border-red-100">
+              {value} Gap
+            </span>
+
+          </div>
+
+        ))}
+
+      </div>
+
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<div className="mt-8 bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
+
+    <div className="flex justify-between items-center mb-8">
+
+        <div>
+
+            <h2 className="text-2xl font-bold text-slate-900">
+                Upcoming Campus Drives
+            </h2>
+
+            <p className="text-slate-500">
+                Scheduled recruitment events
+            </p>
+
+        </div>
+
+        <button className="text-indigo-600 font-semibold">
+            View Calendar
+        </button>
+
+    </div>
+
+    <div className="space-y-5">
+
+        {upcomingDrives.map((item, index) => (
+
+            <div
+                key={index}
+                className="border border-slate-100 rounded-2xl p-5 hover:shadow-lg transition-all"
+            >
+
+                <div className="flex justify-between items-center">
+
+                    <div className="flex items-center gap-5">
+
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center">
+
+                            <Building2 className="w-7 h-7 text-white"/>
+
+                        </div>
+
+                        <div>
+
+                            <h3 className="text-lg font-bold text-slate-900">
+
+                                {item.company}
+
+                            </h3>
+
+                            <p className="text-slate-500">
+
+                                {item.role}
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div className="text-right">
+
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-sm font-semibold">
+
+                            <CalendarDays className="w-4 h-4"/>
+
+                            {item.date}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div className="flex flex-wrap gap-6 mt-6 text-sm text-slate-500">
+
+                    <div className="flex items-center gap-2">
+
+                        <GraduationCap className="w-4 h-4 text-indigo-500"/>
+
+                        {item.branch}
+
+                    </div>
+
+                    <div className="flex items-center gap-2">
+
+                        <Users className="w-4 h-4 text-violet-500"/>
+
+                        {item.students} Registered
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        ))}
+
+    </div>
+
+</div>
+
+
+
+
+{/* // ai insights section */}
+
+<div className="mt-8 bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
+
+    <div className="flex items-center justify-between mb-8">
+
+        <div>
+
+            <h2 className="text-2xl font-bold text-slate-900">
+                AI Insights
+            </h2>
+
+            <p className="text-slate-500">
+                AI powered recommendations for administrators
+            </p>
+
+        </div>
+
+        <div className="px-4 py-2 rounded-full bg-violet-50 border border-violet-100">
+
+            <span className="text-violet-600 font-semibold">
+                Smart Suggestions
+            </span>
+
+        </div>
+
+    </div>
+
+    <div className="grid md:grid-cols-2 gap-5">
+
+        {aiInsights.map((item, index) => {
+
+            const styles = {
+                emerald: {
+                    bg: "bg-emerald-50",
+                    border: "border-emerald-100",
+                    dot: "bg-emerald-500",
+                },
+                amber: {
+                    bg: "bg-amber-50",
+                    border: "border-amber-100",
+                    dot: "bg-amber-500",
+                },
+                indigo: {
+                    bg: "bg-indigo-50",
+                    border: "border-indigo-100",
+                    dot: "bg-indigo-500",
+                },
+                violet: {
+                    bg: "bg-violet-50",
+                    border: "border-violet-100",
+                    dot: "bg-violet-500",
+                },
+            };
+
+            const style =
+                styles[item.color as keyof typeof styles];
+
+            return (
+
+                <div
+                    key={index}
+                    className={`${style.bg} ${style.border} border rounded-2xl p-5 hover:shadow-md transition-all`}
+                >
+
+                    <div className="flex gap-4">
+
+                        <div
+                            className={`w-3 h-3 rounded-full mt-2 ${style.dot}`}
+                        />
+
+                        <div>
+
+                            <h3 className="font-semibold text-slate-900">
+                                {item.title}
+                            </h3>
+
+                            <p className="text-slate-500 mt-2 text-sm">
+                                {item.description}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            );
+
+        })}
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+    </div> </div>
+    
   );
 };
