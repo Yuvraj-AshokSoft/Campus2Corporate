@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Briefcase,
   GraduationCap,
@@ -104,6 +104,7 @@ const HERO_PHRASES = ["Power Campus Placements", "Build Industry-Ready Talent", 
 
 
 export const LandingPage: React.FC = () => {
+  const navigate = useNavigate();
   const [activeDashboardTab, setActiveDashboardTab] = useState<'student' | 'recruiter' | 'college'>('student');
   const [hoveredStakeholder, setHoveredStakeholder] = useState<string | null>(null);
 
@@ -510,7 +511,10 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Mentor Card */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-fuchsia-400 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group shadow-lg">
+            <div 
+              onClick={() => navigate('/mentor-dashboard')}
+              className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-fuchsia-400 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group shadow-lg cursor-pointer"
+            >
               <div className="w-11 h-11 rounded-xl bg-fuchsia-50 flex items-center justify-center text-fuchsia-600 mb-5 group-hover:bg-fuchsia-600 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
                 <Users className="w-5.5 h-5.5" />
               </div>
@@ -1193,6 +1197,11 @@ export const LandingPage: React.FC = () => {
                       style={{ top: node.top, left: node.left }}
                       onMouseEnter={() => setHoveredStakeholder(node.id)}
                       onMouseLeave={() => setHoveredStakeholder(null)}
+                      onClick={() => {
+                        if (node.id === 'mentor') {
+                          navigate('/mentor-dashboard');
+                        }
+                      }}
                     >
                       <div className={`w-12 h-12 rounded-2xl bg-slate-50 border ${isActive ? 'border-[#5e17eb] shadow-xl bg-white shadow-[#5e17eb]/20' : 'border-slate-200'} flex items-center justify-center text-slate-700 transition-all duration-300 shadow-sm relative cursor-pointer`}>
                         <node.icon className={`w-5 h-5 ${isActive ? 'text-[#5e17eb]' : 'text-slate-500'}`} />
