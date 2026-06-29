@@ -16,7 +16,6 @@ import {
   BookOpenCheck,
   Sparkles,
   Send,
-  X,
   FileText,
   CheckCircle,
   AlertCircle,

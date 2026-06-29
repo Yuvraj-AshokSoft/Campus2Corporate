@@ -101,12 +101,50 @@ const ScrollReveal: React.FC<{ children: React.ReactNode; className?: string; id
 
 const HERO_PHRASES = ["Power Campus Placements", "Build Industry-Ready Talent", "Accelerate Enterprise Hiring"];
 
+// ─── Inline Icon SVG Helpers for Authentication Onboarding Flow ────────────
+const CloseIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
 
+const ShieldIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+
+const EyeIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+const EyeOffIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+    <line x1="1" y1="1" x2="23" y2="23" />
+  </svg>
+);
+
+const ChevronLeftIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M15 18l-6-6 6-6" />
+  </svg>
+);
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeDashboardTab, setActiveDashboardTab] = useState<'student' | 'recruiter' | 'college'>('student');
   const [hoveredStakeholder, setHoveredStakeholder] = useState<string | null>(null);
+
+  // Onboarding authentication states
+  const [showAuthFlow, setShowAuthFlow] = useState(false);
+  const [authStep, setAuthStep] = useState<1 | 2>(1);
+  const [selectedRole, setSelectedRole] = useState<'Student' | 'Mentor' | 'College / Institute' | 'Recruiter'>('Student');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Hero phrase rotation state
   const [phraseIndex, setPhraseIndex] = useState(0);
@@ -262,16 +300,25 @@ export const LandingPage: React.FC = () => {
             </div>
           </nav>
 
-          <div className="flex items-center space-x-5">
-            <button className="hidden sm:inline-flex text-sm text-slate-600 hover:text-slate-900 transition-colors font-semibold cursor-pointer">
-              Sign In
-            </button>
-            <a
-              href="#cta"
-              className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-slate-900 text-sm font-semibold text-white hover:bg-slate-800 hover:shadow-lg transition-all duration-300"
+          <div className="flex items-center space-x-3">
+            <button 
+              onClick={() => {
+                setShowAuthFlow(true);
+                setAuthStep(1);
+              }}
+              className="inline-flex items-center justify-center px-4.5 py-2 border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm font-semibold text-xs rounded-xl transition-all cursor-pointer"
             >
-              Request Demo
-            </a>
+              Login
+            </button>
+            <button
+              onClick={() => {
+                setShowAuthFlow(true);
+                setAuthStep(1);
+              }}
+              className="inline-flex items-center justify-center px-5 py-2 bg-[#5e17eb] hover:bg-[#4b12bc] text-xs font-bold text-white rounded-xl shadow-sm transition-all cursor-pointer"
+            >
+              Get Started
+            </button>
           </div>
         </div>
       </header>
@@ -310,13 +357,16 @@ export const LandingPage: React.FC = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-2 w-full sm:w-auto">
-                <a
-                  href="#cta"
-                  className="group inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-[#5e17eb] hover:bg-[#4b12bc] text-base font-semibold text-white shadow-lg shadow-purple-500/25 hover:-translate-y-0.5 transition-all duration-300"
+                <button
+                  onClick={() => {
+                    setShowAuthFlow(true);
+                    setAuthStep(1);
+                  }}
+                  className="group inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-[#5e17eb] hover:bg-[#4b12bc] text-base font-semibold text-white shadow-lg shadow-purple-500/25 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
                 >
                   Initiate Integration
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
-                </a>
+                </button>
                 <a
                   href="#solution"
                   className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-base font-semibold text-slate-700 hover:bg-slate-50 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 shadow-sm"
@@ -1917,6 +1967,221 @@ export const LandingPage: React.FC = () => {
 
         </div>
       </footer>
+
+      {showAuthFlow && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300 text-left">
+          <div className={`bg-white rounded-3xl shadow-2xl border border-slate-100 w-full ${
+            authStep === 1 ? 'max-w-2xl' : 'max-w-md'
+          } p-6 md:p-8 relative overflow-hidden flex flex-col transition-all duration-305 transition-all duration-300 animate-in fade-in zoom-in-95 duration-200`}>
+            
+            {/* Close button */}
+            <button 
+              onClick={() => setShowAuthFlow(false)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 bg-slate-50 text-slate-400 hover:text-slate-700 transition-colors z-50 cursor-pointer"
+            >
+              <CloseIcon className="w-4 h-4" />
+            </button>
+
+            {authStep === 1 ? (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Step 1: Choose Your Profile</h2>
+                  <p className="text-xs text-slate-500 mt-1">Select the option that best describes you.</p>
+                </div>
+
+                {/* Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    {
+                      id: 'Student' as const,
+                      name: 'Student',
+                      sub: 'Learn skills, take assessments, build projects and get placed.',
+                      themeColor: 'bg-purple-650 hover:bg-purple-750 bg-purple-600',
+                      iconBg: 'bg-purple-50 text-purple-600 border border-purple-100',
+                      icon: GraduationCap
+                    },
+                    {
+                      id: 'Mentor' as const,
+                      name: 'Mentor',
+                      sub: 'Guide students, conduct sessions and rate projects.',
+                      themeColor: 'bg-emerald-650 hover:bg-emerald-750 bg-emerald-600',
+                      iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
+                      icon: Users
+                    },
+                    {
+                      id: 'College / Institute' as const,
+                      name: 'College / Institute',
+                      sub: 'Track students progress, assign mentors and manage placements.',
+                      themeColor: 'bg-blue-650 hover:bg-blue-750 bg-blue-600',
+                      iconBg: 'bg-blue-50 text-blue-600 border border-blue-100',
+                      icon: Building
+                    },
+                    {
+                      id: 'Recruiter' as const,
+                      name: 'Recruiter',
+                      sub: 'Post jobs, find talent, conduct interviews and hire.',
+                      themeColor: 'bg-orange-500 hover:bg-orange-600',
+                      iconBg: 'bg-orange-50 text-orange-500 border border-orange-100',
+                      icon: Briefcase
+                    }
+                  ].map((role) => (
+                    <div 
+                      key={role.id}
+                      className="border border-slate-200/80 rounded-2xl p-5 flex flex-col items-center justify-between text-center bg-white hover:border-slate-350 hover:shadow-lg transition-all duration-300 group"
+                    >
+                      <div className="flex flex-col items-center">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${role.iconBg} shrink-0`}>
+                          <role.icon className="w-5.5 h-5.5" />
+                        </div>
+                        <h3 className="text-sm font-bold text-slate-800 mt-4">{role.name}</h3>
+                        <p className="text-[11px] text-slate-500 leading-relaxed mt-2.5 px-2 font-semibold">
+                          {role.sub}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSelectedRole(role.id);
+                          setAuthStep(2);
+                        }}
+                        className={`w-full ${role.themeColor} text-white font-bold rounded-xl text-xs py-2.5 mt-5 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm group-hover:-translate-y-0.5`}
+                      >
+                        <span>Continue</span>
+                        <span className="font-bold">➔</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Footer Security Badge */}
+                <div className="bg-slate-50 border border-slate-100/80 p-3.5 rounded-2xl flex items-start gap-3 mt-4">
+                  <ShieldIcon className="text-slate-400 w-4.5 h-4.5 mt-0.5 shrink-0" />
+                  <p className="text-[10px] text-slate-500 leading-normal font-bold">
+                    <span className="font-extrabold text-slate-700">One Email. One Identity. One Role. </span>
+                    {"You can create only one account with your email/phone number."}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Back button */}
+                <button 
+                  onClick={() => setAuthStep(1)}
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                >
+                  <ChevronLeftIcon className="w-4 h-4" />
+                  <span>Back to Step 1</span>
+                </button>
+
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Step 2: Create Your Account ({selectedRole})</h2>
+                  <p className="text-xs text-slate-500 mt-1">Let{"'"}s create your {selectedRole.toLowerCase()} account.</p>
+                </div>
+
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  setShowAuthFlow(false);
+                  alert(`Successfully registered as ${selectedRole}!`);
+                }} className="space-y-4 text-xs font-bold text-slate-700">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">Full Name</label>
+                    <input
+                      type="text"
+                      placeholder="Enter your full name"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500 text-xs font-semibold text-slate-800"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">
+                      {selectedRole === 'Student' ? 'College Email' : 
+                       selectedRole === 'Mentor' ? 'Work Email' : 
+                       selectedRole === 'College / Institute' ? 'Institutional Email' : 'Official Email'}
+                    </label>
+                    <input
+                      type="email"
+                      placeholder={
+                        selectedRole === 'Student' ? 'name@college.edu.in' : 
+                        selectedRole === 'Mentor' ? 'name@company.com' : 
+                        selectedRole === 'College / Institute' ? 'placement@college.edu' : 'hiring@company.com'
+                      }
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500 text-xs font-semibold text-slate-800"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">Phone Number</label>
+                    <input
+                      type="text"
+                      placeholder="+91 98765 43210"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500 text-xs font-semibold text-slate-800"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">Password</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Create a strong password"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500 pr-10 text-xs font-semibold text-slate-800"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-655 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 py-1">
+                    <input
+                      type="checkbox"
+                      id="termsAgree"
+                      className="rounded border-slate-350 text-purple-650 focus:ring-purple-500 w-3.5 h-3.5 cursor-pointer"
+                      required
+                    />
+                    <label htmlFor="termsAgree" className="text-[10px] text-slate-500 font-semibold cursor-pointer">
+                      I agree to the <span className="text-[#5e17eb] hover:underline">Terms of Service</span> & <span className="text-[#5e17eb] hover:underline">Privacy Policy</span>
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all ${
+                      selectedRole === 'Student' ? 'bg-purple-600 hover:bg-purple-750' : 
+                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-750' : 
+                      selectedRole === 'College / Institute' ? 'bg-blue-600 hover:bg-blue-750' : 'bg-orange-500 hover:bg-orange-600'
+                    }`}
+                  >
+                    Continue
+                  </button>
+
+                  <div className="text-center pt-2 text-[10px] text-slate-400 font-bold">
+                    <span>Already have an account? </span>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setShowAuthFlow(false);
+                        alert("Mock Login Flow triggered!");
+                      }} 
+                      className="text-[#5e17eb] hover:underline font-black cursor-pointer"
+                    >
+                      Login
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
 
     </div>
   );
