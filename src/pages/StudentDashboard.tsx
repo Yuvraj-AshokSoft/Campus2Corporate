@@ -8,6 +8,7 @@ import {
   Calendar,
   Award,
   ChevronDown,
+  ChevronRight,
   Mail,
   Phone,
   GraduationCap,
@@ -20,7 +21,17 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-  CalendarDays
+  CalendarDays,
+  Upload,
+  Lightbulb,
+  Eye,
+  RefreshCw,
+  LayoutDashboard,
+  ClipboardCheck,
+  Briefcase,
+  MessageSquareText,
+  BadgeCheck,
+  Settings,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -49,6 +60,19 @@ const modules = [
   { title: 'Python Programming', category: 'Programming Fundamentals', progress: 45, color: 'bg-emerald-600' },
   { title: 'Data Structures & Algorithms', category: 'Technical Interview Prep', progress: 60, color: 'bg-violet-600' },
   { title: 'Aptitude Training', category: 'Placement Prep', progress: 85, color: 'bg-amber-500' },
+];
+
+const menuItems = [
+  { title: 'Dashboard', icon: LayoutDashboard, active: true },
+  { title: 'My Profile', icon: UserCheck },
+  { title: 'My Courses', icon: BookOpen },
+  { title: 'Assessments', icon: ClipboardCheck },
+  { title: 'Placements', icon: Briefcase },
+  { title: 'Mentorship', icon: Users },
+  { title: 'Career Coach', icon: MessageSquareText },
+  { title: 'Resume Score', icon: FileText },
+  { title: 'Certificates', icon: BadgeCheck },
+  { title: 'Settings', icon: Settings },
 ];
 
 const studentContext = `
@@ -149,14 +173,7 @@ Rules:
   const dayDotColors = ['bg-indigo-500', 'bg-violet-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500'];
 
   return (
-  
-
-    
-    
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-
-
-      
       <div className="flex items-start justify-between mb-5">
         <div>
           <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
@@ -204,7 +221,7 @@ Rules:
           {plan.map((day, i) => (
             <div key={i} className={`rounded-xl border p-3 ${dayColors[i]}`}>
               <div className="flex items-center gap-2 mb-2">
-                <span className={`w-2 h-2 rounded-full ${dotColors[i]}`} />
+                <span className={`w-2 h-2 rounded-full ${dayDotColors[i]}`} />
                 <span className="text-xs font-semibold text-slate-700">{day.day}</span>
               </div>
               <ul className="space-y-1">
@@ -217,7 +234,6 @@ Rules:
               </ul>
             </div>
           ))}
-
 
           <button
             onClick={generatePlan}
@@ -281,11 +297,7 @@ ${studentContext}`,
   const circumference = 2 * Math.PI * 28;
 
   return (
-
-    
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-
-
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
@@ -328,7 +340,6 @@ ${studentContext}`,
 
       {result && (
         <div className="flex flex-col sm:flex-row gap-6">
-          {/* Score Ring */}
           <div className="flex flex-col items-center justify-center flex-shrink-0">
             <svg width="72" height="72" viewBox="0 0 72 72">
               <circle cx="36" cy="36" r="28" fill="none" stroke="#f1f5f9" strokeWidth="6" />
@@ -347,7 +358,6 @@ ${studentContext}`,
             <p className="text-[10px] text-slate-400 mt-8 font-medium">Readiness Score</p>
           </div>
 
-          {/* Details */}
           <div className="flex-1 space-y-4">
             <div>
               <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Strengths</p>
@@ -491,7 +501,6 @@ ${resumeText}`,
 
   return (
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-      {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
           <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
@@ -503,7 +512,6 @@ ${resumeText}`,
         <span className="text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full">AI</span>
       </div>
 
-      {/* Upload state */}
       {!loading && !result && (
         <>
           <div
@@ -561,7 +569,6 @@ ${resumeText}`,
         </>
       )}
 
-      {/* Loading */}
       {loading && (
         <div className="flex flex-col items-center py-8 gap-2">
           <Loader2 className="w-5 h-5 text-amber-500 animate-spin" />
@@ -569,10 +576,8 @@ ${resumeText}`,
         </div>
       )}
 
-      {/* Result */}
       {result && (
         <div className="space-y-5">
-          {/* Score summary */}
           <div className="flex items-center gap-5">
             <div className="relative flex-shrink-0 w-[80px] h-[80px]">
               <svg width="80" height="80" viewBox="0 0 80 80">
@@ -602,7 +607,6 @@ ${resumeText}`,
             </div>
           </div>
 
-          {/* Breakdown bars */}
           <div>
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Score Breakdown</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
@@ -623,7 +627,6 @@ ${resumeText}`,
             </div>
           </div>
 
-          {/* Keywords */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Keywords found</p>
@@ -647,7 +650,6 @@ ${resumeText}`,
             </div>
           </div>
 
-          {/* Tip */}
           <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-3 flex gap-2.5">
             <Lightbulb className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0 mt-0.5" />
             <div>
@@ -656,7 +658,6 @@ ${resumeText}`,
             </div>
           </div>
 
-          {/* Visibility note */}
           <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
             <Eye className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
             <p className="text-[11px] text-slate-400">
@@ -666,7 +667,6 @@ ${resumeText}`,
             </p>
           </div>
 
-          {/* Re-score */}
           <button
             onClick={reset}
             className="w-full text-xs text-amber-600 hover:text-amber-700 font-medium py-2 border border-amber-100 rounded-lg hover:bg-amber-50 transition-colors flex items-center justify-center gap-2"
@@ -835,257 +835,357 @@ export const StudentDashboard: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 text-slate-800 antialiased">
-      
-      {/* Premium Header */}
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Student Dashboard
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Welcome back, <span className="font-semibold text-slate-700">Yuvraj Singh</span> 👋
-          </p>
+    <div className="h-screen bg-slate-50 flex overflow-hidden">
+
+      {/* ── Sidebar ── */}
+      <div className="w-60 h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white flex flex-col">
+
+        <div className="px-4 py-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg">
+              <GraduationCap className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">C2C</h2>
+              <p className="text-sm text-indigo-200">Student Portal</p>
+            </div>
+          </div>
         </div>
 
-        <div className="relative self-stretch sm:self-auto">
-          <button
-            onClick={() => setShowDropdown(!showDropdown)}
-            className="flex items-center gap-3 p-1.5 pr-4 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200/60 transition-all w-full sm:w-auto"
-          >
-            <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-sm text-white shadow-md shadow-indigo-200">
-              YS
-            </div>
-            <div className="text-left hidden xs:block">
-              <p className="text-xs font-semibold text-slate-800 leading-tight">Yuvraj Singh</p>
-              <p className="text-[10px] text-slate-500 leading-tight">B.Tech CSE - 4th Year</p>
-            </div>
-            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
-          </button>
-
-          {showDropdown && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-[9999]">  
-              <div className="p-3 border-b border-slate-100">
-                <h3 className="font-semibold text-sm text-slate-950">Yuvraj Singh</h3>
-                <p className="text-xs text-slate-500">yuvraj@example.com</p>
-              </div>
-              {['My Profile', 'My Courses', 'Certificates', 'Settings'].map((item) => (
-                <button key={item} className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors">
-                  {item}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* ── Left column ── */}
-        <div className="space-y-6">
-
-          {/* Profile Card */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-600" />
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center font-bold text-lg text-white shadow-inner">
-                YS
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold text-slate-900 leading-tight">Yuvraj Singh</h2>
-                  <span className="bg-indigo-50 text-indigo-700 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-indigo-100">
-                    STU001
+        {/* Navigation */}
+        <div className="flex-1 overflow-y-auto px-5 py-6 space-y-1">
+          {menuItems.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={index}
+                className={`w-full flex items-center justify-between rounded-2xl px-3 py-2 transition-all duration-300
+                ${
+                  item.active
+                    ? 'bg-gradient-to-r from-indigo-500/30 to-violet-500/20 border border-indigo-400/20 shadow-lg'
+                    : 'hover:bg-white/5'
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <Icon className={`w-6 h-6 ${item.active ? 'text-indigo-300' : 'text-slate-300'}`} />
+                  <span className={`font-medium text-lg ${item.active ? 'text-white' : 'text-slate-300'}`}>
+                    {item.title}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">B.Tech Computer Science & Eng.</p>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-5 border-t border-slate-100 space-y-4">
-              {[
-                { icon: Mail, label: 'Email', value: 'yuvraj@example.com' },
-                { icon: Phone, label: 'Phone', value: '+91 9876543210' },
-                { icon: GraduationCap, label: 'University', value: 'Campus2Corporate University' },
-                { icon: MapPin, label: 'DOB', value: '30-12-2000' },
-              ].map(({ icon: Icon, label, value }) => (
-                <div key={label} className="flex items-center gap-3 text-xs">
-                  <Icon className="w-4 h-4 text-slate-400" />
-                  <div>
-                    <p className="text-slate-400">{label}</p>
-                    <p className="font-medium text-slate-700">{value}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Registration Overview */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <h2 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <BookOpenCheck className="w-4 h-4 text-indigo-500" />
-              Registration Overview
-            </h2>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: 'Registered', val: '5', bg: 'bg-indigo-50/50', text: 'text-indigo-700', border: 'border-indigo-100/50' },
-                { label: 'Completed', val: '2', bg: 'bg-emerald-50/50', text: 'text-emerald-700', border: 'border-emerald-100/50' },
-                { label: 'Pending', val: '3', bg: 'bg-amber-50/50', text: 'text-amber-700', border: 'border-amber-100/50' },
-                { label: 'Certificates', val: '1', bg: 'bg-purple-50/50', text: 'text-purple-700', border: 'border-purple-100/50' },
-              ].map((stat) => (
-                <div key={stat.label} className={`p-4 rounded-xl border ${stat.bg} ${stat.border}`}>
-                  <p className="text-xs text-slate-500 font-medium">{stat.label}</p>
-                  <p className={`text-2xl font-bold mt-1 ${stat.text}`}>{stat.val}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* AI Study Planner */}
-          <AIStudyPlanner />
+                {item.active && <ChevronRight className="w-5 h-5 text-indigo-300" />}
+              </button>
+            );
+          })}
         </div>
 
-        {/* ── Right column ── */}
-        <div className="lg:col-span-2 space-y-6">
-
-          {/* Performance Chart */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <h2 className="text-base font-semibold text-slate-900">Performance Overview</h2>
-                <p className="text-xs text-slate-500">Learning score metric progression</p>
-              </div>
+        {/* Bottom */}
+        <div className="p-4">
+          <div className="rounded-xl bg-white/5 border border-white/10 p-5">
+            <p className="text-sm text-slate-400">Overall Progress</p>
+            <h3 className="text-2xl font-bold mt-2">65%</h3>
+            <div className="mt-4 h-2 rounded-full bg-slate-700">
+              <div className="h-2 rounded-full w-2/3 bg-gradient-to-r from-indigo-400 to-violet-500" />
             </div>
-            <div className="w-full" style={{ height: 235 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="scoreColor" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1e293b',
-                      borderRadius: '8px',
-                      border: 'none',
-                      color: '#f8fafc',
-                      fontSize: '12px',
-                    }}
-                  />
-                  <Area type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#scoreColor)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* AI Placement Readiness Analyzer */}
-          <AIProfileAnalyzer />
-
-          {/* AI ATS Resume Scorer */}
-          <AIATSScorer />
-
-          {/* Modules & Learning Progress */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h2 className="text-base font-semibold text-slate-900">Modules & Learning Progress</h2>
-                <p className="text-xs text-slate-500">Track and monitor your course completion status</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {modules.map((mod, idx) => (
-                <div key={idx} className="p-4 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors bg-slate-50/30">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-semibold text-sm text-slate-800">{mod.title}</h3>
-                      <p className="text-[10px] text-slate-400 mt-0.5">{mod.category}</p>
-                    </div>
-                    <span className="text-xs font-bold text-slate-600">{mod.progress}%</span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2 mt-3">
-                    <div
-                      className={`h-2 rounded-full ${mod.color} transition-all duration-500`}
-                      style={{ width: `${mod.progress}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="text-xs text-slate-400 mt-3">4th Year • Semester 8</p>
           </div>
         </div>
       </div>
 
-      {/* Roadmap Section */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mt-6 overflow-hidden">
-        <div className="text-center max-w-md mx-auto mb-8">
-          <h2 className="text-lg font-bold text-slate-950">Roadmap to Placement</h2>
-          <p className="text-xs text-slate-500 mt-1">Navigate through step-by-step career readiness milestones</p>
+      {/* ── Main content ── */}
+      <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-6">
+
+        {/* Hero */}
+        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 px-8 py-7">
+          <div className="absolute top-0 right-0 w-72 h-72 bg-violet-500/10 blur-3xl rounded-full" />
+
+          <div className="relative z-10">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-400 text-xs mb-4">
+                  B.Tech CSE • 4th Year
+                </div>
+
+                <h1 className="text-3xl font-bold text-white">Welcome back, Yuvraj 👋</h1>
+
+                <p className="text-slate-400 mt-2 max-w-xl">
+                  Track your courses, placement readiness, and AI-powered career tools — all in one place.
+                </p>
+              </div>
+
+              <div className="relative">
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="flex items-center gap-3 p-1.5 pr-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center font-bold text-sm text-white shadow-md">
+                    YS
+                  </div>
+                  <div className="text-left hidden xs:block">
+                    <p className="text-xs font-semibold text-white leading-tight">Yuvraj Singh</p>
+                    <p className="text-[10px] text-slate-400 leading-tight">STU001</p>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-[9999]">
+                    <div className="p-3 border-b border-slate-100">
+                      <h3 className="font-semibold text-sm text-slate-950">Yuvraj Singh</h3>
+                      <p className="text-xs text-slate-500">yuvraj@example.com</p>
+                    </div>
+                    {['My Profile', 'My Courses', 'Certificates', 'Settings'].map((item) => (
+                      <button key={item} className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* KPI strip */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                <p className="text-slate-400 text-sm">Registered</p>
+                <h2 className="text-3xl font-bold text-white mt-1">5</h2>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                <p className="text-slate-400 text-sm">Completed</p>
+                <h2 className="text-3xl font-bold text-emerald-300 mt-1">2</h2>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                <p className="text-slate-400 text-sm">Pending</p>
+                <h2 className="text-3xl font-bold text-amber-300 mt-1">3</h2>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+                <p className="text-slate-400 text-sm">Certificates</p>
+                <h2 className="text-3xl font-bold text-violet-300 mt-1">1</h2>
+              </div>
+            </div>
+
+            {/* Quick tags */}
+            <div className="flex flex-wrap gap-3 mt-6">
+              <div className="px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-sm">
+                React Assignment Due Jun 25
+              </div>
+              <div className="px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-sm">
+                Aptitude Assessment Jun 28
+              </div>
+              <div className="px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm">
+                Mock Interview Jul 5
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="relative">
-          <div className="hidden lg:block absolute top-[26px] left-[6%] right-[6%] h-[2px] bg-slate-100" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-5">
-            {[
-              { step: '01', title: 'Profile Building', desc: 'Secure, verified credentials.', icon: UserCheck },
-              { step: '02', title: 'Skill Assessment', desc: 'AI proctored baseline tests.', icon: Brain },
-              { step: '03', title: 'Learning Roadmap', desc: 'Curated targeted content.', icon: BookOpen },
-              { step: '04', title: 'Mentorship', desc: 'Mock trials & expert reviews.', icon: Users },
-              { step: '05', title: 'AI Matching', desc: 'Vector matching active roles.', icon: Cpu },
-              { step: '06', title: 'Interview', desc: 'Calendar scheduling.', icon: Calendar },
-              { step: '07', title: 'Placement', desc: 'Final contract signing.', icon: Award },
-            ].map((item) => (
-              <div
-                key={item.step}
-                className="relative flex flex-col items-center text-center p-4 bg-slate-50/50 rounded-xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 hover:border-indigo-100 hover:bg-white group"
-              >
-                <div className="w-12 h-12 rounded-full bg-white border border-slate-200/80 flex items-center justify-center text-slate-600 shadow-sm relative z-10 group-hover:border-indigo-200 group-hover:text-indigo-600 group-hover:shadow-md transition-all">
-                  <item.icon className="w-5 h-5" />
-                  <span className="absolute -top-1 -right-1 text-[8px] bg-slate-100 border border-slate-200 text-slate-500 font-mono w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm group-hover:bg-indigo-50 group-hover:border-indigo-100 group-hover:text-indigo-600 transition-colors">
-                    {item.step}
-                  </span>
+        {/* Main grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+
+          {/* ── Left column ── */}
+          <div className="space-y-6">
+
+            {/* Profile Card */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-600" />
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center font-bold text-lg text-white shadow-inner">
+                  YS
                 </div>
-                <h3 className="text-xs font-semibold text-slate-700 mt-4 group-hover:text-slate-900 transition-colors">{item.title}</h3>
-                <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">{item.desc}</p>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-slate-900 leading-tight">Yuvraj Singh</h2>
+                    <span className="bg-indigo-50 text-indigo-700 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-indigo-100">
+                      STU001
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">B.Tech Computer Science & Eng.</p>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-5 border-t border-slate-100 space-y-4">
+                {[
+                  { icon: Mail, label: 'Email', value: 'yuvraj@example.com' },
+                  { icon: Phone, label: 'Phone', value: '+91 9876543210' },
+                  { icon: GraduationCap, label: 'University', value: 'Campus2Corporate University' },
+                  { icon: MapPin, label: 'DOB', value: '30-12-2000' },
+                ].map(({ icon: Icon, label, value }) => (
+                  <div key={label} className="flex items-center gap-3 text-xs">
+                    <Icon className="w-4 h-4 text-slate-400" />
+                    <div>
+                      <p className="text-slate-400">{label}</p>
+                      <p className="font-medium text-slate-700">{value}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Registration Overview */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+              <h2 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <BookOpenCheck className="w-4 h-4 text-indigo-500" />
+                Registration Overview
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'Registered', val: '5', bg: 'bg-indigo-50/50', text: 'text-indigo-700', border: 'border-indigo-100/50' },
+                  { label: 'Completed', val: '2', bg: 'bg-emerald-50/50', text: 'text-emerald-700', border: 'border-emerald-100/50' },
+                  { label: 'Pending', val: '3', bg: 'bg-amber-50/50', text: 'text-amber-700', border: 'border-amber-100/50' },
+                  { label: 'Certificates', val: '1', bg: 'bg-purple-50/50', text: 'text-purple-700', border: 'border-purple-100/50' },
+                ].map((stat) => (
+                  <div key={stat.label} className={`p-4 rounded-xl border ${stat.bg} ${stat.border}`}>
+                    <p className="text-xs text-slate-500 font-medium">{stat.label}</p>
+                    <p className={`text-2xl font-bold mt-1 ${stat.text}`}>{stat.val}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* AI Study Planner */}
+            <AIStudyPlanner />
+          </div>
+
+          {/* ── Right column ── */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* Performance Chart */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">Performance Overview</h2>
+                  <p className="text-xs text-slate-500">Learning score metric progression</p>
+                </div>
+              </div>
+              <div className="w-full" style={{ height: 235 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={performanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="scoreColor" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1e293b',
+                        borderRadius: '8px',
+                        border: 'none',
+                        color: '#f8fafc',
+                        fontSize: '12px',
+                      }}
+                    />
+                    <Area type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#scoreColor)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* AI Placement Readiness Analyzer */}
+            <AIProfileAnalyzer />
+
+            {/* AI ATS Resume Scorer */}
+            <AIATSScorer />
+
+            {/* Modules & Learning Progress */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">Modules & Learning Progress</h2>
+                  <p className="text-xs text-slate-500">Track and monitor your course completion status</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {modules.map((mod, idx) => (
+                  <div key={idx} className="p-4 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors bg-slate-50/30">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-semibold text-sm text-slate-800">{mod.title}</h3>
+                        <p className="text-[10px] text-slate-400 mt-0.5">{mod.category}</p>
+                      </div>
+                      <span className="text-xs font-bold text-slate-600">{mod.progress}%</span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2 mt-3">
+                      <div
+                        className={`h-2 rounded-full ${mod.color} transition-all duration-500`}
+                        style={{ width: `${mod.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Roadmap Section */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mt-6 overflow-hidden">
+          <div className="text-center max-w-md mx-auto mb-8">
+            <h2 className="text-lg font-bold text-slate-950">Roadmap to Placement</h2>
+            <p className="text-xs text-slate-500 mt-1">Navigate through step-by-step career readiness milestones</p>
+          </div>
+
+          <div className="relative">
+            <div className="hidden lg:block absolute top-[26px] left-[6%] right-[6%] h-[2px] bg-slate-100" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-5">
+              {[
+                { step: '01', title: 'Profile Building', desc: 'Secure, verified credentials.', icon: UserCheck },
+                { step: '02', title: 'Skill Assessment', desc: 'AI proctored baseline tests.', icon: Brain },
+                { step: '03', title: 'Learning Roadmap', desc: 'Curated targeted content.', icon: BookOpen },
+                { step: '04', title: 'Mentorship', desc: 'Mock trials & expert reviews.', icon: Users },
+                { step: '05', title: 'AI Matching', desc: 'Vector matching active roles.', icon: Cpu },
+                { step: '06', title: 'Interview', desc: 'Calendar scheduling.', icon: Calendar },
+                { step: '07', title: 'Placement', desc: 'Final contract signing.', icon: Award },
+              ].map((item) => (
+                <div
+                  key={item.step}
+                  className="relative flex flex-col items-center text-center p-4 bg-slate-50/50 rounded-xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 hover:border-indigo-100 hover:bg-white group"
+                >
+                  <div className="w-12 h-12 rounded-full bg-white border border-slate-200/80 flex items-center justify-center text-slate-600 shadow-sm relative z-10 group-hover:border-indigo-200 group-hover:text-indigo-600 group-hover:shadow-md transition-all">
+                    <item.icon className="w-5 h-5" />
+                    <span className="absolute -top-1 -right-1 text-[8px] bg-slate-100 border border-slate-200 text-slate-500 font-mono w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm group-hover:bg-indigo-50 group-hover:border-indigo-100 group-hover:text-indigo-600 transition-colors">
+                      {item.step}
+                    </span>
+                  </div>
+                  <h3 className="text-xs font-semibold text-slate-700 mt-4 group-hover:text-slate-900 transition-colors">{item.title}</h3>
+                  <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Upcoming Activities */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mt-6">
+          <h2 className="text-base font-semibold text-slate-900 mb-6 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-indigo-500" />
+            Upcoming Activities
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { title: 'React Assignment Submission', desc: 'Module 3 Project Submission', date: 'Due: 25 Jun', color: 'text-rose-600 bg-rose-50 border-rose-100' },
+              { title: 'Aptitude Assessment', desc: 'Placement Prep Test', date: '28 Jun', color: 'text-amber-700 bg-amber-50 border-amber-100' },
+              { title: 'Mentor Session', desc: 'One-on-One Career Guidance', date: '30 Jun', color: 'text-indigo-700 bg-indigo-50 border-indigo-100' },
+              { title: 'Mock Interview', desc: 'Technical Practice', date: '05 Jul', color: 'text-emerald-700 bg-emerald-50 border-emerald-100' },
+            ].map((activity) => (
+              <div key={activity.title} className="p-4 rounded-xl border border-slate-100 flex flex-col justify-between hover:shadow-sm transition-shadow">
+                <div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${activity.color}`}>
+                    {activity.date}
+                  </span>
+                  <h3 className="font-semibold text-sm text-slate-800 mt-3 leading-snug">{activity.title}</h3>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-2">{activity.desc}</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Upcoming Activities */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mt-6">
-        <h2 className="text-base font-semibold text-slate-900 mb-6 flex items-center gap-2">
-          <Clock className="w-5 h-5 text-indigo-500" />
-          Upcoming Activities
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { title: 'React Assignment Submission', desc: 'Module 3 Project Submission', date: 'Due: 25 Jun', color: 'text-rose-600 bg-rose-50 border-rose-100' },
-            { title: 'Aptitude Assessment', desc: 'Placement Prep Test', date: '28 Jun', color: 'text-amber-700 bg-amber-50 border-amber-100' },
-            { title: 'Mentor Session', desc: 'One-on-One Career Guidance', date: '30 Jun', color: 'text-indigo-700 bg-indigo-50 border-indigo-100' },
-            { title: 'Mock Interview', desc: 'Technical Practice', date: '05 Jul', color: 'text-emerald-700 bg-emerald-50 border-emerald-100' },
-          ].map((activity) => (
-            <div key={activity.title} className="p-4 rounded-xl border border-slate-100 flex flex-col justify-between hover:shadow-sm transition-shadow">
-              <div>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${activity.color}`}>
-                  {activity.date}
-                </span>
-                <h3 className="font-semibold text-sm text-slate-800 mt-3 leading-snug">{activity.title}</h3>
-              </div>
-              <p className="text-[11px] text-slate-400 mt-2">{activity.desc}</p>
-            </div>
-          ))}
-        </div>
+        {/* AI Career Coach */}
+        <AICareerCoach />
       </div>
-
-      {/* AI Career Coach */}
-      <AICareerCoach />
     </div>
   );
 };
