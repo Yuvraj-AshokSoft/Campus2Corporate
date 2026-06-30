@@ -192,6 +192,8 @@ const AIChatPanel = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <div className="flex h-full flex-col">
+
+      
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800 p-4">
         <div className="flex items-center gap-2.5">

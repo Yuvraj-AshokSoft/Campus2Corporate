@@ -20,11 +20,7 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-  CalendarDays,
-  Upload,
-  Eye,
-  RefreshCw,
-  Lightbulb,
+  CalendarDays
 } from 'lucide-react';
 import {
   AreaChart,
@@ -149,17 +145,18 @@ Rules:
     }
   };
 
-  const dayColors = [
-    'bg-indigo-50 border-indigo-100',
-    'bg-violet-50 border-violet-100',
-    'bg-emerald-50 border-emerald-100',
-    'bg-amber-50 border-amber-100',
-    'bg-rose-50 border-rose-100',
-  ];
-  const dotColors = ['bg-indigo-500', 'bg-violet-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500'];
+  const dayColors = ['bg-indigo-50 border-indigo-100', 'bg-violet-50 border-violet-100', 'bg-emerald-50 border-emerald-100', 'bg-amber-50 border-amber-100', 'bg-rose-50 border-rose-100'];
+  const dayDotColors = ['bg-indigo-500', 'bg-violet-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500'];
 
   return (
+  
+
+    
+    
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+
+
+      
       <div className="flex items-start justify-between mb-5">
         <div>
           <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
@@ -220,6 +217,8 @@ Rules:
               </ul>
             </div>
           ))}
+
+
           <button
             onClick={generatePlan}
             className="w-full text-xs text-violet-600 hover:text-violet-700 font-medium py-1.5 border border-violet-100 rounded-lg hover:bg-violet-50 transition-colors mt-1"
@@ -282,7 +281,11 @@ ${studentContext}`,
   const circumference = 2 * Math.PI * 28;
 
   return (
+
+    
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+
+
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
@@ -833,11 +836,13 @@ export const StudentDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 text-slate-800 antialiased">
-
-      {/* Header */}
+      
+      {/* Premium Header */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Student Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            Student Dashboard
+          </h1>
           <p className="text-sm text-slate-500 mt-1">
             Welcome back, <span className="font-semibold text-slate-700">Yuvraj Singh</span> 👋
           </p>
@@ -859,16 +864,13 @@ export const StudentDashboard: React.FC = () => {
           </button>
 
           {showDropdown && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-[9999]">
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-[9999]">  
               <div className="p-3 border-b border-slate-100">
                 <h3 className="font-semibold text-sm text-slate-950">Yuvraj Singh</h3>
                 <p className="text-xs text-slate-500">yuvraj@example.com</p>
               </div>
               {['My Profile', 'My Courses', 'Certificates', 'Settings'].map((item) => (
-                <button
-                  key={item}
-                  className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-                >
+                <button key={item} className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors">
                   {item}
                 </button>
               ))}
