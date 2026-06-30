@@ -109,11 +109,7 @@ const CloseIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) 
   </svg>
 );
 
-const ShieldIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-  </svg>
-);
+
 
 const EyeIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -135,6 +131,13 @@ const ChevronLeftIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-
   </svg>
 );
 
+const ShieldCheckIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <path d="m9 11 2 2 4-4" />
+  </svg>
+);
+
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeDashboardTab, setActiveDashboardTab] = useState<'student' | 'recruiter' | 'college'>('student');
@@ -142,8 +145,8 @@ export const LandingPage: React.FC = () => {
 
   // Onboarding authentication states
   const [showAuthFlow, setShowAuthFlow] = useState(false);
-  const [authStep, setAuthStep] = useState<1 | 2>(1);
-  const [selectedRole, setSelectedRole] = useState<'Student' | 'Mentor' | 'College / Institute' | 'Recruiter'>('Student');
+  const [authMode, setAuthMode] = useState<'select' | 'signup' | 'login'>('select');
+  const [selectedRole, setSelectedRole] = useState<'Student' | 'Mentor' | 'College' | 'Recruiter'>('Student');
   const [showPassword, setShowPassword] = useState(false);
 
   // Hero phrase rotation state
@@ -304,16 +307,16 @@ export const LandingPage: React.FC = () => {
             <button 
               onClick={() => {
                 setShowAuthFlow(true);
-                setAuthStep(1);
+                setAuthMode('select');
               }}
-              className="inline-flex items-center justify-center px-4.5 py-2 border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm font-semibold text-xs rounded-xl transition-all cursor-pointer"
+              className="inline-flex items-center justify-center px-4.5 py-2 border border-slate-200 bg-transparent hover:bg-slate-50 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-750 transition-all cursor-pointer"
             >
               Login
             </button>
             <button
               onClick={() => {
                 setShowAuthFlow(true);
-                setAuthStep(1);
+                setAuthMode('select');
               }}
               className="inline-flex items-center justify-center px-5 py-2 bg-[#5e17eb] hover:bg-[#4b12bc] text-xs font-bold text-white rounded-xl shadow-sm transition-all cursor-pointer"
             >
@@ -360,7 +363,7 @@ export const LandingPage: React.FC = () => {
                 <button
                   onClick={() => {
                     setShowAuthFlow(true);
-                    setAuthStep(1);
+                    setAuthMode('select');
                   }}
                   className="group inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-[#5e17eb] hover:bg-[#4b12bc] text-base font-semibold text-white shadow-lg shadow-purple-500/25 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
                 >
@@ -1971,8 +1974,8 @@ export const LandingPage: React.FC = () => {
       {showAuthFlow && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300 text-left">
           <div className={`bg-white rounded-3xl shadow-2xl border border-slate-100 w-full ${
-            authStep === 1 ? 'max-w-2xl' : 'max-w-md'
-          } p-6 md:p-8 relative overflow-hidden flex flex-col transition-all duration-305 transition-all duration-300 animate-in fade-in zoom-in-95 duration-200`}>
+            authMode === 'select' ? 'max-w-2xl' : 'max-w-md'
+          } p-6 md:p-8 relative overflow-hidden flex flex-col transition-all duration-300 animate-in fade-in zoom-in-95 duration-200`}>
             
             {/* Close button */}
             <button 
@@ -1982,7 +1985,7 @@ export const LandingPage: React.FC = () => {
               <CloseIcon className="w-4 h-4" />
             </button>
 
-            {authStep === 1 ? (
+            {authMode === 'select' ? (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-xl font-extrabold text-slate-900">Step 1: Choose Your Profile</h2>
@@ -2009,7 +2012,7 @@ export const LandingPage: React.FC = () => {
                       icon: Users
                     },
                     {
-                      id: 'College / Institute' as const,
+                      id: 'College' as const,
                       name: 'College / Institute',
                       sub: 'Track students progress, assign mentors and manage placements.',
                       themeColor: 'bg-blue-650 hover:bg-blue-750 bg-blue-600',
@@ -2041,7 +2044,7 @@ export const LandingPage: React.FC = () => {
                       <button
                         onClick={() => {
                           setSelectedRole(role.id);
-                          setAuthStep(2);
+                          setAuthMode('signup');
                         }}
                         className={`w-full ${role.themeColor} text-white font-bold rounded-xl text-xs py-2.5 mt-5 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm group-hover:-translate-y-0.5`}
                       >
@@ -2054,18 +2057,18 @@ export const LandingPage: React.FC = () => {
 
                 {/* Footer Security Badge */}
                 <div className="bg-slate-50 border border-slate-100/80 p-3.5 rounded-2xl flex items-start gap-3 mt-4">
-                  <ShieldIcon className="text-slate-400 w-4.5 h-4.5 mt-0.5 shrink-0" />
+                  <ShieldCheckIcon className="text-slate-400 w-4.5 h-4.5 mt-0.5 shrink-0" />
                   <p className="text-[10px] text-slate-500 leading-normal font-bold">
                     <span className="font-extrabold text-slate-700">One Email. One Identity. One Role. </span>
                     {"You can create only one account with your email/phone number."}
                   </p>
                 </div>
               </div>
-            ) : (
+            ) : authMode === 'signup' ? (
               <div className="space-y-6">
                 {/* Back button */}
                 <button 
-                  onClick={() => setAuthStep(1)}
+                  onClick={() => setAuthMode('select')}
                   className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
                 >
                   <ChevronLeftIcon className="w-4 h-4" />
@@ -2073,7 +2076,7 @@ export const LandingPage: React.FC = () => {
                 </button>
 
                 <div>
-                  <h2 className="text-xl font-extrabold text-slate-900">Step 2: Create Your Account ({selectedRole})</h2>
+                  <h2 className="text-xl font-extrabold text-slate-900">Step 2: Create Your Account ({selectedRole === 'College' ? 'College / Institute' : selectedRole})</h2>
                   <p className="text-xs text-slate-500 mt-1">Let{"'"}s create your {selectedRole.toLowerCase()} account.</p>
                 </div>
 
@@ -2081,31 +2084,34 @@ export const LandingPage: React.FC = () => {
                   e.preventDefault();
                   setShowAuthFlow(false);
                   alert(`Successfully registered as ${selectedRole}!`);
+                  if (selectedRole === 'Mentor') {
+                    navigate('/mentor-dashboard');
+                  }
                 }} className="space-y-4 text-xs font-bold text-slate-700">
                   <div className="space-y-1">
                     <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">Full Name</label>
                     <input
                       type="text"
                       placeholder="Enter your full name"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500 text-xs font-semibold text-slate-800"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] text-xs font-semibold text-slate-800"
                       required
                     />
                   </div>
 
                   <div className="space-y-1">
                     <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">
-                      {selectedRole === 'Student' ? 'College Email' : 
-                       selectedRole === 'Mentor' ? 'Work Email' : 
-                       selectedRole === 'College / Institute' ? 'Institutional Email' : 'Official Email'}
+                      {selectedRole === 'Student' ? 'College Email Address' : 
+                       selectedRole === 'Mentor' ? 'Corporate Email' : 
+                       selectedRole === 'College' ? 'Institutional Email' : 'Corporate Email'}
                     </label>
                     <input
                       type="email"
                       placeholder={
                         selectedRole === 'Student' ? 'name@college.edu.in' : 
                         selectedRole === 'Mentor' ? 'name@company.com' : 
-                        selectedRole === 'College / Institute' ? 'placement@college.edu' : 'hiring@company.com'
+                        selectedRole === 'College' ? 'placement@college.edu' : 'hiring@company.com'
                       }
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500 text-xs font-semibold text-slate-800"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] text-xs font-semibold text-slate-800"
                       required
                     />
                   </div>
@@ -2115,7 +2121,7 @@ export const LandingPage: React.FC = () => {
                     <input
                       type="text"
                       placeholder="+91 98765 43210"
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500 text-xs font-semibold text-slate-800"
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] text-xs font-semibold text-slate-800"
                       required
                     />
                   </div>
@@ -2126,7 +2132,7 @@ export const LandingPage: React.FC = () => {
                       <input
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Create a strong password"
-                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-500 pr-10 text-xs font-semibold text-slate-800"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] pr-10 text-xs font-semibold text-slate-800"
                         required
                       />
                       <button
@@ -2156,7 +2162,7 @@ export const LandingPage: React.FC = () => {
                     className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all ${
                       selectedRole === 'Student' ? 'bg-purple-600 hover:bg-purple-750' : 
                       selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-750' : 
-                      selectedRole === 'College / Institute' ? 'bg-blue-600 hover:bg-blue-750' : 'bg-orange-500 hover:bg-orange-600'
+                      selectedRole === 'College' ? 'bg-blue-600 hover:bg-blue-750' : 'bg-orange-500 hover:bg-orange-600'
                     }`}
                   >
                     Continue
@@ -2166,13 +2172,94 @@ export const LandingPage: React.FC = () => {
                     <span>Already have an account? </span>
                     <button 
                       type="button"
-                      onClick={() => {
-                        setShowAuthFlow(false);
-                        alert("Mock Login Flow triggered!");
-                      }} 
+                      onClick={() => setAuthMode('login')} 
                       className="text-[#5e17eb] hover:underline font-black cursor-pointer"
                     >
                       Login
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Back button */}
+                <button 
+                  onClick={() => setAuthMode('select')}
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                >
+                  <ChevronLeftIcon className="w-4 h-4" />
+                  <span>Back to Step 1</span>
+                </button>
+
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Login as {selectedRole === 'College' ? 'College / Institute' : selectedRole}</h2>
+                  <p className="text-xs text-slate-500 mt-1">Welcome back! Please enter your credentials to access your dashboard.</p>
+                </div>
+
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  setShowAuthFlow(false);
+                  alert(`Successfully logged in as ${selectedRole}!`);
+                  if (selectedRole === 'Mentor') {
+                    navigate('/mentor-dashboard');
+                  }
+                }} className="space-y-4 text-xs font-bold text-slate-700">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">
+                      {selectedRole === 'Student' ? 'College Email Address' : 
+                       selectedRole === 'Mentor' ? 'Corporate Email' : 
+                       selectedRole === 'College' ? 'Institutional Email' : 'Corporate Email'}
+                    </label>
+                    <input
+                      type="email"
+                      placeholder={
+                        selectedRole === 'Student' ? 'Enter your college email address' : 
+                        selectedRole === 'Mentor' ? 'Enter corporate email address' : 
+                        selectedRole === 'College' ? 'Enter institutional email address' : 'Enter corporate email address'
+                      }
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] text-xs font-semibold text-slate-800"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">Password</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter password"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] pr-10 text-xs font-semibold text-slate-800"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-655 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all ${
+                      selectedRole === 'Student' ? 'bg-purple-600 hover:bg-purple-750' : 
+                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-750' : 
+                      selectedRole === 'College' ? 'bg-blue-600 hover:bg-blue-750' : 'bg-orange-500 hover:bg-orange-600'
+                    }`}
+                  >
+                    Sign In as {selectedRole === 'College' ? 'College / Institute' : selectedRole}
+                  </button>
+
+                  <div className="text-center pt-2 text-[10px] text-slate-400 font-bold">
+                    <span>Don{"'"}t have an account yet? </span>
+                    <button 
+                      type="button"
+                      onClick={() => setAuthMode('signup')} 
+                      className="text-[#5e17eb] hover:underline font-black cursor-pointer"
+                    >
+                      Create Account
                     </button>
                   </div>
                 </form>
