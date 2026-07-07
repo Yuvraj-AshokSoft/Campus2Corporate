@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { 
   Users, 
   Calendar, 
@@ -431,6 +432,17 @@ const initialActivityTicker: ActivityItem[] = [
 ];
 
 export const MentorDashboard: React.FC = () => {
+  const { currentUser } = useAuth();
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   // Navigation states
   const [activeTab, setActiveTab] = useState<'overview' | 'mentees' | 'sessions' | 'skills' | 'activity' | 'resources' | 'roadmaps' | 'communication' | 'feedback' | 'profile' | 'settings'>('overview');
 
@@ -732,10 +744,10 @@ export const MentorDashboard: React.FC = () => {
           <div className="p-6 border-t border-slate-800 text-left">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-gradient-to-r from-purple-600 to-indigo-650 flex items-center justify-center font-bold text-white text-xs">
-                SJ
+                {getInitials(currentUser?.fullName || 'Sarah Jenkins')}
               </div>
               <div>
-                <h4 className="text-xs font-bold text-white">Sarah Jenkins</h4>
+                <h4 className="text-xs font-bold text-white">{currentUser?.fullName || 'Sarah Jenkins'}</h4>
                 <p className="text-[10px] text-slate-500 font-medium">Mentor ID: M-2026</p>
               </div>
             </div>
@@ -824,7 +836,7 @@ export const MentorDashboard: React.FC = () => {
                   }`}
                 >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-650 to-indigo-650 flex items-center justify-center font-bold text-white text-xs">
-                    SJ
+                    {getInitials(currentUser?.fullName || 'Sarah Jenkins')}
                   </div>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                 </button>
@@ -834,7 +846,7 @@ export const MentorDashboard: React.FC = () => {
                     darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'
                   }`}>
                     <div className="p-3 border-b border-slate-100/10">
-                      <h4 className={`font-bold text-xs ${darkMode ? 'text-white' : 'text-slate-900'}`}>Sarah Jenkins</h4>
+                      <h4 className={`font-bold text-xs ${darkMode ? 'text-white' : 'text-slate-900'}`}>{currentUser?.fullName || 'Sarah Jenkins'}</h4>
                       <p className="text-[10px] text-slate-400 font-semibold">Principal SE • Stripe</p>
                     </div>
                     {['My profile info', 'Rubric settings'].map(item => (
@@ -873,10 +885,10 @@ export const MentorDashboard: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-purple-400 font-bold text-xs">
                       <Sparkles className="w-4.5 h-4.5" />
-                      <span>{"Dr. Sarah's Workspace"}</span>
+                      <span>{currentUser ? `${currentUser.fullName.split(' ')[0]}'s Workspace` : "Dr. Sarah's Workspace"}</span>
                     </div>
                     <h1 className={`text-lg md:text-xl font-extrabold tracking-tight`}>
-                      {"Welcome Back, Dr. Sarah! Guide students, monitor their growth, and help shape the next generation of industry-ready professionals."}
+                      {currentUser ? `Welcome Back, ${currentUser.fullName.split(' ')[0]}! Guide students, monitor their growth, and help shape the next generation of industry-ready professionals.` : "Welcome Back, Dr. Sarah! Guide students, monitor their growth, and help shape the next generation of industry-ready professionals."}
                     </h1>
                     <p className="text-xs text-slate-400 font-semibold">
                       {"Access live evaluations, project code check-ins, and student metrics from the Stripe candidate queue."}
@@ -1942,10 +1954,10 @@ export const MentorDashboard: React.FC = () => {
                 }`}>
                   <div className="flex gap-4 items-center">
                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-purple-650 to-indigo-650 bg-purple-600 flex items-center justify-center font-bold text-white text-xl shadow-md">
-                      SJ
+                      {getInitials(currentUser?.fullName || 'Sarah Jenkins')}
                     </div>
                     <div>
-                      <h2 className={`text-base font-extrabold ${darkMode ? 'text-white' : 'text-slate-900'}`}>Sarah Jenkins</h2>
+                      <h2 className={`text-base font-extrabold ${darkMode ? 'text-white' : 'text-slate-900'}`}>{currentUser?.fullName || 'Sarah Jenkins'}</h2>
                       <p className="text-xs text-slate-500 font-semibold mt-0.5">Principal Software Engineer • Stripe Sourcing pipelines</p>
                       <p className="text-[9px] text-purple-400 font-bold uppercase tracking-wider mt-1.5">Department: Engineering Sourcing</p>
                     </div>
@@ -1954,7 +1966,7 @@ export const MentorDashboard: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-105/10 pt-5 text-slate-500 font-semibold">
                     <div>
                       <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider mb-0.5">Corporate Email</span>
-                      <p className={darkMode ? 'text-slate-200' : 'text-slate-800'}>sarah.jenkins@stripe.com</p>
+                      <p className={darkMode ? 'text-slate-200' : 'text-slate-800'}>{currentUser?.email || 'sarah.jenkins@stripe.com'}</p>
                     </div>
                     <div>
                       <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider mb-0.5">Office hours</span>
@@ -1962,7 +1974,7 @@ export const MentorDashboard: React.FC = () => {
                     </div>
                     <div>
                       <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider mb-0.5">Contact Number</span>
-                      <p className={darkMode ? 'text-slate-200' : 'text-slate-800'}>+1 (555) 019-2834</p>
+                      <p className={darkMode ? 'text-slate-200' : 'text-slate-800'}>{currentUser?.phone || '+1 (555) 019-2834'}</p>
                     </div>
                     <div>
                       <span className="text-[9px] text-slate-400 block font-bold uppercase tracking-wider mb-0.5">Expertise Tags</span>

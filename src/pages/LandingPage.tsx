@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   Briefcase,
   GraduationCap,
@@ -148,6 +149,142 @@ export const LandingPage: React.FC = () => {
   const [authMode, setAuthMode] = useState<'select' | 'signup' | 'login'>('select');
   const [selectedRole, setSelectedRole] = useState<'Student' | 'Mentor' | 'College' | 'Recruiter'>('Student');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Auth Context hooks
+  const { login, register } = useAuth();
+
+  // Signup fields state
+  const [regFullName, setRegFullName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPhone, setRegPhone] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regTerms, setRegTerms] = useState(false);
+
+  // Login fields state
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
+  // Status and loading states
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [formSuccess, setFormSuccess] = useState('');
+
+  // Clear errors and successes on tab or modal shifts
+  useEffect(() => {
+    setFormError('');
+    setFormSuccess('');
+  }, [authMode, selectedRole, showAuthFlow]);
+
+  // Handle redirects based on role
+  const redirectUserByRole = (role: string) => {
+    switch (role.toLowerCase()) {
+      case 'student':
+        navigate('/student/dashboard');
+        break;
+      case 'mentor':
+        navigate('/mentor-dashboard');
+        break;
+      case 'college':
+        navigate('/college-dashboard');
+        break;
+      case 'recruiter':
+        navigate('/recruiter-dashboard');
+        break;
+      default:
+        navigate('/');
+    }
+  };
+
+  const handleSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    setFormSuccess('');
+
+    // Field validation
+    if (!regFullName || !regEmail || !regPhone || !regPassword) {
+      setFormError('Please fill in all required fields');
+      return;
+    }
+
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(regEmail)) {
+      setFormError('Please enter a valid email address');
+      return;
+    }
+
+    if (regPhone.trim().length < 10) {
+      setFormError('Please enter a valid phone number (minimum 10 digits)');
+      return;
+    }
+
+    if (regPassword.length < 8) {
+      setFormError('Password must be at least 8 characters long');
+      return;
+    }
+
+    if (!regTerms) {
+      setFormError('You must agree to the Terms of Service & Privacy Policy');
+      return;
+    }
+
+    setFormLoading(true);
+    const result = await register({
+      fullName: regFullName,
+      email: regEmail,
+      phone: regPhone,
+      password: regPassword,
+      role: selectedRole.toLowerCase()
+    });
+    setFormLoading(false);
+
+    if (result.success) {
+      setFormSuccess('Account created successfully! Redirecting...');
+      setRegFullName('');
+      setRegEmail('');
+      setRegPhone('');
+      setRegPassword('');
+      setRegTerms(false);
+      setTimeout(() => {
+        setShowAuthFlow(false);
+        redirectUserByRole(result.user.role);
+      }, 1200);
+    } else {
+      setFormError(result.message || 'Registration failed');
+    }
+  };
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    setFormSuccess('');
+
+    if (!loginEmail || !loginPassword) {
+      setFormError('Please fill in both email and password');
+      return;
+    }
+
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(loginEmail)) {
+      setFormError('Please enter a valid email address');
+      return;
+    }
+
+    setFormLoading(true);
+    const result = await login(loginEmail, loginPassword);
+    setFormLoading(false);
+
+    if (result.success) {
+      setFormSuccess('Signed in successfully! Redirecting...');
+      setLoginEmail('');
+      setLoginPassword('');
+      setTimeout(() => {
+        setShowAuthFlow(false);
+        redirectUserByRole(result.user.role);
+      }, 1200);
+    } else {
+      setFormError(result.message || 'Invalid email or password');
+    }
+  };
 
   // Hero phrase rotation state
   const [phraseIndex, setPhraseIndex] = useState(0);
@@ -2070,6 +2207,7 @@ export const LandingPage: React.FC = () => {
                 <button 
                   onClick={() => setAuthMode('select')}
                   className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                  disabled={formLoading}
                 >
                   <ChevronLeftIcon className="w-4 h-4" />
                   <span>Back to Step 1</span>
@@ -2080,21 +2218,28 @@ export const LandingPage: React.FC = () => {
                   <p className="text-xs text-slate-500 mt-1">Let{"'"}s create your {selectedRole.toLowerCase()} account.</p>
                 </div>
 
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  setShowAuthFlow(false);
-                  alert(`Successfully registered as ${selectedRole}!`);
-                  if (selectedRole === 'Mentor') {
-                    navigate('/mentor-dashboard');
-                  }
-                }} className="space-y-4 text-xs font-bold text-slate-700">
+                {formError && (
+                  <div className="bg-red-50 text-red-600 border border-red-200 rounded-xl p-3 text-xs font-bold text-center">
+                    {formError}
+                  </div>
+                )}
+                {formSuccess && (
+                  <div className="bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl p-3 text-xs font-bold text-center">
+                    {formSuccess}
+                  </div>
+                )}
+
+                <form onSubmit={handleSignupSubmit} className="space-y-4 text-xs font-bold text-slate-700">
                   <div className="space-y-1">
                     <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">Full Name</label>
                     <input
                       type="text"
                       placeholder="Enter your full name"
+                      value={regFullName}
+                      onChange={(e) => setRegFullName(e.target.value)}
                       className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] text-xs font-semibold text-slate-800"
                       required
+                      disabled={formLoading}
                     />
                   </div>
 
@@ -2111,8 +2256,11 @@ export const LandingPage: React.FC = () => {
                         selectedRole === 'Mentor' ? 'name@company.com' : 
                         selectedRole === 'College' ? 'placement@college.edu' : 'hiring@company.com'
                       }
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
                       className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] text-xs font-semibold text-slate-800"
                       required
+                      disabled={formLoading}
                     />
                   </div>
 
@@ -2121,8 +2269,11 @@ export const LandingPage: React.FC = () => {
                     <input
                       type="text"
                       placeholder="+91 98765 43210"
+                      value={regPhone}
+                      onChange={(e) => setRegPhone(e.target.value)}
                       className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] text-xs font-semibold text-slate-800"
                       required
+                      disabled={formLoading}
                     />
                   </div>
 
@@ -2132,8 +2283,11 @@ export const LandingPage: React.FC = () => {
                       <input
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Create a strong password"
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
                         className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] pr-10 text-xs font-semibold text-slate-800"
                         required
+                        disabled={formLoading}
                       />
                       <button
                         type="button"
@@ -2149,8 +2303,11 @@ export const LandingPage: React.FC = () => {
                     <input
                       type="checkbox"
                       id="termsAgree"
+                      checked={regTerms}
+                      onChange={(e) => setRegTerms(e.target.checked)}
                       className="rounded border-slate-350 text-purple-650 focus:ring-purple-500 w-3.5 h-3.5 cursor-pointer"
                       required
+                      disabled={formLoading}
                     />
                     <label htmlFor="termsAgree" className="text-[10px] text-slate-500 font-semibold cursor-pointer">
                       I agree to the <span className="text-[#5e17eb] hover:underline">Terms of Service</span> & <span className="text-[#5e17eb] hover:underline">Privacy Policy</span>
@@ -2159,13 +2316,16 @@ export const LandingPage: React.FC = () => {
 
                   <button
                     type="submit"
-                    className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all ${
+                    disabled={formLoading}
+                    className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all flex items-center justify-center ${
+                      formLoading ? 'opacity-70 cursor-not-allowed' : ''
+                    } ${
                       selectedRole === 'Student' ? 'bg-purple-600 hover:bg-purple-750' : 
                       selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-750' : 
                       selectedRole === 'College' ? 'bg-blue-600 hover:bg-blue-750' : 'bg-orange-500 hover:bg-orange-600'
                     }`}
                   >
-                    Continue
+                    {formLoading ? 'Creating Account...' : 'Continue'}
                   </button>
 
                   <div className="text-center pt-2 text-[10px] text-slate-400 font-bold">
@@ -2174,6 +2334,7 @@ export const LandingPage: React.FC = () => {
                       type="button"
                       onClick={() => setAuthMode('login')} 
                       className="text-[#5e17eb] hover:underline font-black cursor-pointer"
+                      disabled={formLoading}
                     >
                       Login
                     </button>
@@ -2186,6 +2347,7 @@ export const LandingPage: React.FC = () => {
                 <button 
                   onClick={() => setAuthMode('select')}
                   className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                  disabled={formLoading}
                 >
                   <ChevronLeftIcon className="w-4 h-4" />
                   <span>Back to Step 1</span>
@@ -2196,14 +2358,18 @@ export const LandingPage: React.FC = () => {
                   <p className="text-xs text-slate-500 mt-1">Welcome back! Please enter your credentials to access your dashboard.</p>
                 </div>
 
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  setShowAuthFlow(false);
-                  alert(`Successfully logged in as ${selectedRole}!`);
-                  if (selectedRole === 'Mentor') {
-                    navigate('/mentor-dashboard');
-                  }
-                }} className="space-y-4 text-xs font-bold text-slate-700">
+                {formError && (
+                  <div className="bg-red-50 text-red-600 border border-red-200 rounded-xl p-3 text-xs font-bold text-center">
+                    {formError}
+                  </div>
+                )}
+                {formSuccess && (
+                  <div className="bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl p-3 text-xs font-bold text-center">
+                    {formSuccess}
+                  </div>
+                )}
+
+                <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs font-bold text-slate-700">
                   <div className="space-y-1">
                     <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">
                       {selectedRole === 'Student' ? 'College Email Address' : 
@@ -2217,8 +2383,11 @@ export const LandingPage: React.FC = () => {
                         selectedRole === 'Mentor' ? 'Enter corporate email address' : 
                         selectedRole === 'College' ? 'Enter institutional email address' : 'Enter corporate email address'
                       }
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
                       className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] text-xs font-semibold text-slate-800"
                       required
+                      disabled={formLoading}
                     />
                   </div>
 
@@ -2228,8 +2397,11 @@ export const LandingPage: React.FC = () => {
                       <input
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Enter password"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
                         className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] pr-10 text-xs font-semibold text-slate-800"
                         required
+                        disabled={formLoading}
                       />
                       <button
                         type="button"
@@ -2243,13 +2415,16 @@ export const LandingPage: React.FC = () => {
 
                   <button
                     type="submit"
-                    className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all ${
+                    disabled={formLoading}
+                    className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all flex items-center justify-center ${
+                      formLoading ? 'opacity-70 cursor-not-allowed' : ''
+                    } ${
                       selectedRole === 'Student' ? 'bg-purple-600 hover:bg-purple-750' : 
                       selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-750' : 
                       selectedRole === 'College' ? 'bg-blue-600 hover:bg-blue-750' : 'bg-orange-500 hover:bg-orange-600'
                     }`}
                   >
-                    Sign In as {selectedRole === 'College' ? 'College / Institute' : selectedRole}
+                    {formLoading ? 'Signing In...' : `Sign In as ${selectedRole === 'College' ? 'College / Institute' : selectedRole}`}
                   </button>
 
                   <div className="text-center pt-2 text-[10px] text-slate-400 font-bold">
@@ -2258,6 +2433,7 @@ export const LandingPage: React.FC = () => {
                       type="button"
                       onClick={() => setAuthMode('signup')} 
                       className="text-[#5e17eb] hover:underline font-black cursor-pointer"
+                      disabled={formLoading}
                     >
                       Create Account
                     </button>

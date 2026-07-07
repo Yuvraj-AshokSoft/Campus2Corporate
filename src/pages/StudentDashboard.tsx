@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import {
   Brain,
   UserCheck,
@@ -683,11 +684,12 @@ ${resumeText}`,
 // ─── FEATURE 4: AI Career Coach Chat ─────────────────────────────────────────
 
 const AICareerCoach: React.FC = () => {
+  const { currentUser } = useAuth();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: "Hi Yuvraj! 👋 I'm your AI Career Coach. I know your profile — ask me anything about placements, interviews, or your learning path!",
+      content: `Hi ${currentUser?.fullName?.split(' ')[0] || 'Yuvraj'}! 👋 I'm your AI Career Coach. I know your profile — ask me anything about placements, interviews, or your learning path!`,
     },
   ]);
   const [input, setInput] = useState('');
@@ -833,6 +835,16 @@ Be concise, warm, and actionable. Keep responses under 100 words. Use bullet poi
 
 export const StudentDashboard: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const { currentUser } = useAuth();
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <div className="h-screen bg-slate-50 flex overflow-hidden">
@@ -905,7 +917,7 @@ export const StudentDashboard: React.FC = () => {
                   B.Tech CSE • 4th Year
                 </div>
 
-                <h1 className="text-3xl font-bold text-white">Welcome back, Yuvraj 👋</h1>
+                <h1 className="text-3xl font-bold text-white">Welcome back, {currentUser?.fullName || 'Yuvraj'} 👋</h1>
 
                 <p className="text-slate-400 mt-2 max-w-xl">
                   Track your courses, placement readiness, and AI-powered career tools — all in one place.
@@ -918,10 +930,10 @@ export const StudentDashboard: React.FC = () => {
                   className="flex items-center gap-3 p-1.5 pr-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
                 >
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center font-bold text-sm text-white shadow-md">
-                    YS
+                    {getInitials(currentUser?.fullName || 'Yuvraj Singh')}
                   </div>
                   <div className="text-left hidden xs:block">
-                    <p className="text-xs font-semibold text-white leading-tight">Yuvraj Singh</p>
+                    <p className="text-xs font-semibold text-white leading-tight">{currentUser?.fullName || 'Yuvraj Singh'}</p>
                     <p className="text-[10px] text-slate-400 leading-tight">STU001</p>
                   </div>
                   <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
@@ -930,8 +942,8 @@ export const StudentDashboard: React.FC = () => {
                 {showDropdown && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-[9999]">
                     <div className="p-3 border-b border-slate-100">
-                      <h3 className="font-semibold text-sm text-slate-950">Yuvraj Singh</h3>
-                      <p className="text-xs text-slate-500">yuvraj@example.com</p>
+                      <h3 className="font-semibold text-sm text-slate-950">{currentUser?.fullName || 'Yuvraj Singh'}</h3>
+                      <p className="text-xs text-slate-500">{currentUser?.email || 'yuvraj@example.com'}</p>
                     </div>
                     {['My Profile', 'My Courses', 'Certificates', 'Settings'].map((item) => (
                       <button key={item} className="w-full text-left px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors">
@@ -989,11 +1001,11 @@ export const StudentDashboard: React.FC = () => {
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 to-purple-600" />
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center font-bold text-lg text-white shadow-inner">
-                  YS
+                  {getInitials(currentUser?.fullName || 'Yuvraj Singh')}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold text-slate-900 leading-tight">Yuvraj Singh</h2>
+                    <h2 className="text-lg font-bold text-slate-900 leading-tight">{currentUser?.fullName || 'Yuvraj Singh'}</h2>
                     <span className="bg-indigo-50 text-indigo-700 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-indigo-100">
                       STU001
                     </span>
@@ -1004,8 +1016,8 @@ export const StudentDashboard: React.FC = () => {
 
               <div className="mt-6 pt-5 border-t border-slate-100 space-y-4">
                 {[
-                  { icon: Mail, label: 'Email', value: 'yuvraj@example.com' },
-                  { icon: Phone, label: 'Phone', value: '+91 9876543210' },
+                  { icon: Mail, label: 'Email', value: currentUser?.email || 'yuvraj@example.com' },
+                  { icon: Phone, label: 'Phone', value: currentUser?.phone || '+91 9876543210' },
                   { icon: GraduationCap, label: 'University', value: 'Campus2Corporate University' },
                   { icon: MapPin, label: 'DOB', value: '30-12-2000' },
                 ].map(({ icon: Icon, label, value }) => (
