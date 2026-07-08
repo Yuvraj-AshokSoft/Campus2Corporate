@@ -24,15 +24,17 @@ import {
   Loader2,
   CalendarDays,
   Upload,
-  Lightbulb,
   Eye,
   RefreshCw,
+  Lightbulb,
+  Target,
+  Briefcase,
   LayoutDashboard,
   ClipboardCheck,
-  Briefcase,
   MessageSquareText,
   BadgeCheck,
   Settings,
+
 } from 'lucide-react';
 import {
   AreaChart,
@@ -108,6 +110,16 @@ interface ATSResult {
   breakdown: ATSBreakdown[];
   keywords_found: string[];
   keywords_missing: string[];
+  tip: string;
+}
+
+interface SkillGapResult {
+  match_score: number;
+  role: string;
+  summary: string;
+  matched_skills: string[];
+  missing_skills: { skill: string; priority: 'High' | 'Medium' | 'Low' }[];
+  suggested_modules: string[];
   tip: string;
 }
 
@@ -681,7 +693,228 @@ ${resumeText}`,
   );
 };
 
-// ─── FEATURE 4: AI Career Coach Chat ─────────────────────────────────────────
+// ─── FEATURE 4: AI Job Skills & Gap Analysis Matching ────────────────────────
+
+const popularRoles = ['Frontend Developer', 'Backend Developer', 'Data Analyst', 'Full Stack Developer'];
+
+const AISkillGapAnalyzer: React.FC = () => {
+  const [role, setRole] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<SkillGapResult | null>(null);
+  const [error, setError] = useState('');
+
+  const analyze = async (targetRole?: string) => {
+    const roleToUse = (targetRole ?? role).trim();
+    if (!roleToUse) return;
+    setRole(roleToUse);
+    setLoading(true);
+    setError('');
+    setResult(null);
+    try {
+      const text = await callClaude({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `You are a job skill-gap analyzer. Compare this student's current skills against what is typically required for the target job role. Return ONLY valid JSON — no markdown, no backticks, no extra text.
+
+Format exactly:
+{"match_score":68,"role":"Frontend Developer","summary":"You meet most core requirements but lack testing and deployment experience.","matched_skills":["React","JavaScript","HTML/CSS"],"missing_skills":[{"skill":"TypeScript","priority":"High"},{"skill":"Unit Testing","priority":"Medium"}],"suggested_modules":["TypeScript Fundamentals","Testing with Jest"],"tip":"Focus on TypeScript next — it's required in 80% of frontend job postings."}
+
+Rules:
+- match_score: 0-100 integer
+- role: echo back the target role name, cleaned up
+- summary: 1 sentence, under 22 words
+- matched_skills: 3-6 items the student already has, based on their registered modules and progress
+- missing_skills: 3-5 items, each with a "skill" (1-3 words) and "priority" of "High", "Medium", or "Low"
+- suggested_modules: 2-4 short course/module names to close the gap
+- tip: 1 sentence, under 25 words, most impactful next step
+
+Target job role: ${roleToUse}
+
+Student data:
+${studentContext}`,
+        }],
+      });
+      setResult(parseJSON<SkillGapResult>(text));
+    } catch {
+      setError('Analysis failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const reset = () => {
+    setResult(null);
+    setError('');
+    setRole('');
+  };
+
+  const scoreColor = result
+    ? result.match_score >= 75 ? 'text-emerald-600' : result.match_score >= 50 ? 'text-amber-600' : 'text-rose-600'
+    : '';
+  const scoreRing = result
+    ? result.match_score >= 75 ? 'stroke-emerald-500' : result.match_score >= 50 ? 'stroke-amber-500' : 'stroke-rose-500'
+    : '';
+  const circumference = 2 * Math.PI * 28;
+
+  const priorityCls = (p: string) =>
+    p === 'High'
+      ? 'bg-rose-50 text-rose-700 border-rose-100'
+      : p === 'Medium'
+      ? 'bg-amber-50 text-amber-700 border-amber-100'
+      : 'bg-slate-50 text-slate-600 border-slate-200';
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
+            <Target className="w-4 h-4 text-rose-500" />
+            AI Job Skills & Gap Analysis
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">See how your skills match a target job role</p>
+        </div>
+        <span className="text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-100 px-2 py-0.5 rounded-full">AI</span>
+      </div>
+
+      {!result && !loading && (
+        <div className="bg-slate-50 rounded-xl border border-slate-100 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Briefcase className="w-3.5 h-3.5 text-slate-400" />
+            <p className="text-xs font-medium text-slate-700">Enter a target job role</p>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && analyze()}
+              placeholder="e.g. Frontend Developer"
+              className="flex-1 text-xs bg-white border border-slate-200 rounded-lg px-3 py-2.5 text-slate-700 placeholder-slate-400 focus:outline-none focus:border-rose-300 focus:ring-2 focus:ring-rose-50"
+            />
+            <button
+              onClick={() => analyze()}
+              disabled={!role.trim()}
+              className="bg-rose-500 hover:bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-colors whitespace-nowrap"
+            >
+              Analyze
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-3">
+            {popularRoles.map((r) => (
+              <button
+                key={r}
+                onClick={() => analyze(r)}
+                className="text-[11px] text-slate-500 bg-white hover:bg-rose-50 hover:text-rose-700 border border-slate-200 hover:border-rose-100 px-2.5 py-1 rounded-full transition-colors"
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+          {error && (
+            <div className="flex items-center gap-2 text-rose-600 text-xs bg-rose-50 border border-rose-100 rounded-lg px-3 py-2 mt-3">
+              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+              {error}
+            </div>
+          )}
+        </div>
+      )}
+
+      {loading && (
+        <div className="flex items-center gap-3 py-4 px-4 bg-slate-50 rounded-xl border border-slate-100">
+          <Loader2 className="w-4 h-4 text-rose-500 animate-spin flex-shrink-0" />
+          <p className="text-xs text-slate-500">Matching your skills against {role}…</p>
+        </div>
+      )}
+
+      {result && (
+        <div className="space-y-5">
+          <div className="flex items-center gap-5">
+            <div className="relative flex-shrink-0 w-[72px] h-[72px]">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="28" fill="none" stroke="#f1f5f9" strokeWidth="6" />
+                <circle
+                  cx="36" cy="36" r="28"
+                  fill="none"
+                  className={scoreRing}
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={circumference - (circumference * result.match_score) / 100}
+                  transform="rotate(-90 36 36)"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className={`text-lg font-bold ${scoreColor}`}>{result.match_score}%</span>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-800">{result.role}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{result.summary}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Matched skills</p>
+              <div className="flex flex-wrap gap-1.5">
+                {result.matched_skills.map((s, i) => (
+                  <span key={i} className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Skill gaps</p>
+              <div className="flex flex-col gap-1.5">
+                {result.missing_skills.map((m, i) => (
+                  <div key={i} className="flex items-center justify-between text-[11px] bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5">
+                    <span className="text-slate-700">{m.skill}</span>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${priorityCls(m.priority)}`}>
+                      {m.priority}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Suggested modules to close the gap</p>
+            <div className="flex flex-wrap gap-1.5">
+              {result.suggested_modules.map((m, i) => (
+                <span key={i} className="text-[11px] px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+                  {m}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-rose-50 border border-rose-100 rounded-lg p-3 flex gap-2.5">
+            <Lightbulb className="w-3.5 h-3.5 text-rose-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-[10px] font-semibold text-rose-400 uppercase tracking-wider mb-0.5">Top recommendation</p>
+              <p className="text-xs text-rose-700">{result.tip}</p>
+            </div>
+          </div>
+
+          <button
+            onClick={reset}
+            className="w-full text-xs text-rose-600 hover:text-rose-700 font-medium py-2 border border-rose-100 rounded-lg hover:bg-rose-50 transition-colors flex items-center justify-center gap-2"
+          >
+            <RefreshCw className="w-3 h-3" />
+            Check another role
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── FEATURE 5: AI Career Coach Chat ─────────────────────────────────────────
 
 const AICareerCoach: React.FC = () => {
   const { currentUser } = useAuth();
@@ -847,10 +1080,10 @@ export const StudentDashboard: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-slate-50 flex overflow-hidden">
+    <div className="dashboard-shell h-screen bg-slate-50 flex overflow-hidden">
 
       {/* ── Sidebar ── */}
-      <div className="w-60 h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white flex flex-col">
+      <div className="dashboard-sidebar w-60 h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white flex flex-col">
 
         <div className="px-4 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
@@ -904,10 +1137,10 @@ export const StudentDashboard: React.FC = () => {
       </div>
 
       {/* ── Main content ── */}
-      <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-6">
+      <div className="dashboard-main flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-6">
 
         {/* Hero */}
-        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 px-8 py-7">
+        <div className="dashboard-hero relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 px-8 py-7">
           <div className="absolute top-0 right-0 w-72 h-72 bg-violet-500/10 blur-3xl rounded-full" />
 
           <div className="relative z-10">
@@ -1098,8 +1331,11 @@ export const StudentDashboard: React.FC = () => {
             {/* AI Placement Readiness Analyzer */}
             <AIProfileAnalyzer />
 
-            {/* AI ATS Resume Scorer */}
-            <AIATSScorer />
+          {/* AI ATS Resume Scorer */}
+          <AIATSScorer />
+
+          {/* AI Job Skills & Gap Analysis Matching */}
+          <AISkillGapAnalyzer />
 
             {/* Modules & Learning Progress */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
