@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import API from '../services/api';
+import { useAuth as useClerkAuth, useUser as useClerkUser, useSignIn, useSignUp } from '@clerk/clerk-react';
 
 interface User {
   id: string;
@@ -22,79 +22,56 @@ interface AuthContextType {
     password: string;
     role: string;
   }) => Promise<any>;
+  verifyOtp: (code: string, role: string) => Promise<any>;
+  forgotPassword: (email: string) => Promise<any>;
+  resetPassword: (code: string, newPassword: string) => Promise<any>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isLoaded: isAuthLoaded, isSignedIn, signOut } = useClerkAuth();
+  const { isLoaded: isUserLoaded, user } = useClerkUser();
+  const { isLoaded: isSignInLoaded, signIn, setActive: setSignInActive } = useSignIn();
+  const { isLoaded: isSignUpLoaded, signUp, setActive: setSignUpActive } = useSignUp();
+
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
 
-  // Persist login after page refresh
+  // Map Clerk user to our custom User format
   useEffect(() => {
-    const initializeAuth = async () => {
-      const token = localStorage.getItem('token');
-      const savedUser = localStorage.getItem('user');
-
-      if (token && savedUser) {
-        try {
-          // Verify token against /me endpoint
-          const response = await API.get('/auth/me');
-          if (response.data.success && response.data.user) {
-            const userWithRole = response.data.user;
-            // Standardize db _id field to id
-            const userObj = {
-              id: userWithRole._id || userWithRole.id,
-              fullName: userWithRole.fullName,
-              email: userWithRole.email,
-              phone: userWithRole.phone,
-              role: userWithRole.role,
-              isVerified: userWithRole.isVerified,
-            };
-            setCurrentUser(userObj);
-            setIsAuthenticated(true);
-            localStorage.setItem('user', JSON.stringify(userObj));
-          } else {
-            handleLogoutClean();
-          }
-        } catch (error) {
-          console.error('Failed to restore auth session:', error);
-          handleLogoutClean();
-        }
-      } else {
-        handleLogoutClean();
-      }
-      setLoading(false);
-    };
-
-    initializeAuth();
-  }, []);
-
-  const handleLogoutClean = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setCurrentUser(null);
-    setIsAuthenticated(false);
-  };
+    if (isUserLoaded && isSignedIn && user) {
+      setCurrentUser({
+        id: user.id,
+        fullName: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
+        email: user.primaryEmailAddress?.emailAddress || '',
+        phone: (user.unsafeMetadata?.phone as string) || user.primaryPhoneNumber?.phoneNumber || '',
+        role: (user.unsafeMetadata?.role as any) || 'student',
+        isVerified: user.emailAddresses.find(e => e.emailAddress === user.primaryEmailAddress?.emailAddress)?.verification.status === 'verified',
+      });
+    } else {
+      setCurrentUser(null);
+    }
+  }, [isUserLoaded, isSignedIn, user]);
 
   const login = async (email: string, password: string) => {
+    if (!isSignInLoaded) {
+      return { success: false, message: 'Clerk login engine is loading...' };
+    }
     try {
-      const response = await API.post('/auth/login', { email, password });
-      
-      if (response.data.success) {
-        const { token, user } = response.data;
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        setCurrentUser(user);
-        setIsAuthenticated(true);
-        return { success: true, user };
+      const result = await signIn.create({
+        identifier: email,
+        password,
+      });
+
+      if (result.status === 'complete') {
+        await setSignInActive({ session: result.createdSessionId });
+        return { success: true };
       }
-      return { success: false, message: response.data.message || 'Login failed' };
+      return { success: false, message: 'Additional verification required.' };
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Login request failed';
-      return { success: false, message };
+      const msg = error.errors?.[0]?.message || 'Authentication failed';
+      return { success: false, message: msg };
     }
   };
 
@@ -105,38 +82,105 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password: string;
     role: string;
   }) => {
+    if (!isSignUpLoaded) {
+      return { success: false, message: 'Clerk registration engine is loading...' };
+    }
     try {
-      const response = await API.post('/auth/register', userData);
-      
-      if (response.data.success) {
-        const { token, user } = response.data;
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        setCurrentUser(user);
-        setIsAuthenticated(true);
-        return { success: true, user };
-      }
-      return { success: false, message: response.data.message || 'Registration failed' };
+      // Create user details in Clerk
+      await signUp.create({
+        emailAddress: userData.email,
+        password: userData.password,
+        firstName: userData.fullName.split(' ')[0],
+        lastName: userData.fullName.split(' ').slice(1).join(' ') || '',
+        unsafeMetadata: {
+          role: userData.role.toLowerCase(),
+          phone: userData.phone
+        }
+      });
+
+      // Send OTP email verification
+      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+
+      return { success: true };
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Registration request failed';
-      return { success: false, message };
+      const msg = error.errors?.[0]?.message || 'Account creation failed';
+      return { success: false, message: msg };
+    }
+  };
+
+  const verifyOtp = async (code: string, _role: string) => {
+    if (!isSignUpLoaded) {
+      return { success: false, message: 'Clerk engine is loading...' };
+    }
+    try {
+      const result = await signUp.attemptEmailAddressVerification({ code });
+
+      if (result.status === 'complete') {
+        await setSignUpActive({ session: result.createdSessionId });
+        return { success: true };
+      }
+      return { success: false, message: 'OTP verification failed.' };
+    } catch (error: any) {
+      const msg = error.errors?.[0]?.message || 'Verification failed';
+      return { success: false, message: msg };
+    }
+  };
+
+  const forgotPassword = async (email: string) => {
+    if (!isSignInLoaded) {
+      return { success: false, message: 'Clerk engine is loading...' };
+    }
+    try {
+      await signIn.create({
+        strategy: 'reset_password_email_code',
+        identifier: email,
+      });
+      return { success: true };
+    } catch (error: any) {
+      const msg = error.errors?.[0]?.message || 'Verification dispatcher failed';
+      return { success: false, message: msg };
+    }
+  };
+
+  const resetPassword = async (code: string, newPassword: string) => {
+    if (!isSignInLoaded) {
+      return { success: false, message: 'Clerk engine is loading...' };
+    }
+    try {
+      const result = await signIn.attemptFirstFactor({
+        strategy: 'reset_password_email_code',
+        code,
+        password: newPassword,
+      });
+
+      if (result.status === 'complete') {
+        await setSignInActive({ session: result.createdSessionId });
+        return { success: true };
+      }
+      return { success: false, message: 'Password reset failed.' };
+    } catch (error: any) {
+      const msg = error.errors?.[0]?.message || 'Failed to update password';
+      return { success: false, message: msg };
     }
   };
 
   const logout = () => {
-    handleLogoutClean();
-    // Redirect to landing page to login
-    window.location.href = '/';
+    signOut().then(() => {
+      window.location.href = '/';
+    });
   };
 
   return (
     <AuthContext.Provider
       value={{
         currentUser,
-        isAuthenticated,
-        loading,
+        isAuthenticated: isSignedIn || false,
+        loading: !isAuthLoaded || !isUserLoaded,
         login,
         register,
+        verifyOtp,
+        forgotPassword,
+        resetPassword,
         logout,
       }}
     >

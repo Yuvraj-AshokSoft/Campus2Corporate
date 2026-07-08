@@ -17,16 +17,9 @@ import {
   Sparkles,
   Star,
   Users,
+  LogOut,
 } from 'lucide-react';
-
-const menuItems = [
-  { title: 'Dashboard', icon: LayoutDashboard, active: true },
-  { title: 'Candidates', icon: Users },
-  { title: 'Job Drives', icon: Briefcase },
-  { title: 'Interviews', icon: CalendarDays },
-  { title: 'Scorecards', icon: FileText },
-  { title: 'Settings', icon: Settings },
-];
+import { useAuth } from '../context/AuthContext';
 
 const stats = [
   { label: 'Matched Candidates', value: '2,410', change: '+18%', icon: Users },
@@ -43,6 +36,18 @@ const candidates = [
 ];
 
 export const RecruiterDashboard: React.FC = () => {
+  const { logout } = useAuth();
+
+  const menuItems = [
+    { title: 'Dashboard', icon: LayoutDashboard, active: true },
+    { title: 'Candidates', icon: Users },
+    { title: 'Job Drives', icon: Briefcase },
+    { title: 'Interviews', icon: CalendarDays },
+    { title: 'Scorecards', icon: FileText },
+    { title: 'Settings', icon: Settings },
+    { title: 'Sign Out', icon: LogOut, onClick: logout },
+  ];
+
   return (
     <div className="dashboard-shell h-screen bg-slate-50 flex overflow-hidden">
       <aside className="dashboard-sidebar">
@@ -64,6 +69,7 @@ export const RecruiterDashboard: React.FC = () => {
               <button
                 key={item.title}
                 type="button"
+                onClick={item.onClick}
                 className={`dashboard-nav-item ${item.active ? 'is-active' : ''}`}
                 aria-current={item.active ? 'page' : undefined}
               >

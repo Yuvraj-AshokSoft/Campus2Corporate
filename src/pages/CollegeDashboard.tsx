@@ -25,9 +25,8 @@ import {
   BarChart3,
   
   Settings,
-  ChevronRight,
     Clock,
-  
+  LogOut,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -45,10 +44,11 @@ import {
 } from "recharts";
 
 import { Sidebar } from "../components/layout/Sidebar";
-import { Navbar } from "../components/layout/Navbar";
+import { useAuth } from "../context/AuthContext";
 
 
 export const CollegeDashboard: React.FC = () => {
+  const { logout } = useAuth();
 
 
   const upcomingDrives = [
@@ -202,6 +202,11 @@ export const CollegeDashboard: React.FC = () => {
   {
     title: "Settings",
     icon: Settings,
+  },
+  {
+    title: "Sign Out",
+    icon: LogOut,
+    onClick: () => logout(),
   },
 ];
 
