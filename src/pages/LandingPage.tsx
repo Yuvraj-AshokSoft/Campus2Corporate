@@ -146,12 +146,12 @@ export const LandingPage: React.FC = () => {
 
   // Onboarding authentication states
   const [showAuthFlow, setShowAuthFlow] = useState(false);
-  const [authMode, setAuthMode] = useState<'select' | 'signup' | 'login'>('select');
+  const [authMode, setAuthMode] = useState<'select' | 'signup' | 'login' | 'forgot' | 'otp' | 'reset'>('select');
   const [selectedRole, setSelectedRole] = useState<'Student' | 'Mentor' | 'College' | 'Recruiter'>('Student');
   const [showPassword, setShowPassword] = useState(false);
 
   // Auth Context hooks
-  const { login, register } = useAuth();
+  const { login, register, verifyOtp, forgotPassword, resetPassword, isAuthenticated, logout, currentUser } = useAuth();
 
   // Signup fields state
   const [regFullName, setRegFullName] = useState('');
@@ -164,15 +164,61 @@ export const LandingPage: React.FC = () => {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
+  // Forgot password & Reset states
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
+  const [otpTimer, setOtpTimer] = useState(59);
+  const [otpTimerActive, setOtpTimerActive] = useState(false);
+  const [otpPurpose, setOtpPurpose] = useState<'signup' | 'reset'>('signup');
+  const [resetOtpCode, setResetOtpCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Field validation error states
+  const [regFullNameError, setRegFullNameError] = useState('');
+  const [regEmailError, setRegEmailError] = useState('');
+  const [regPhoneError, setRegPhoneError] = useState('');
+  const [regPasswordError, setRegPasswordError] = useState('');
+  const [loginEmailError, setLoginEmailError] = useState('');
+  const [loginPasswordError, setLoginPasswordError] = useState('');
+  const [forgotEmailError, setForgotEmailError] = useState('');
+  const [newPasswordError, setNewPasswordError] = useState('');
+  const [confirmNewPasswordError, setConfirmNewPasswordError] = useState('');
+
   // Status and loading states
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
 
+  // OTP Countdown Timer
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+    if (otpTimerActive && otpTimer > 0) {
+      interval = setInterval(() => {
+        setOtpTimer((prev) => prev - 1);
+      }, 1000);
+    } else if (otpTimer === 0) {
+      setOtpTimerActive(false);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [otpTimerActive, otpTimer]);
+
   // Clear errors and successes on tab or modal shifts
   useEffect(() => {
     setFormError('');
     setFormSuccess('');
+    setRegFullNameError('');
+    setRegEmailError('');
+    setRegPhoneError('');
+    setRegPasswordError('');
+    setLoginEmailError('');
+    setLoginPasswordError('');
+    setForgotEmailError('');
+    setNewPasswordError('');
+    setConfirmNewPasswordError('');
   }, [authMode, selectedRole, showAuthFlow]);
 
   // Handle redirects based on role
@@ -195,35 +241,84 @@ export const LandingPage: React.FC = () => {
     }
   };
 
+  // Client-side validations
+  const validateEmail = (email: string, role: string) => {
+    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if (!email) {
+      return 'Email address is required';
+    }
+    if (!emailRegex.test(email)) {
+      return 'Please enter a valid email address';
+    }
+    if (role === 'Student') {
+      const isInstitutional = email.endsWith('.edu') || email.endsWith('.edu.in') || email.endsWith('.ac.in');
+      if (!isInstitutional) {
+        return 'Institutional email recommended (.edu, .edu.in, .ac.in)';
+      }
+    }
+    return '';
+  };
+
+  const validatePassword = (password: string) => {
+    if (!password) {
+      return 'Password is required';
+    }
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters long';
+    }
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    if (!hasUpperCase || !hasNumber || !hasSpecial) {
+      return 'Must contain an uppercase letter, a number, and a special character';
+    }
+    return '';
+  };
+
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
     setFormSuccess('');
+    setRegFullNameError('');
+    setRegEmailError('');
+    setRegPhoneError('');
+    setRegPasswordError('');
 
-    // Field validation
-    if (!regFullName || !regEmail || !regPhone || !regPassword) {
-      setFormError('Please fill in all required fields');
-      return;
+    let hasErrors = false;
+
+    if (!regFullName) {
+      setRegFullNameError('Full Name is required');
+      hasErrors = true;
     }
 
-    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-    if (!emailRegex.test(regEmail)) {
-      setFormError('Please enter a valid email address');
-      return;
+    const emailErr = validateEmail(regEmail, selectedRole);
+    if (emailErr) {
+      setRegEmailError(emailErr);
+      if (emailErr.includes('required') || emailErr.includes('valid')) {
+        hasErrors = true;
+      }
     }
 
-    if (regPhone.trim().length < 10) {
-      setFormError('Please enter a valid phone number (minimum 10 digits)');
-      return;
+    if (!regPhone) {
+      setRegPhoneError('Phone Number is required');
+      hasErrors = true;
+    } else if (regPhone.trim().length < 10) {
+      setRegPhoneError('Please enter a valid phone number (minimum 10 digits)');
+      hasErrors = true;
     }
 
-    if (regPassword.length < 8) {
-      setFormError('Password must be at least 8 characters long');
-      return;
+    const passErr = validatePassword(regPassword);
+    if (passErr) {
+      setRegPasswordError(passErr);
+      hasErrors = true;
     }
 
     if (!regTerms) {
       setFormError('You must agree to the Terms of Service & Privacy Policy');
+      hasErrors = true;
+    }
+
+    if (hasErrors) {
       return;
     }
 
@@ -238,16 +333,11 @@ export const LandingPage: React.FC = () => {
     setFormLoading(false);
 
     if (result.success) {
-      setFormSuccess('Account created successfully! Redirecting...');
-      setRegFullName('');
-      setRegEmail('');
-      setRegPhone('');
-      setRegPassword('');
-      setRegTerms(false);
-      setTimeout(() => {
-        setShowAuthFlow(false);
-        redirectUserByRole(result.user.role);
-      }, 1200);
+      setFormSuccess('Verification code sent to your email. Redirecting to verification...');
+      setOtpTimer(59);
+      setOtpTimerActive(true);
+      setOtpPurpose('signup');
+      setAuthMode('otp');
     } else {
       setFormError(result.message || 'Registration failed');
     }
@@ -257,15 +347,28 @@ export const LandingPage: React.FC = () => {
     e.preventDefault();
     setFormError('');
     setFormSuccess('');
+    setLoginEmailError('');
+    setLoginPasswordError('');
 
-    if (!loginEmail || !loginPassword) {
-      setFormError('Please fill in both email and password');
-      return;
+    let hasErrors = false;
+
+    if (!loginEmail) {
+      setLoginEmailError('Email is required');
+      hasErrors = true;
+    } else {
+      const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+      if (!emailRegex.test(loginEmail)) {
+        setLoginEmailError('Please enter a valid email address');
+        hasErrors = true;
+      }
     }
 
-    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-    if (!emailRegex.test(loginEmail)) {
-      setFormError('Please enter a valid email address');
+    if (!loginPassword) {
+      setLoginPasswordError('Password is required');
+      hasErrors = true;
+    }
+
+    if (hasErrors) {
       return;
     }
 
@@ -279,10 +382,179 @@ export const LandingPage: React.FC = () => {
       setLoginPassword('');
       setTimeout(() => {
         setShowAuthFlow(false);
-        redirectUserByRole(result.user.role);
+        // Note: For Clerk, redirects will check current user's role metadata after setActive completes.
+        // The currentUser object gets updated via user hook propagation.
+        // Let's redirect based on the role state or retrieve it from currentUser/metadata if available.
+        redirectUserByRole(selectedRole.toLowerCase());
       }, 1200);
     } else {
       setFormError(result.message || 'Invalid email or password');
+    }
+  };
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotEmailError('');
+    setFormError('');
+    setFormSuccess('');
+
+    const emailErr = validateEmail(forgotEmail, selectedRole);
+    if (emailErr) {
+      setForgotEmailError(emailErr);
+      if (emailErr.includes('required') || emailErr.includes('valid')) {
+        return;
+      }
+    }
+
+    setFormLoading(true);
+    const result = await forgotPassword(forgotEmail);
+    setFormLoading(false);
+
+    if (result.success) {
+      setFormSuccess('Verification code sent to your email.');
+      setOtpTimer(59);
+      setOtpTimerActive(true);
+      setOtpPurpose('reset');
+      setAuthMode('otp');
+    } else {
+      setFormError(result.message || 'Failed to dispatch reset code.');
+    }
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (value && !/^\d$/.test(value)) return;
+
+    const newOtp = [...otpDigits];
+    newOtp[index] = value;
+    setOtpDigits(newOtp);
+
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`otp-input-${index + 1}`) as HTMLInputElement;
+      if (nextInput) nextInput.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      const newOtp = [...otpDigits];
+      if (!newOtp[index] && index > 0) {
+        newOtp[index - 1] = '';
+        setOtpDigits(newOtp);
+        const prevInput = document.getElementById(`otp-input-${index - 1}`) as HTMLInputElement;
+        if (prevInput) prevInput.focus();
+      } else {
+        newOtp[index] = '';
+        setOtpDigits(newOtp);
+      }
+    }
+  };
+
+  const handleOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    setFormSuccess('');
+
+    const otpCode = otpDigits.join('');
+    if (otpCode.length < 6) {
+      setFormError('Please enter all 6 digits of the confirmation code.');
+      return;
+    }
+
+    setFormLoading(true);
+    if (otpPurpose === 'signup') {
+      const result = await verifyOtp(otpCode, selectedRole.toLowerCase());
+      setFormLoading(false);
+      if (result.success) {
+        setFormSuccess('Account created successfully! Redirecting...');
+        setRegFullName('');
+        setRegEmail('');
+        setRegPhone('');
+        setRegPassword('');
+        setRegTerms(false);
+        setTimeout(() => {
+          setShowAuthFlow(false);
+          redirectUserByRole(selectedRole.toLowerCase());
+        }, 1200);
+      } else {
+        setFormError(result.message || 'Verification failed');
+      }
+    } else {
+      // Save code for password reset and advance screen
+      setFormLoading(false);
+      setResetOtpCode(otpCode);
+      setFormSuccess('Code verified successfully.');
+      setAuthMode('reset');
+    }
+  };
+
+  const handleResendCode = async () => {
+    setFormError('');
+    setFormSuccess('');
+    setFormLoading(true);
+    let result;
+    if (otpPurpose === 'signup') {
+      // Re-trigger registration email dispatch
+      result = await register({
+        fullName: regFullName,
+        email: regEmail,
+        phone: regPhone,
+        password: regPassword,
+        role: selectedRole.toLowerCase()
+      });
+    } else {
+      result = await forgotPassword(forgotEmail);
+    }
+    setFormLoading(false);
+
+    if (result.success) {
+      setOtpTimer(59);
+      setOtpTimerActive(true);
+      setFormSuccess('A new verification code has been dispatched.');
+    } else {
+      setFormError(result.message || 'Failed to dispatch code.');
+    }
+  };
+
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    setFormSuccess('');
+    setNewPasswordError('');
+    setConfirmNewPasswordError('');
+
+    let hasErrors = false;
+
+    const passErr = validatePassword(newPassword);
+    if (passErr) {
+      setNewPasswordError(passErr);
+      hasErrors = true;
+    }
+
+    if (!confirmNewPassword) {
+      setConfirmNewPasswordError('Please confirm your new password');
+      hasErrors = true;
+    } else if (newPassword !== confirmNewPassword) {
+      setConfirmNewPasswordError('Passwords do not match');
+      hasErrors = true;
+    }
+
+    if (hasErrors) {
+      return;
+    }
+
+    setFormLoading(true);
+    const result = await resetPassword(resetOtpCode, newPassword);
+    setFormLoading(false);
+
+    if (result.success) {
+      setFormSuccess('Password updated successfully! Redirecting to sign in...');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setTimeout(() => {
+        setAuthMode('login');
+      }, 1500);
+    } else {
+      setFormError(result.message || 'Failed to reset password.');
     }
   };
 
@@ -440,26 +712,43 @@ export const LandingPage: React.FC = () => {
             </div>
           </nav>
 
-          <div className="flex items-center space-x-3">
-            <button 
-              onClick={() => {
-                setShowAuthFlow(true);
-                setAuthMode('select');
-              }}
-              className="inline-flex items-center justify-center px-4.5 py-2 border border-slate-200 bg-transparent hover:bg-slate-50 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-750 transition-all cursor-pointer"
-            >
-              Login
-            </button>
-            <button
-              onClick={() => {
-                setShowAuthFlow(true);
-                setAuthMode('select');
-              }}
-              className="inline-flex items-center justify-center px-5 py-2 bg-[#5e17eb] hover:bg-[#4b12bc] text-xs font-bold text-white rounded-xl shadow-sm transition-all cursor-pointer"
-            >
-              Get Started
-            </button>
-          </div>
+          {isAuthenticated ? (
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => redirectUserByRole(currentUser?.role || 'student')}
+                className="inline-flex items-center justify-center px-4.5 py-2 border border-slate-200 bg-transparent hover:bg-slate-50 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-750 transition-all cursor-pointer"
+              >
+                Go to Dashboard
+              </button>
+              <button
+                onClick={logout}
+                className="inline-flex items-center justify-center px-5 py-2 bg-red-600 hover:bg-red-700 text-xs font-bold text-white rounded-xl shadow-sm transition-all cursor-pointer"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-3">
+              <button 
+                onClick={() => {
+                  setShowAuthFlow(true);
+                  setAuthMode('select');
+                }}
+                className="inline-flex items-center justify-center px-4.5 py-2 border border-slate-200 bg-transparent hover:bg-slate-50 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-750 transition-all cursor-pointer"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => {
+                  setShowAuthFlow(true);
+                  setAuthMode('select');
+                }}
+                className="inline-flex items-center justify-center px-5 py-2 bg-[#5e17eb] hover:bg-[#4b12bc] text-xs font-bold text-white rounded-xl shadow-sm transition-all cursor-pointer"
+              >
+                Get Started
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
@@ -2219,12 +2508,12 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 {formError && (
-                  <div className="bg-red-50 text-red-600 border border-red-200 rounded-xl p-3 text-xs font-bold text-center">
+                  <div className="bg-red-50 text-red-650 border border-red-200 rounded-xl p-3 text-xs font-bold text-center">
                     {formError}
                   </div>
                 )}
                 {formSuccess && (
-                  <div className="bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl p-3 text-xs font-bold text-center">
+                  <div className="bg-emerald-50 text-emerald-650 border border-emerald-200 rounded-xl p-3 text-xs font-bold text-center">
                     {formSuccess}
                   </div>
                 )}
@@ -2237,10 +2526,15 @@ export const LandingPage: React.FC = () => {
                       placeholder="Enter your full name"
                       value={regFullName}
                       onChange={(e) => setRegFullName(e.target.value)}
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] text-xs font-semibold text-slate-800"
+                      className={`w-full px-3.5 py-2.5 border rounded-xl focus:outline-none focus:ring-1 text-xs font-semibold text-slate-800 transition-colors ${
+                        regFullNameError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-200 focus:ring-[#5e17eb] focus:border-[#5e17eb]'
+                      }`}
                       required
                       disabled={formLoading}
                     />
+                    {regFullNameError && (
+                      <span className="text-red-500 text-[10px] font-bold mt-1 font-sans block">{regFullNameError}</span>
+                    )}
                   </div>
 
                   <div className="space-y-1">
@@ -2258,10 +2552,17 @@ export const LandingPage: React.FC = () => {
                       }
                       value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] text-xs font-semibold text-slate-800"
+                      className={`w-full px-3.5 py-2.5 border rounded-xl focus:outline-none focus:ring-1 text-xs font-semibold text-slate-800 transition-colors ${
+                        regEmailError ? (regEmailError.includes('recommended') ? 'border-amber-500 focus:ring-amber-500 focus:border-amber-500' : 'border-red-500 focus:ring-red-500 focus:border-red-500') : 'border-slate-200 focus:ring-[#5e17eb] focus:border-[#5e17eb]'
+                      }`}
                       required
                       disabled={formLoading}
                     />
+                    {regEmailError && (
+                      <span className={`text-[10px] font-bold mt-1 font-sans block ${
+                        regEmailError.includes('recommended') ? 'text-amber-500' : 'text-red-500'
+                      }`}>{regEmailError}</span>
+                    )}
                   </div>
 
                   <div className="space-y-1">
@@ -2271,10 +2572,15 @@ export const LandingPage: React.FC = () => {
                       placeholder="+91 98765 43210"
                       value={regPhone}
                       onChange={(e) => setRegPhone(e.target.value)}
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] text-xs font-semibold text-slate-800"
+                      className={`w-full px-3.5 py-2.5 border rounded-xl focus:outline-none focus:ring-1 text-xs font-semibold text-slate-800 transition-colors ${
+                        regPhoneError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-200 focus:ring-[#5e17eb] focus:border-[#5e17eb]'
+                      }`}
                       required
                       disabled={formLoading}
                     />
+                    {regPhoneError && (
+                      <span className="text-red-500 text-[10px] font-bold mt-1 font-sans block">{regPhoneError}</span>
+                    )}
                   </div>
 
                   <div className="space-y-1">
@@ -2285,7 +2591,9 @@ export const LandingPage: React.FC = () => {
                         placeholder="Create a strong password"
                         value={regPassword}
                         onChange={(e) => setRegPassword(e.target.value)}
-                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] pr-10 text-xs font-semibold text-slate-800"
+                        className={`w-full px-3.5 py-2.5 border rounded-xl focus:outline-none focus:ring-1 pr-10 text-xs font-semibold text-slate-800 transition-colors ${
+                          regPasswordError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-200 focus:ring-[#5e17eb] focus:border-[#5e17eb]'
+                        }`}
                         required
                         disabled={formLoading}
                       />
@@ -2297,6 +2605,9 @@ export const LandingPage: React.FC = () => {
                         {showPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
                       </button>
                     </div>
+                    {regPasswordError && (
+                      <span className="text-red-500 text-[10px] font-bold mt-1 font-sans block">{regPasswordError}</span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 py-1">
@@ -2305,7 +2616,7 @@ export const LandingPage: React.FC = () => {
                       id="termsAgree"
                       checked={regTerms}
                       onChange={(e) => setRegTerms(e.target.checked)}
-                      className="rounded border-slate-350 text-purple-650 focus:ring-purple-500 w-3.5 h-3.5 cursor-pointer"
+                      className="rounded border-slate-350 text-[#5e17eb] focus:ring-[#5e17eb] w-3.5 h-3.5 cursor-pointer"
                       required
                       disabled={formLoading}
                     />
@@ -2341,7 +2652,7 @@ export const LandingPage: React.FC = () => {
                   </div>
                 </form>
               </div>
-            ) : (
+            ) : authMode === 'login' ? (
               <div className="space-y-6">
                 {/* Back button */}
                 <button 
@@ -2359,12 +2670,12 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 {formError && (
-                  <div className="bg-red-50 text-red-600 border border-red-200 rounded-xl p-3 text-xs font-bold text-center">
+                  <div className="bg-red-50 text-red-650 border border-red-200 rounded-xl p-3 text-xs font-bold text-center">
                     {formError}
                   </div>
                 )}
                 {formSuccess && (
-                  <div className="bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl p-3 text-xs font-bold text-center">
+                  <div className="bg-emerald-50 text-emerald-650 border border-emerald-200 rounded-xl p-3 text-xs font-bold text-center">
                     {formSuccess}
                   </div>
                 )}
@@ -2385,10 +2696,15 @@ export const LandingPage: React.FC = () => {
                       }
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] text-xs font-semibold text-slate-800"
+                      className={`w-full px-3.5 py-2.5 border rounded-xl focus:outline-none focus:ring-1 text-xs font-semibold text-slate-800 transition-colors ${
+                        loginEmailError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-200 focus:ring-[#5e17eb] focus:border-[#5e17eb]'
+                      }`}
                       required
                       disabled={formLoading}
                     />
+                    {loginEmailError && (
+                      <span className="text-red-500 text-[10px] font-bold mt-1 font-sans block">{loginEmailError}</span>
+                    )}
                   </div>
 
                   <div className="space-y-1">
@@ -2399,7 +2715,9 @@ export const LandingPage: React.FC = () => {
                         placeholder="Enter password"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
-                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#5e17eb] pr-10 text-xs font-semibold text-slate-800"
+                        className={`w-full px-3.5 py-2.5 border rounded-xl focus:outline-none focus:ring-1 pr-10 text-xs font-semibold text-slate-800 transition-colors ${
+                          loginPasswordError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-200 focus:ring-[#5e17eb] focus:border-[#5e17eb]'
+                        }`}
                         required
                         disabled={formLoading}
                       />
@@ -2411,6 +2729,20 @@ export const LandingPage: React.FC = () => {
                         {showPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
                       </button>
                     </div>
+                    {loginPasswordError && (
+                      <span className="text-red-500 text-[10px] font-bold mt-1 font-sans block">{loginPasswordError}</span>
+                    )}
+                  </div>
+
+                  <div className="text-right py-1">
+                    <button 
+                      type="button"
+                      onClick={() => setAuthMode('forgot')}
+                      className="text-[10px] font-bold text-slate-400 hover:text-[#5e17eb] transition-colors"
+                      disabled={formLoading}
+                    >
+                      Forgot Password?
+                    </button>
                   </div>
 
                   <button
@@ -2438,6 +2770,238 @@ export const LandingPage: React.FC = () => {
                       Create Account
                     </button>
                   </div>
+                </form>
+              </div>
+            ) : authMode === 'forgot' ? (
+              <div className="space-y-6">
+                {/* Back button */}
+                <button 
+                  onClick={() => setAuthMode('login')}
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                  disabled={formLoading}
+                >
+                  <ChevronLeftIcon className="w-4 h-4" />
+                  <span>Back to Login</span>
+                </button>
+
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Reset Your Password</h2>
+                  <p className="text-xs text-slate-500 mt-1">Enter the verified email address linked with your account and we will dispatch a digital 6-digit verification code.</p>
+                </div>
+
+                {formError && (
+                  <div className="bg-red-50 text-red-600 border border-red-200 rounded-xl p-3 text-xs font-bold text-center">
+                    {formError}
+                  </div>
+                )}
+                {formSuccess && (
+                  <div className="bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl p-3 text-xs font-bold text-center">
+                    {formSuccess}
+                  </div>
+                )}
+
+                <form onSubmit={handleForgotSubmit} className="space-y-4 text-xs font-bold text-slate-700">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">Email Address</label>
+                    <input
+                      type="email"
+                      placeholder="Enter verified email address"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      className={`w-full px-3.5 py-2.5 border rounded-xl focus:outline-none focus:ring-1 text-xs font-semibold text-slate-800 transition-colors ${
+                        forgotEmailError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-200 focus:ring-[#5e17eb] focus:border-[#5e17eb]'
+                      }`}
+                      required
+                      disabled={formLoading}
+                    />
+                    {forgotEmailError && (
+                      <span className="text-red-500 text-[10px] font-bold mt-1 font-sans block">{forgotEmailError}</span>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={formLoading}
+                    className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all flex items-center justify-center ${
+                      formLoading ? 'opacity-70 cursor-not-allowed' : ''
+                    } ${
+                      selectedRole === 'Student' ? 'bg-purple-600 hover:bg-purple-750' : 
+                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-750' : 
+                      selectedRole === 'College' ? 'bg-blue-600 hover:bg-blue-750' : 'bg-orange-500 hover:bg-orange-600'
+                    }`}
+                  >
+                    {formLoading ? 'Sending Code...' : 'Send Verification Code'}
+                  </button>
+                </form>
+              </div>
+            ) : authMode === 'otp' ? (
+              <div className="space-y-6">
+                {/* Back button */}
+                <button 
+                  onClick={() => setAuthMode('forgot')}
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                  disabled={formLoading}
+                >
+                  <ChevronLeftIcon className="w-4 h-4" />
+                  <span>Back to Email</span>
+                </button>
+
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Security Verification</h2>
+                  <p className="text-xs text-slate-500 mt-1">We sent a 6-digit confirmation code to your email. Please type the digits below to authenticate your identity.</p>
+                </div>
+
+                {formError && (
+                  <div className="bg-red-50 text-red-600 border border-red-200 rounded-xl p-3 text-xs font-bold text-center">
+                    {formError}
+                  </div>
+                )}
+                {formSuccess && (
+                  <div className="bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl p-3 text-xs font-bold text-center">
+                    {formSuccess}
+                  </div>
+                )}
+
+                <form onSubmit={handleOtpVerify} className="space-y-6 text-xs font-bold text-slate-700">
+                  
+                  {/* OTP 6-Digit Grid */}
+                  <div className="flex justify-between items-center gap-2">
+                    {otpDigits.map((digit, index) => (
+                      <input
+                        key={index}
+                        id={`otp-input-${index}`}
+                        type="text"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpChange(index, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                        className="w-11 h-12 border border-slate-200 rounded-xl text-center text-lg font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5e17eb] focus:border-[#5e17eb] bg-slate-50 focus:bg-white transition-all"
+                        required
+                        disabled={formLoading}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Micro actions Area */}
+                  <div className="flex justify-between items-center text-[11px] font-bold text-slate-400 px-1">
+                    {otpTimer > 0 ? (
+                      <span>Resend code in 00:{otpTimer.toString().padStart(2, '0')}</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleResendCode}
+                        className="text-[#5e17eb] hover:underline font-black cursor-pointer"
+                        disabled={formLoading}
+                      >
+                        Resend Code
+                      </button>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={formLoading}
+                    className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all flex items-center justify-center ${
+                      formLoading ? 'opacity-70 cursor-not-allowed' : ''
+                    } ${
+                      selectedRole === 'Student' ? 'bg-purple-600 hover:bg-purple-750' : 
+                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-750' : 
+                      selectedRole === 'College' ? 'bg-blue-600 hover:bg-blue-750' : 'bg-orange-500 hover:bg-orange-600'
+                    }`}
+                  >
+                    {formLoading ? 'Verifying...' : 'Verify & Continue'}
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Create New Password</h2>
+                  <p className="text-xs text-slate-500 mt-1">Ensure your new authorization credential contains safe typographic complexities to maximize profile defense.</p>
+                </div>
+
+                {formError && (
+                  <div className="bg-red-50 text-red-600 border border-red-200 rounded-xl p-3 text-xs font-bold text-center">
+                    {formError}
+                  </div>
+                )}
+                {formSuccess && (
+                  <div className="bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-xl p-3 text-xs font-bold text-center">
+                    {formSuccess}
+                  </div>
+                )}
+
+                <form onSubmit={handleResetSubmit} className="space-y-4 text-xs font-bold text-slate-700">
+                  
+                  {/* New Password */}
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">New Password</label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter new password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className={`w-full px-3.5 py-2.5 border rounded-xl focus:outline-none focus:ring-1 pr-10 text-xs font-semibold text-slate-800 transition-colors ${
+                          newPasswordError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-200 focus:ring-[#5e17eb] focus:border-[#5e17eb]'
+                        }`}
+                        required
+                        disabled={formLoading}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-655 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {newPasswordError && (
+                      <span className="text-red-500 text-[10px] font-bold mt-1 font-sans block">{newPasswordError}</span>
+                    )}
+                  </div>
+
+                  {/* Confirm New Password */}
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">Confirm New Password</label>
+                    <div className="relative">
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        placeholder="Confirm new password"
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        className={`w-full px-3.5 py-2.5 border rounded-xl focus:outline-none focus:ring-1 pr-10 text-xs font-semibold text-slate-800 transition-colors ${
+                          confirmNewPasswordError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-200 focus:ring-[#5e17eb] focus:border-[#5e17eb]'
+                        }`}
+                        required
+                        disabled={formLoading}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-655 cursor-pointer"
+                      >
+                        {showConfirmPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {confirmNewPasswordError && (
+                      <span className="text-red-500 text-[10px] font-bold mt-1 font-sans block">{confirmNewPasswordError}</span>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={formLoading}
+                    className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all flex items-center justify-center ${
+                      formLoading ? 'opacity-70 cursor-not-allowed' : ''
+                    } ${
+                      selectedRole === 'Student' ? 'bg-purple-600 hover:bg-purple-750' : 
+                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-750' : 
+                      selectedRole === 'College' ? 'bg-blue-600 hover:bg-blue-750' : 'bg-orange-500 hover:bg-orange-600'
+                    }`}
+                  >
+                    {formLoading ? 'Updating Password...' : 'Update Password & Sign In'}
+                  </button>
                 </form>
               </div>
             )}

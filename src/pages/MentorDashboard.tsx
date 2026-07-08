@@ -432,7 +432,7 @@ const initialActivityTicker: ActivityItem[] = [
 ];
 
 export const MentorDashboard: React.FC = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
 
   const getInitials = (name: string) => {
     return name
@@ -864,6 +864,12 @@ export const MentorDashboard: React.FC = () => {
                         {item}
                       </button>
                     ))}
+                    <button 
+                      onClick={logout}
+                      className="w-full text-left px-3.5 py-2 text-xs font-bold transition-colors border-t border-slate-100/10 mt-1 text-red-500 hover:bg-red-500/10 cursor-pointer"
+                    >
+                      Sign Out
+                    </button>
                   </div>
                 )}
               </div>

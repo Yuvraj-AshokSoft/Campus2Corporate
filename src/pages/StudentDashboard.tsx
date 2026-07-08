@@ -1068,7 +1068,7 @@ Be concise, warm, and actionable. Keep responses under 100 words. Use bullet poi
 
 export const StudentDashboard: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false);
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
 
   const getInitials = (name: string) => {
     return name
@@ -1183,6 +1183,12 @@ export const StudentDashboard: React.FC = () => {
                         {item}
                       </button>
                     ))}
+                    <button
+                      onClick={logout}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-bold transition-colors border-t border-slate-100 mt-1 cursor-pointer"
+                    >
+                      Sign Out
+                    </button>
                   </div>
                 )}
               </div>
