@@ -28,6 +28,11 @@ import {
   Lightbulb,
   Target,
   Briefcase,
+  LayoutDashboard,
+  ClipboardCheck,
+  MessageSquareText,
+  BadgeCheck,
+  Settings,
 
 } from 'lucide-react';
 import {
@@ -228,7 +233,7 @@ Rules:
           {plan.map((day, i) => (
             <div key={i} className={`rounded-xl border p-3 ${dayColors[i]}`}>
               <div className="flex items-center gap-2 mb-2">
-                <span className={`w-2 h-2 rounded-full`} />
+                <span className={`w-2 h-2 rounded-full ${dayDotColors[i]}`} />
                 <span className="text-xs font-semibold text-slate-700">{day.day}</span>
               </div>
               <ul className="space-y-1">
@@ -1063,10 +1068,10 @@ export const StudentDashboard: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   return (
-    <div className="h-screen bg-slate-50 flex overflow-hidden">
+    <div className="dashboard-shell h-screen bg-slate-50 flex overflow-hidden">
 
       {/* ── Sidebar ── */}
-      <div className="w-60 h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white flex flex-col">
+      <div className="dashboard-sidebar w-60 h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white flex flex-col">
 
         <div className="px-4 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
@@ -1120,10 +1125,10 @@ export const StudentDashboard: React.FC = () => {
       </div>
 
       {/* ── Main content ── */}
-      <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-6">
+      <div className="dashboard-main flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-6">
 
         {/* Hero */}
-        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 px-8 py-7">
+        <div className="dashboard-hero relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 px-8 py-7">
           <div className="absolute top-0 right-0 w-72 h-72 bg-violet-500/10 blur-3xl rounded-full" />
 
           <div className="relative z-10">

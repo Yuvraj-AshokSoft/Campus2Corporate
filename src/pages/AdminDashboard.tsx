@@ -434,7 +434,7 @@ export const AdminDashboard = () => {
   const [activeSidebar, setActiveSidebar] = useState("AI Command Center");
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
+    <div className="admin-dashboard min-h-screen bg-slate-50 font-sans text-slate-800">
 
       {/* ── Header ── */}
       <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">

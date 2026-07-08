@@ -44,6 +44,10 @@ import {
   PolarRadiusAxis,
 } from "recharts";
 
+import { Sidebar } from "../components/layout/Sidebar";
+import { Navbar } from "../components/layout/Navbar";
+
+
 export const CollegeDashboard: React.FC = () => {
 
 
@@ -438,131 +442,37 @@ const departments = [
   
 
   return (
-       <div className="h-screen bg-slate-50 flex overflow-hidden">
+    <div className="dashboard-shell h-screen bg-slate-50 flex overflow-hidden">
 
+      <Sidebar
+        portalLabel="College Portal"
+        items={menuItems}
+        footer={
+          <div className="rounded-xl bg-white/5 border border-white/10 p-5">
+            <p className="text-sm text-slate-400">
+              Academic Year
+            </p>
 
-{/* // sidebar  */}
+            <h3 className="text-2xl font-bold mt-2">
+              2025–26
+            </h3>
 
+            <div className="mt-4 h-2 rounded-full bg-slate-700">
+              <div className="h-2 rounded-full w-3/4 bg-gradient-to-r from-indigo-400 to-violet-500" />
+            </div>
 
-<div className="w-60 h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white flex flex-col">  
-
-  <div className="px-4 py-4 border-b border-white/10">
-
-    <div className="flex items-center gap-3">
-
-      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg">
-
-        <GraduationCap className="w-7 h-7 text-white"/>
-
-      </div>
-
-      <div>
-
-        <h2 className="text-2xl font-bold">
-          C2C
-        </h2>
-
-        <p className="text-sm text-indigo-200">
-          College Portal
-        </p>
-
-      </div>
-
-    </div>
-
-  </div>
-
-  {/* Navigation */}
-
-  <div className="flex-1 overflow-y-auto px-5 py-6 space-y-1">
-
-    {menuItems.map((item,index)=>{
-
-      const Icon=item.icon;
-
-      return(
-
-        <button
-          key={index}
-          className={`w-full flex items-center justify-between rounded-2xl px-3 py-2 transition-all duration-300
-
-          ${
-            item.active
-            ? "bg-gradient-to-r from-indigo-500/30 to-violet-500/20 border border-indigo-400/20 shadow-lg"
-            : "hover:bg-white/5"
-          }`}
-        >
-
-          <div className="flex items-center gap-4">
-
-            <Icon
-              className={`w-6 h-6 ${
-                item.active
-                ? "text-indigo-300"
-                : "text-slate-300"
-              }`}
-            />
-
-            <span
-              className={`font-medium text-lg ${
-                item.active
-                ? "text-white"
-                : "text-slate-300"
-              }`}
-            >
-              {item.title}
-            </span>
-
+            <p className="text-xs text-slate-400 mt-3">
+              Semester Progress • 75%
+            </p>
           </div>
-
-          {item.active && (
-
-            <ChevronRight className="w-5 h-5 text-indigo-300"/>
-
-          )}
-
-        </button>
-
-      )
-
-    })}
-
-  </div>
-
-  {/* Bottom */}
-
- <div className="p-4">
-
-    <div className="rounded-xl bg-white/5 border border-white/10 p-5">
-
-      <p className="text-sm text-slate-400">
-        Academic Year
-      </p>
-
-      <h3 className="text-2xl font-bold mt-2">
-        2025–26
-      </h3>
-
-      <div className="mt-4 h-2 rounded-full bg-slate-700">
-
-        <div className="h-2 rounded-full w-3/4 bg-gradient-to-r from-indigo-400 to-violet-500"/>
-
-      </div>
-
-      <p className="text-xs text-slate-400 mt-3">
-        Semester Progress • 75%
-      </p>
-
-    </div>
-
-  </div>
-
-</div>
+        }
+      />
 
 
 
-<div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-6">
-   <div className=" relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 px-8 py-7 ">
+
+<div className="dashboard-main flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-6">
+   <div className="dashboard-hero relative overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 px-8 py-7 ">
 
   {/* Glow */}
   <div className="absolute top-0 right-0 w-72 h-72 bg-violet-500/10 blur-3xl rounded-full" />

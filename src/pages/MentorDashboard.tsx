@@ -671,7 +671,7 @@ export const MentorDashboard: React.FC = () => {
 
   return (
     <DashboardLayout>
-      <div className={`min-h-screen font-sans antialiased flex flex-col md:flex-row transition-colors duration-300 ${
+      <div className={`dashboard-shell min-h-screen font-sans antialiased flex flex-col md:flex-row transition-colors duration-300 ${
         darkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-50/50 text-slate-800'
       }`}>
         
@@ -687,7 +687,7 @@ export const MentorDashboard: React.FC = () => {
         )}
 
         {/* Sidebar Nav */}
-        <aside className={`w-full md:w-64 shrink-0 flex flex-col justify-between border-r transition-colors duration-300 ${
+        <aside className={`dashboard-sidebar w-full md:w-64 shrink-0 flex flex-col justify-between border-r transition-colors duration-300 ${
           darkMode ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-slate-900 text-slate-400 border-slate-850'
         }`}>
           <div className="p-6">
@@ -860,7 +860,7 @@ export const MentorDashboard: React.FC = () => {
           </header>
 
           {/* Main workspace */}
-          <main className="flex-1 p-6 overflow-y-auto">
+          <main className="dashboard-main flex-1 p-6 overflow-y-auto">
 
             {/* TAB 1: OVERVIEW */}
             {activeTab === 'overview' && (
