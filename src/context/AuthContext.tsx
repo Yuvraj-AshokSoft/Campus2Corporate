@@ -103,7 +103,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { success: true };
     } catch (error: any) {
-      const msg = error.errors?.[0]?.message || 'Account creation failed';
+      let msg = error.errors?.[0]?.message || 'Account creation failed';
+      if (error.errors?.[0]?.code === 'form_password_pwned' || msg.includes('data breach')) {
+        msg = "Password has been found in an online data breach. For account safety, please use a more unique password (e.g., Khu$h1_Smar7).";
+      }
       return { success: false, message: msg };
     }
   };
@@ -159,7 +162,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return { success: false, message: 'Password reset failed.' };
     } catch (error: any) {
-      const msg = error.errors?.[0]?.message || 'Failed to update password';
+      let msg = error.errors?.[0]?.message || 'Failed to update password';
+      if (error.errors?.[0]?.code === 'form_password_pwned' || msg.includes('data breach')) {
+        msg = "Password has been found in an online data breach. For account safety, please use a more unique password (e.g., Khu$h1_Smar7).";
+      }
       return { success: false, message: msg };
     }
   };
