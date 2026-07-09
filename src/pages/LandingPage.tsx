@@ -242,19 +242,12 @@ export const LandingPage: React.FC = () => {
   };
 
   // Client-side validations
-  const validateEmail = (email: string, role: string) => {
-    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+  const validateEmail = (email: string, _role: string) => {
     if (!email) {
       return 'Email address is required';
     }
-    if (!emailRegex.test(email)) {
-      return 'Please enter a valid email address';
-    }
-    if (role === 'Student') {
-      const isInstitutional = email.endsWith('.edu') || email.endsWith('.edu.in') || email.endsWith('.ac.in');
-      if (!isInstitutional) {
-        return 'Institutional email recommended (.edu, .edu.in, .ac.in)';
-      }
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      return 'Please provide a valid personal or professional @gmail.com address.';
     }
     return '';
   };
@@ -2545,15 +2538,11 @@ export const LandingPage: React.FC = () => {
                     </label>
                     <input
                       type="email"
-                      placeholder={
-                        selectedRole === 'Student' ? 'name@college.edu.in' : 
-                        selectedRole === 'Mentor' ? 'name@company.com' : 
-                        selectedRole === 'College' ? 'placement@college.edu' : 'hiring@company.com'
-                      }
+                      placeholder="username@gmail.com"
                       value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
                       className={`w-full px-3.5 py-2.5 border rounded-xl focus:outline-none focus:ring-1 text-xs font-semibold text-slate-800 transition-colors ${
-                        regEmailError ? (regEmailError.includes('recommended') ? 'border-amber-500 focus:ring-amber-500 focus:border-amber-500' : 'border-red-500 focus:ring-red-500 focus:border-red-500') : 'border-slate-200 focus:ring-[#5e17eb] focus:border-[#5e17eb]'
+                        regEmailError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-200 focus:ring-[#5e17eb] focus:border-[#5e17eb]'
                       }`}
                       required
                       disabled={formLoading}
@@ -2689,11 +2678,7 @@ export const LandingPage: React.FC = () => {
                     </label>
                     <input
                       type="email"
-                      placeholder={
-                        selectedRole === 'Student' ? 'Enter your college email address' : 
-                        selectedRole === 'Mentor' ? 'Enter corporate email address' : 
-                        selectedRole === 'College' ? 'Enter institutional email address' : 'Enter corporate email address'
-                      }
+                      placeholder="username@gmail.com"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       className={`w-full px-3.5 py-2.5 border rounded-xl focus:outline-none focus:ring-1 text-xs font-semibold text-slate-800 transition-colors ${
