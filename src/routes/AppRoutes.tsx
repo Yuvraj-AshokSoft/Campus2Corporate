@@ -11,6 +11,10 @@ import { MentorDashboard } from '../pages/MentorDashboard';
 
 import { AuthProvider } from '../context/AuthContext';
 import { ProtectedRoute } from './ProtectedRoute';
+import Analytics from "../pages/admin/analytics";
+import UserManagement from "../pages/admin/userManagement";
+import CompanyManagement from "../pages/admin/companyManagement";
+import Settings from "../pages/admin/settings";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -90,6 +94,15 @@ export const AppRoutes: React.FC = () => {
                 </ProtectedRoute>
               } 
             />
+
+            <Route path="/admin-dashboard/analytics" element={<Analytics />} />
+
+<Route path="/admin-dashboard/users" element={<UserManagement />} />
+
+<Route path="/admin-dashboard/companies" element={<CompanyManagement />} />
+
+<Route path="/admin-dashboard/settings" element={<Settings />} />
+
 
             {/* Mentor routes */}
             <Route 

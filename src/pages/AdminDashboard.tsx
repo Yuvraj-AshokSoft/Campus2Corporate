@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { NavLink } from "react-router-dom";
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type IconName =
@@ -63,19 +65,67 @@ const Icon = ({ name, className = "h-4 w-4" }: { name: IconName; className?: str
 };
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-const sidebarItems: Array<{ label: string; icon: IconName; active?: boolean; badge?: number }> = [
-  { label: "AI Command Center", icon: "ai-brain", active: true },
-  { label: "Placement Intelligence", icon: "placement", badge: 3 },
-  { label: "Student Analytics", icon: "users" },
-  { label: "Recruiter Intelligence", icon: "briefcase", badge: 18 },
-  { label: "Resume Intelligence", icon: "resume" },
-  { label: "Interview Analytics", icon: "interview" },
-  { label: "Risk Monitoring", icon: "risk", badge: 5 },
-  { label: "Campus Insights", icon: "campus" },
-  { label: "AI Automation", icon: "automation" },
-  { label: "Security Center", icon: "shield" },
-  { label: "System Health", icon: "monitor" },
+type SidebarItem = {
+  label: string;
+  icon: IconName;
+  path: string;
+};
+
+const sidebarItems: SidebarItem[] = [
+  {
+    label: "Admin Dashboard",
+    icon: "dashboard",
+    path: "/admin-dashboard",
+  },
+  {
+    label: "Student Dashboard",
+    icon: "graduation",
+    path: "/student-dashboard",
+  },
+  {
+    label: "College Dashboard",
+    icon: "building",
+    path: "/college-dashboard",
+  },
+  {
+    label: "Recruiter Dashboard",
+    icon: "briefcase",
+    path: "/recruiter-dashboard",
+  },
+  {
+    label: "Mentor Dashboard",
+    icon: "user-check",
+    path: "/mentor-dashboard",
+  },
+
+  {
+    label: "Analytics",
+    icon: "chart",
+    path: "/admin-dashboard/analytics",
+  },
+  {
+    label: "User Management",
+    icon: "users",
+    path: "/admin-dashboard/users",
+  },
+  {
+    label: "Company Management",
+    icon: "monitor",
+    path: "/admin-dashboard/companies",
+  },
+  {
+    label: "Settings",
+    icon: "settings",
+    path: "/admin-dashboard/settings",
+  },
 ];
+  // { label: "Interview Analytics", icon: "interview" },
+  // { label: "Risk Monitoring", icon: "risk", badge: 5 },
+  // { label: "Campus Insights", icon: "campus" },
+  // { label: "AI Automation", icon: "automation" },
+  // { label: "Security Center", icon: "shield" },
+  // { label: "System Health", icon: "monitor" },
+
 
 const stats = [
   { label: "Student signals", value: "18.4k", change: "+14%", up: true, icon: "users" as IconName, accent: "#7c3aed", bg: "#faf5ff", text: "#6d28d9" },
@@ -431,7 +481,7 @@ const AIRiskScorer = () => {
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 export const AdminDashboard = () => {
   const [aiOpen, setAiOpen] = useState(false);
-  const [activeSidebar, setActiveSidebar] = useState("AI Command Center");
+
 
   return (
     <div className="admin-dashboard min-h-screen bg-slate-50 font-sans text-slate-800">
@@ -495,25 +545,33 @@ export const AdminDashboard = () => {
               </div>
 
               {/* Nav */}
-              <nav className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-                {sidebarItems.map((item) => (
-                  <button key={item.label}
-                    onClick={() => setActiveSidebar(item.label)}
-                    className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] font-semibold transition ${
-                      activeSidebar === item.label
-                        ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                    }`}>
-                    <Icon name={item.icon} className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="flex-1 truncate">{item.label}</span>
-                    {item.badge && (
-                      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black ${activeSidebar === item.label ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
-                        {item.badge}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </nav>
+            <nav className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+  {sidebarItems.map((item) => (
+    <NavLink
+      key={item.label}
+      to={item.path}
+      className={({ isActive }) =>
+        `flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-semibold transition ${
+          isActive
+            ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+        }`
+      }
+    >
+      <Icon name={item.icon} className="h-3.5 w-3.5 flex-shrink-0" />
+
+      <span className="flex-1 truncate">
+        {item.label}
+      </span>
+
+      {/* {item.badge && (
+        <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-black text-slate-600">
+          {item.badge}
+        </span>
+      )} */}
+    </NavLink>
+  ))}
+</nav>
 
               {/* Security score */}
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
