@@ -217,7 +217,7 @@ const PulseDot = ({ color = "#10b981" }: { color?: string }) => (
 );
 
 // ─── Section header (matches admin card headers) ─────────────────────────────
-const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#2563eb" }:
+const SectionHeader = ({ eyebrow, title, sub, icon, iconColor: _iconColor = "#2563eb" }:
   { eyebrow: string; title: string; sub?: string; icon: IconName; iconColor?: string }) => (
   <div className="flex items-start justify-between">
     <div>
