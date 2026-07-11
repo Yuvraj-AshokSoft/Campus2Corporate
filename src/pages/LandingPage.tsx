@@ -100,7 +100,7 @@ const ScrollReveal: React.FC<{ children: React.ReactNode; className?: string; id
   );
 };
 
-const HERO_PHRASES = ["Power Campus Placements", "Build Industry-Ready Talent", "Accelerate Enterprise Hiring"];
+// Removed HERO_PHRASES
 
 // ─── Inline Icon SVG Helpers for Authentication Onboarding Flow ────────────
 const CloseIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-4" }) => (
@@ -141,6 +141,12 @@ const ShieldCheckIcon: React.FC<{ className?: string }> = ({ className = "w-4 h-
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+
+  const phrases = [
+    "Power Campus Placements",
+    "Build Industry-Ready-Talent",
+    "Accelerate Enterprise Hiring"
+  ];
 
   const [hoveredStakeholder, setHoveredStakeholder] = useState<string | null>(null);
 
@@ -580,16 +586,16 @@ export const LandingPage: React.FC = () => {
     const phraseInterval = setInterval(() => {
       setIsPhraseTransitioning(true);
       phraseTimeoutId = setTimeout(() => {
-        setPhraseIndex((prev) => (prev + 1) % HERO_PHRASES.length);
+        setPhraseIndex((prev) => (prev + 1) % phrases.length);
         setIsPhraseTransitioning(false);
       }, 300);
-    }, 3000);
+    }, 2000);
 
     return () => {
       clearInterval(phraseInterval);
       if (phraseTimeoutId) clearTimeout(phraseTimeoutId);
     };
-  }, []);
+  }, [phrases.length]);
 
   const stakeholders = [
     { 
@@ -778,7 +784,7 @@ export const LandingPage: React.FC = () => {
       </header>
 
       {/* 1. Hero Section */}
-      <section className="relative overflow-hidden z-10 pt-16 pb-24 md:pt-20 md:pb-32 w-full">
+      <section className="relative overflow-hidden z-10 pt-16 pb-24 md:pt-20 md:pb-32 w-full bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] bg-gradient-to-tr from-indigo-50/40 via-white to-purple-50/40">
 
         {/* Background Accents */}
         <div className="absolute top-[-10%] left-[-15%] w-[1000px] h-[1000px] bg-[#5e17eb]/10 rounded-full blur-[140px] pointer-events-none" />
@@ -795,19 +801,20 @@ export const LandingPage: React.FC = () => {
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tighter text-slate-900 leading-[1.1] max-w-2xl">
-                From Learning to Hiring— <br className="hidden sm:inline" />
-                <span className="relative inline-block text-[#5e17eb] h-[1.2em] overflow-hidden align-bottom pb-2 w-full sm:w-auto">
-                  <span
-                    className={`inline-block transition-all duration-700 ease-in-out transform absolute left-0 right-0 ${
-                      isPhraseTransitioning 
-                        ? 'opacity-0 -translate-y-8 blur-sm' 
-                        : 'opacity-100 translate-y-0 blur-none'
-                    }`}
-                  >
-                    {HERO_PHRASES[phraseIndex]}
-                  </span>
-                </span>
+                From Learning to Hiring—
               </h1>
+
+              <div className="h-12 overflow-hidden relative mt-2 w-full flex items-center justify-center lg:justify-start">
+                <span
+                  className={`inline-block text-xl sm:text-2xl md:text-3xl bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent font-extrabold ${
+                    isPhraseTransitioning
+                      ? 'opacity-0 translate-y-2 scale-95 transition-all duration-300 ease-out'
+                      : 'opacity-100 translate-y-0 scale-100 transition-all duration-300 ease-out'
+                  }`}
+                >
+                  {phrases[phraseIndex]}
+                </span>
+              </div>
 
               <p className="text-lg text-slate-500 leading-relaxed max-w-xl font-medium">
                 Empower students with structured courses, real-world projects, AI-powered assessments, expert mentorship, and data-driven career guidance—while enabling institutions to track performance and recruiters to discover enterprise-ready talent.
@@ -819,7 +826,7 @@ export const LandingPage: React.FC = () => {
                     setShowAuthFlow(true);
                     setAuthScreen('select');
                   }}
-                  className="group inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-[#5e17eb] hover:bg-[#4b12bc] text-base font-semibold text-white shadow-lg shadow-purple-500/25 hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer"
+                  className="group inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-[#5e17eb] hover:bg-[#4b12bc] text-base font-semibold text-white shadow-lg hover:shadow-purple-500/30 active:scale-[0.98] transition-all duration-300 transform hover:scale-[1.01] cursor-pointer"
                 >
                   Initiate Integration
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
@@ -851,7 +858,7 @@ export const LandingPage: React.FC = () => {
                 />
 
                 {/* Floating Badge: Learn */}
-                <div className="absolute top-[8%] left-[0%] sm:left-[5%] bg-white/90 backdrop-blur-sm p-3 rounded-2xl shadow-xl shadow-purple-500/10 border border-white flex flex-col items-center justify-center z-20 hover:-translate-y-1 transition-transform duration-300">
+                <div className="absolute top-[8%] left-[0%] sm:left-[5%] bg-white/85 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl p-3 flex flex-col items-center justify-center z-20 hover:-translate-y-1 transition-transform duration-300">
                   <div className="w-10 h-10 bg-purple-100 text-[#5e17eb] rounded-xl flex items-center justify-center mb-1">
                     <GraduationCap className="w-5 h-5" />
                   </div>
@@ -859,7 +866,7 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 {/* Floating Badge: Build */}
-                <div className="absolute top-[45%] left-[-12%] sm:left-[-8%] bg-white/90 backdrop-blur-sm p-3 rounded-2xl shadow-xl shadow-purple-500/10 border border-white flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300 z-20">
+                <div className="absolute top-[45%] left-[-12%] sm:left-[-8%] bg-white/85 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl p-3 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300 z-20">
                   <div className="w-10 h-10 bg-purple-100 text-[#5e17eb] rounded-xl flex items-center justify-center mb-1">
                     <Cpu className="w-5 h-5" />
                   </div>
@@ -867,7 +874,7 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 {/* Floating Badge: Assess */}
-                <div className="absolute bottom-[15%] left-[-2%] sm:left-[5%] bg-white/90 backdrop-blur-sm p-3 rounded-2xl shadow-xl shadow-purple-500/10 border border-white flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300 z-20">
+                <div className="absolute bottom-[15%] left-[-2%] sm:left-[5%] bg-white/85 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl p-3 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300 z-20">
                   <div className="w-10 h-10 bg-purple-100 text-[#5e17eb] rounded-xl flex items-center justify-center mb-1">
                     <FileText className="w-5 h-5" />
                   </div>
@@ -875,7 +882,7 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 {/* Floating Badge: Career Growth */}
-                <div className="absolute top-[12%] right-[0%] sm:right-[5%] bg-white/90 backdrop-blur-sm p-3 rounded-2xl shadow-xl shadow-purple-500/10 border border-white flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300 z-20">
+                <div className="absolute top-[12%] right-[0%] sm:right-[5%] bg-white/85 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl p-3 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300 z-20">
                   <div className="w-10 h-10 bg-purple-100 text-[#5e17eb] rounded-xl flex items-center justify-center mb-1">
                     <BarChart3 className="w-5 h-5" />
                   </div>
@@ -883,7 +890,7 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 {/* Floating Badge: Top Recruiters */}
-                <div className="absolute top-[45%] right-[-12%] sm:right-[-8%] bg-white/90 backdrop-blur-sm p-3 rounded-2xl shadow-xl shadow-purple-500/10 border border-white flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300 z-20">
+                <div className="absolute top-[45%] right-[-12%] sm:right-[-8%] bg-white/85 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl p-3 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300 z-20">
                   <div className="w-10 h-10 bg-purple-100 text-[#5e17eb] rounded-xl flex items-center justify-center mb-1">
                     <Briefcase className="w-5 h-5" />
                   </div>
@@ -891,7 +898,7 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 {/* Floating Badge: Right Opportunities */}
-                <div className="absolute bottom-[20%] right-[-5%] sm:right-[2%] bg-white/90 backdrop-blur-sm p-3 rounded-2xl shadow-xl shadow-purple-500/10 border border-white flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300 z-20">
+                <div className="absolute bottom-[20%] right-[-5%] sm:right-[2%] bg-white/85 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl p-3 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300 z-20">
                   <div className="w-10 h-10 bg-purple-100 text-[#5e17eb] rounded-xl flex items-center justify-center mb-1">
                     <Target className="w-5 h-5" />
                   </div>
@@ -1739,173 +1746,6 @@ export const LandingPage: React.FC = () => {
         </div>
       </ScrollReveal>
 
-      {/* 7. AI Intelligence Section */}
-      <ScrollReveal id="ai" className="relative z-10 py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-
-          {/* Left Column: AI Visual Card */}
-          <div className="lg:col-span-6 relative">
-            <div className="absolute inset-0 bg-gradient-to-tr from-[#5e17eb]/15 to-purple-500/10 rounded-3xl blur-3xl pointer-events-none"></div>
-
-            {/* The main AI intelligence mockup - Dark Premium Terminal */}
-            <div className="relative bg-slate-950 border border-slate-800 rounded-3xl p-6 lg:p-8 shadow-2xl overflow-hidden group text-left font-sans">
-              
-              <style dangerouslySetInnerHTML={{ __html: `
-                @keyframes typeLine {
-                  0% { opacity: 0; transform: translateX(-5px); }
-                  100% { opacity: 1; transform: translateX(0); }
-                }
-                .type-line { opacity: 0; animation: typeLine 0.4s ease-out forwards; }
-              `}} />
-
-              {/* Header Bar */}
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800/80 mb-5">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                </div>
-                <span className="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider">
-                  C2C_MATCH_ENGINE // Live Feed
-                </span>
-              </div>
-
-              {/* Terminal Rows */}
-              <div className="font-mono text-xs md:text-sm tracking-wide space-y-3 min-h-[180px] p-2">
-                <div className="text-slate-400 type-line" style={{ animationDelay: '0.2s' }}>
-                  &gt; [INFO] Initializing candidate match analysis matrix...
-                </div>
-                <div className="text-slate-400 type-line" style={{ animationDelay: '1.0s' }}>
-                  &gt; [INFO] Parsing verified portfolio repositories & skill arrays...
-                </div>
-                <div className="text-[#5e17eb] font-semibold type-line" style={{ animationDelay: '1.8s' }}>
-                  &gt; [SUCCESS] Target verified: React, TypeScript, System Architecture
-                </div>
-                <div className="text-slate-400 type-line" style={{ animationDelay: '2.6s' }}>
-                  &gt; [COMPUTING] Querying active corporate recruiter benchmarks...
-                </div>
-                <div className="text-emerald-400 font-bold type-line" style={{ animationDelay: '3.4s' }}>
-                  &gt; [COMPLETE] Score Generated: 94% (Highly Recommended Node)
-                </div>
-                <div className="flex items-center gap-1.5 mt-2 type-line" style={{ animationDelay: '4.0s' }}>
-                  <div className="w-1.5 h-3 bg-[#5e17eb] animate-pulse"></div>
-                  <span className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">Pipeline synchronization complete</span>
-                </div>
-              </div>
-
-              {/* Animated Status Loading Line */}
-              <div className="mt-6 w-full bg-slate-800 h-1 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 animate-pulse w-[94%]" style={{ animationDelay: '3.4s' }}></div>
-              </div>
-            </div>
-
-            {/* Micro-Metrics Score Footers */}
-            <div className="grid grid-cols-2 gap-4 mt-5 relative z-10 text-left font-sans">
-              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between">
-                <span className="text-[10px] text-slate-400 block mb-2 font-bold uppercase tracking-wider">Placement Readiness</span>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold font-sans text-slate-900">94%</span>
-                  <span className="bg-emerald-50 text-emerald-700 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-semibold">
-                    TOP TIER
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between">
-                <span className="text-[10px] text-slate-400 block mb-2 font-bold uppercase tracking-wider">AI Confidence Rating</span>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold font-sans text-slate-900">98%</span>
-                  <span className="bg-purple-50 text-purple-700 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-semibold">
-                    VERIFIED
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Right Column: AI Explanations */}
-          <div className="lg:col-span-6 flex flex-col space-y-6">
-            <span className="px-3.5 py-1.5 rounded-full bg-[#5e17eb]/10 border border-[#5e17eb]/20 text-xs font-bold text-[#5e17eb] w-fit shadow-sm uppercase tracking-wider">
-              AI MATCHING ENGINE
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              The Intelligence Behind Every Placement
-            </h2>
-            <p className="text-slate-600 text-base font-medium leading-relaxed">
-              C2C AI analyzes verified skills, assessments, projects, and recruiter requirements to recommend the best-fit candidates in real time.
-            </p>
-
-            <div className="space-y-6 pt-2">
-
-              {/* Feature 1 */}
-              <div className="flex items-start space-x-4 group cursor-default">
-                <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 shrink-0 shadow-sm group-hover:bg-[#5e17eb] group-hover:border-[#5e17eb] group-hover:text-white transition-all duration-300">
-                  <FileText className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 leading-tight">AI Resume Intelligence</h3>
-                  <p className="text-xs text-slate-500 mt-1.5 font-medium leading-relaxed">Automatically extracts and verifies candidate skills from portfolios and resumes.</p>
-                  <div className="flex items-center gap-2 mt-2.5">
-                    <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[9px] font-bold text-slate-600 uppercase">AI Parsing</span>
-                    <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[9px] font-bold text-slate-600 uppercase">ATS Ready</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Feature 2 */}
-              <div className="flex items-start space-x-4 group cursor-default">
-                <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 shrink-0 shadow-sm group-hover:bg-[#5e17eb] group-hover:border-[#5e17eb] group-hover:text-white transition-all duration-300">
-                  <Brain className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 leading-tight">Skill Gap Analysis</h3>
-                  <p className="text-xs text-slate-500 mt-1.5 font-medium leading-relaxed">Identifies missing competencies and recommends personalized micro-learning paths.</p>
-                  <div className="flex items-center gap-2 mt-2.5">
-                    <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[9px] font-bold text-slate-600 uppercase">Verified Skills</span>
-                    <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[9px] font-bold text-slate-600 uppercase">Learning Paths</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="flex items-start space-x-4 group cursor-default">
-                <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 shrink-0 shadow-sm group-hover:bg-[#5e17eb] group-hover:border-[#5e17eb] group-hover:text-white transition-all duration-300">
-                  <Cpu className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 leading-tight">Intelligent Job Matching</h3>
-                  <p className="text-xs text-slate-500 mt-1.5 font-medium leading-relaxed">Maps candidate profiles against complex enterprise requirements with precision.</p>
-                  <div className="flex items-center gap-2 mt-2.5">
-                    <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[9px] font-bold text-slate-600 uppercase">Recommendations</span>
-                    <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[9px] font-bold text-slate-600 uppercase">Role Alignment</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Feature 4 */}
-              <div className="flex items-start space-x-4 group cursor-default">
-                <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 shrink-0 shadow-sm group-hover:bg-[#5e17eb] group-hover:border-[#5e17eb] group-hover:text-white transition-all duration-300">
-                  <Target className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 leading-tight">AI Candidate Ranking</h3>
-                  <p className="text-xs text-slate-500 mt-1.5 font-medium leading-relaxed">Provides recruiters with a prioritized list of highly qualified, pre-assessed talent.</p>
-                  <div className="flex items-center gap-2 mt-2.5">
-                    <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[9px] font-bold text-slate-600 uppercase">Automated Ranking</span>
-                    <span className="px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-[9px] font-bold text-slate-600 uppercase">Real-Time Data</span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      </ScrollReveal>
-
-            {/* 8. Dashboard Preview Section */}
-      
-
       {/* Structural visual transition element */}
       <div className="relative h-24 w-full bg-gradient-to-b from-slate-50/50 to-white overflow-hidden pointer-events-none">
         <svg className="absolute bottom-0 w-full h-12 text-slate-50/30 fill-current" viewBox="0 0 1440 74" fill="none">
@@ -1988,7 +1828,7 @@ export const LandingPage: React.FC = () => {
             {[
               {
                 id: 'story-1',
-                name: 'Aman',
+                name: 'Gaurav ',
                 role: 'Software Engineer',
                 company: 'Amazon',
                 package: '₹12 LPA Package',

@@ -227,7 +227,7 @@ const initialStudents: Student[] = [
   },
   {
     id: '4',
-    name: 'Aman Verma',
+    name: 'Gaurav  Verma',
     college: 'BITS Pilani',
     branch: 'Computer Science',
     semester: '8th Semester',
@@ -243,7 +243,7 @@ const initialStudents: Student[] = [
     communicationRating: 80,
     avatar: 'AV',
     avatarBg: 'bg-violet-600',
-    email: 'aman.verma@bits.edu',
+    email: 'Gaurav .verma@bits.edu',
     phone: '+91 98765 43213',
     notes: [
       'Completed distributed key-value storage challenges.',
@@ -428,7 +428,7 @@ const initialActivityTicker: ActivityItem[] = [
   { id: 'act1', text: 'Rahul Sharma completed Java Assessment', time: '10m ago', done: true },
   { id: 'act2', text: 'Priya Singh uploaded Resume for review', time: '1h ago', done: true },
   { id: 'act3', text: 'Anjali Gupta completed Aptitude Mock', time: '4h ago', done: false },
-  { id: 'act4', text: 'Aman Verma initiated Learning Roadmap', time: '1d ago', done: true }
+  { id: 'act4', text: 'Gaurav  Verma initiated Learning Roadmap', time: '1d ago', done: true }
 ];
 
 export const MentorDashboard: React.FC = () => {
@@ -1504,7 +1504,7 @@ export const MentorDashboard: React.FC = () => {
                           {[
                             { rank: '🥇 Rank 1', name: 'Rahul Sharma', fit: 'Stripe (React)', score: 96 },
                             { rank: '🥈 Rank 2', name: 'Priya Singh', fit: 'Atlassian (Full Stack)', score: 94 },
-                            { rank: '🥉 Rank 3', name: 'Aman Verma', fit: 'Vercel (Backend)', score: 92 }
+                            { rank: '🥉 Rank 3', name: 'Gaurav  Verma', fit: 'Vercel (Backend)', score: 92 }
                           ].map((item, idx) => (
                             <tr key={idx} className={`border-b transition-colors ${
                               darkMode ? 'border-slate-800/40 hover:bg-slate-850/50' : 'border-slate-100/40 hover:bg-slate-50/20'
