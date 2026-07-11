@@ -1,23 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { DashboardLayout } from '../components/layout/DashboardLayout';
+import { roleNavigation } from '../data/platform';
 import {
   ArrowLeft,
+  BarChart3,
   Bell,
   Briefcase,
   Building2,
   CalendarDays,
-  ChevronRight,
   Clock,
   FileText,
   Filter,
   GraduationCap,
   LayoutDashboard,
-  Search,
   Settings,
   Sparkles,
   Star,
   Users,
-  LogOut,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -38,87 +38,48 @@ const candidates = [
 export const RecruiterDashboard: React.FC = () => {
   const { logout } = useAuth();
 
-  const menuItems = [
-    { title: 'Dashboard', icon: LayoutDashboard, active: true },
-    { title: 'Candidates', icon: Users },
-    { title: 'Job Drives', icon: Briefcase },
-    { title: 'Interviews', icon: CalendarDays },
-    { title: 'Scorecards', icon: FileText },
-    { title: 'Settings', icon: Settings },
-    { title: 'Sign Out', icon: LogOut, onClick: logout },
-  ];
+  const menuItems = roleNavigation.recruiter.map((item) => ({
+    title: item.title,
+    icon: item.title === 'Dashboard' ? LayoutDashboard : item.title === 'Candidates' ? Users : item.title === 'Job Posts' ? Briefcase : item.title === 'Applications' ? FileText : item.title === 'Interviews' ? CalendarDays : item.title === 'Analytics' ? BarChart3 : Settings,
+    active: item.active,
+    onClick: item.title === 'Settings' ? logout : undefined,
+  }));
 
   return (
-    <div className="dashboard-shell h-screen bg-slate-50 flex overflow-hidden">
-      <aside className="dashboard-sidebar">
-        <div className="dashboard-sidebar-brand">
-          <div className="dashboard-brand-mark">
-            <Briefcase className="h-5 w-5" />
+    <DashboardLayout
+      portalLabel="Recruiter Portal"
+      title="Recruiter Dashboard"
+      subtitle="Manage verified talent pipelines and interview activity"
+      actions={
+        <Link to="/" className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
+          <ArrowLeft className="h-4 w-4" />
+          Home
+        </Link>
+      }
+      profile={
+        <button type="button" className="dashboard-icon-button" aria-label="Notifications">
+          <Bell className="h-4 w-4" />
+        </button>
+      }
+      footer={
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <p className="text-xs font-semibold text-slate-400">Hiring Pipeline</p>
+          <p className="mt-2 text-2xl font-bold text-white">76%</p>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full w-3/4 rounded-full bg-gradient-to-r from-blue-400 to-emerald-400" />
           </div>
-          <div>
-            <h2>C2C</h2>
-            <p>Recruiter Portal</p>
-          </div>
+          <p className="mt-3 text-xs text-slate-400">Stripe India cohort</p>
         </div>
-
-        <nav className="dashboard-sidebar-nav" aria-label="Recruiter navigation">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <button
-                key={item.title}
-                type="button"
-                onClick={item.onClick}
-                className={`dashboard-nav-item ${item.active ? 'is-active' : ''}`}
-                aria-current={item.active ? 'page' : undefined}
-              >
-                <span className="dashboard-nav-label">
-                  <Icon className="h-4 w-4" />
-                  {item.title}
-                </span>
-                {item.active && <ChevronRight className="dashboard-nav-chevron" />}
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="dashboard-sidebar-footer">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <p className="text-xs font-semibold text-slate-400">Hiring Pipeline</p>
-            <p className="mt-2 text-2xl font-bold text-white">76%</p>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full w-3/4 rounded-full bg-gradient-to-r from-blue-400 to-emerald-400" />
-            </div>
-            <p className="mt-3 text-xs text-slate-400">Stripe India cohort</p>
-          </div>
-        </div>
-      </aside>
-
-      <main className="dashboard-main flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
-        <header className="dashboard-navbar -mx-6 -mt-6 mb-6">
-          <div>
-            <h1>Recruiter Dashboard</h1>
-            <p>Manage verified talent pipelines and interview activity.</p>
-          </div>
-          <div className="dashboard-navbar-actions">
-            <div className="dashboard-search" role="search">
-              <Search className="h-4 w-4" />
-              <span>Search candidates</span>
-              <kbd>/</kbd>
-            </div>
-            <button type="button" className="dashboard-icon-button" aria-label="Notifications">
-              <Bell className="h-4 w-4" />
-            </button>
-            <Link
-              to="/"
-              className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Home
-            </Link>
-          </div>
-        </header>
+      }
+      sidebarItems={menuItems.map((item) => ({
+        title: item.title,
+        icon: ({ className }) => <item.icon className={className} />,
+        active: item.active,
+        onClick: item.onClick,
+      }))}
+      className="bg-slate-50"
+    >
+      <div className="mx-auto max-w-7xl">
 
         <section className="dashboard-hero relative overflow-hidden rounded-[24px] px-6 py-6 text-white">
           <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -264,7 +225,7 @@ export const RecruiterDashboard: React.FC = () => {
             </section>
           </div>
         </section>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };

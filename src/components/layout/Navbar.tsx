@@ -18,7 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({ title = 'Dashboard', subtitle, a
       </div>
 
       <div className="dashboard-navbar-actions">
-        <div className="dashboard-search" role="search">
+        <div className="dashboard-search hidden md:flex" role="search">
           <Search className="h-4 w-4" />
           <span>Search</span>
           <kbd>/</kbd>

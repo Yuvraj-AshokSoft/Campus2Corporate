@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
+import { DashboardLayout } from "../components/layout/DashboardLayout";
+import { roleNavigation } from "../data/platform";
 import {
   AreaChart,
   Area,
@@ -144,21 +146,6 @@ const modules = [
   { title: "Python Programming", category: "Programming Fundamentals", progress: 45, color: "#10b981" },
   { title: "Data Structures & Algorithms", category: "Technical Interview Prep", progress: 60, color: "#8b5cf6" },
   { title: "Aptitude Training", category: "Placement Prep", progress: 85, color: "#f59e0b" },
-];
-
-const sidebarItems: Array<{ label: string; icon: IconName; active?: boolean; badge?: number }> = [
-  { label: "Dashboard", icon: "dashboard", active: true },
-  { label: "My Profile", icon: "user-check" },
-  { label: "My Courses", icon: "book", badge: 3 },
-  { label: "Project List", icon: "briefcase" },
-  { label: "Applied Projects", icon: "clipboard", badge: 2 },
-  { label: "Assessments", icon: "clipboard", badge: 2 },
-  { label: "Placements", icon: "briefcase" },
-  { label: "Mentorship", icon: "users" },
-  { label: "Career Coach", icon: "ai-brain" },
-  { label: "Resume Score", icon: "resume" },
-  { label: "Certificates", icon: "award" },
-  { label: "Settings", icon: "settings" },
 ];
 
 const stats = [
@@ -1137,73 +1124,75 @@ export const StudentDashboard = () => {
   const [activeSidebar, setActiveSidebar] = useState("Dashboard");
   const [profileOpen, setProfileOpen] = useState(false);
 
+  const sidebarItemsMapped = roleNavigation.student.map((item) => ({
+    title: item.title,
+    icon: item.title.toLowerCase().replace(/\s+/g, "-") as IconName,
+    active: item.active,
+    badge: item.badge,
+  }));
+
+  const profileMenu = (
+    <div className="relative">
+      <button onClick={() => setProfileOpen(!profileOpen)}
+        className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-[10px] font-black text-white">{initials}</span>
+        <span className="hidden sm:inline">{firstName}</span>
+        <Icon name="chevron-down" className={`h-3.5 w-3.5 text-slate-400 transition-transform ${profileOpen ? "rotate-180" : ""}`} />
+      </button>
+      {profileOpen && (
+        <div className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-xl">
+          <div className="border-b border-slate-100 p-3">
+            <p className="text-sm font-bold text-slate-900">{fullName}</p>
+            <p className="text-xs text-slate-400">{email}</p>
+          </div>
+          {["My Profile", "My Courses", "Certificates", "Settings"].map((item) => (
+            <button key={item} className="w-full px-4 py-2 text-left text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900">
+              {item}
+            </button>
+          ))}
+          <button onClick={logout}
+            className="mt-1 flex w-full items-center gap-2 border-t border-slate-100 px-4 py-2 text-left text-sm font-bold text-rose-600 transition hover:bg-rose-50">
+            <Icon name="logout" className="h-3.5 w-3.5" />
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="student-dashboard min-h-screen bg-slate-50 font-sans text-slate-800">
-
-      {/* ── Header ── */}
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-[60px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-md shadow-blue-500/25">
-              <Icon name="graduation" className="h-5 w-5 text-white" />
-              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
-            </div>
-            <div>
-              <p className="text-sm font-black tracking-tight text-slate-900">C2C Student</p>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Campus2Corporate</p>
-            </div>
-          </div>
-
-          <div className="hidden w-64 cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-400 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/40 md:flex">
-            <Icon name="search" className="h-3.5 w-3.5" />
-            <span className="text-[13px]">Search portal…</span>
-            <kbd className="ml-auto rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-bold text-slate-400">⌘K</kbd>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-50">
-              <Icon name="bell" className="h-4 w-4" />
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white">3</span>
-            </button>
-            <button onClick={() => setAiOpen(true)}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-3.5 py-2 text-sm font-bold text-white shadow-md shadow-blue-500/20 transition hover:from-blue-700 hover:to-blue-800">
-              <Icon name="sparkles" className="h-3.5 w-3.5" />
-              Ask AI
-            </button>
-            <div className="relative">
-              <button onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-[10px] font-black text-white">{initials}</span>
-                <span className="hidden sm:inline">{firstName}</span>
-                <Icon name="chevron-down" className={`h-3.5 w-3.5 text-slate-400 transition-transform ${profileOpen ? "rotate-180" : ""}`} />
-              </button>
-              {profileOpen && (
-                <div className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-xl">
-                  <div className="border-b border-slate-100 p-3">
-                    <p className="text-sm font-bold text-slate-900">{fullName}</p>
-                    <p className="text-xs text-slate-400">{email}</p>
-                  </div>
-                  {["My Profile", "My Courses", "Certificates", "Settings"].map((item) => (
-                    <button key={item} className="w-full px-4 py-2 text-left text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900">
-                      {item}
-                    </button>
-                  ))}
-                  <button onClick={logout}
-                    className="mt-1 flex w-full items-center gap-2 border-t border-slate-100 px-4 py-2 text-left text-sm font-bold text-rose-600 transition hover:bg-rose-50">
-                    <Icon name="logout" className="h-3.5 w-3.5" />
-                    Sign out
-                  </button>
-                </div>
-              )}
-            </div>
+    <DashboardLayout
+      portalLabel="Student Portal"
+      title="Student Dashboard"
+      subtitle="Placement-ready learning workspace"
+      actions={
+        <>
+          <button onClick={() => setAiOpen(true)} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-3.5 py-2 text-sm font-bold text-white shadow-md shadow-blue-500/20 transition hover:from-blue-700 hover:to-blue-800">
+            <Icon name="sparkles" className="h-3.5 w-3.5" />
+            Ask AI
+          </button>
+        </>
+      }
+      profile={profileMenu}
+      footer={
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <p className="text-xs font-semibold text-slate-400">Placement readiness</p>
+          <p className="mt-2 text-2xl font-bold text-white">78%</p>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full w-[78%] rounded-full bg-gradient-to-r from-blue-400 to-emerald-400" />
           </div>
         </div>
-      </header>
-
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      }
+      sidebarItems={sidebarItemsMapped.map((item) => ({
+        title: item.title,
+        icon: ({ className }) => <Icon name={item.icon} className={className} />,
+        active: item.active,
+        badge: item.badge,
+      }))}
+      className="student-dashboard font-sans text-slate-800"
+    >
+      <div className="mx-auto max-w-7xl">
         <div className="flex gap-6">
-
-          {/* ── Sidebar ── */}
           <aside className="hidden w-56 flex-shrink-0 lg:block">
             <div className="sticky top-[76px] space-y-3">
               <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-4 shadow-lg">
@@ -1217,16 +1206,16 @@ export const StudentDashboard = () => {
               </div>
 
               <nav className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-                {sidebarItems.map((item) => (
-                  <button key={item.label}
-                    onClick={() => setActiveSidebar(item.label)}
+                {sidebarItemsMapped.map((item) => (
+                  <button key={item.title}
+                    onClick={() => setActiveSidebar(item.title)}
                     className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] font-semibold transition ${
-                      activeSidebar === item.label ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      activeSidebar === item.title ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     }`}>
                     <Icon name={item.icon} className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="flex-1 truncate">{item.label}</span>
+                    <span className="flex-1 truncate">{item.title}</span>
                     {item.badge && (
-                      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black ${activeSidebar === item.label ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
+                      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black ${activeSidebar === item.title ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
                         {item.badge}
                       </span>
                     )}
@@ -1250,7 +1239,6 @@ export const StudentDashboard = () => {
             </div>
           </aside>
 
-          {/* ── Main Content ── */}
           <main className="min-w-0 flex-1 space-y-5">
 
             {/* Hero banner */}
@@ -1515,7 +1503,7 @@ export const StudentDashboard = () => {
           <Icon name="sparkles" className="h-6 w-6 text-white" />
         </button>
       )}
-    </div>
+    </DashboardLayout>
   );
 };
 

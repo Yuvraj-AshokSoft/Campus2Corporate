@@ -10,7 +10,6 @@ import {
   CartesianGrid,
 } from "recharts";
 import { useNavigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
 // ─── Icon System (matches Admin Dashboard) ────────────────────────────────────
 type IconName =
   | "activity" | "alert" | "arrow-up" | "arrow-down" | "bell" | "briefcase"
@@ -261,7 +260,9 @@ const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#2563eb" }:
     <div>
       <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{eyebrow}</p>
       <h2 className="mt-0.5 flex items-center gap-2 text-lg font-black text-slate-900">
-        <Icon name={icon} className="h-4 w-4"  />
+        <span style={{ color: iconColor }}>
+          <Icon name={icon} className="h-4 w-4" />
+        </span>
         {title}
       </h2>
       {sub && <p className="mt-1 text-xs text-slate-400">{sub}</p>}
@@ -273,7 +274,7 @@ const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#2563eb" }:
 // ═══════════════════════════════════════════════════════════════════════════
 // FEATURE 1 — AI Smart Study Planner
 // ═══════════════════════════════════════════════════════════════════════════
-const AIStudyPlanner = () => {
+export const AIStudyPlanner = () => {
   const { context } = useStudentProfile();
   const [loading, setLoading] = useState(false);
   const [plan, setPlan] = useState<StudyDay[] | null>(null);
@@ -375,7 +376,7 @@ Rules:
 // ═══════════════════════════════════════════════════════════════════════════
 // FEATURE 2 — AI Placement Readiness Analyzer
 // ═══════════════════════════════════════════════════════════════════════════
-const AIProfileAnalyzer = () => {
+export const AIProfileAnalyzer = () => {
   const { context } = useStudentProfile();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ProfileResult | null>(null);
@@ -505,7 +506,7 @@ ${context}`,
 // ═══════════════════════════════════════════════════════════════════════════
 // FEATURE 3 — AI ATS Resume Scorer
 // ═══════════════════════════════════════════════════════════════════════════
-const AIATSScorer = () => {
+export const AIATSScorer = () => {
   const [fileName, setFileName] = useState("");
   const [fileContent, setFileContent] = useState("");
   const [loading, setLoading] = useState(false);
@@ -729,7 +730,7 @@ ${resumeText}`,
 // ═══════════════════════════════════════════════════════════════════════════
 // FEATURE 4 — AI Job Skills & Gap Analysis Matching
 // ═══════════════════════════════════════════════════════════════════════════
-const AISkillGapAnalyzer = () => {
+export const AISkillGapAnalyzer = () => {
   const { context } = useStudentProfile();
   const [role, setRole] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1170,12 +1171,11 @@ Be concise, warm, and actionable. Keep responses under 100 words. Use bullet poi
 // MAIN DASHBOARD
 // ═══════════════════════════════════════════════════════════════════════════
 export const StudentDashboard = () => {
-  const { fullName, firstName, initials, email, phone, logout } = useStudentProfile();
+  const { fullName, firstName, initials, email, phone } = useStudentProfile();
   const [aiOpen, setAiOpen] = useState(false);
   const [activeSidebar, setActiveSidebar] = useState("Dashboard");
   const [profileOpen, setProfileOpen] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   return (
     <div className="student-dashboard min-h-screen bg-slate-50 font-sans text-slate-800">
 

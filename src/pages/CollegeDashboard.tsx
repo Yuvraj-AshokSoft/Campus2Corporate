@@ -4,29 +4,18 @@ import {
   UserCheck,
   Award,
   Building2,
-   CheckCircle2,
+  CheckCircle2,
   FileText,
-   CalendarDays,
   Calendar,
+  CalendarDays,
   Brain,
-
+  Clock,
   Upload,
   Sparkles,
   UserPlus,
   ClipboardList,
-  FileBarChart2,
-   LayoutDashboard,
   GraduationCap,
-
-  BookOpen,
-  ClipboardCheck,
-  Briefcase,
-  
-  BarChart3,
-  
-  Settings,
-    Clock,
-  LogOut,
+  FileBarChart2,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -43,13 +32,7 @@ import {
   PolarRadiusAxis,
 } from "recharts";
 
-import { Sidebar } from "../components/layout/Sidebar";
-import { useAuth } from "../context/AuthContext";
-
-
 export const CollegeDashboard: React.FC = () => {
-  const { logout } = useAuth();
-
 
   const upcomingDrives = [
   {
@@ -146,67 +129,6 @@ export const CollegeDashboard: React.FC = () => {
     students: 74,
     status: "Hiring",
     color: "bg-purple-500",
-  },
-];
-
-
-  const menuItems = [
-  {
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    active: true,
-  },
-  {
-      title: "Mentorship",
-       icon: UserCheck 
-  },
-
-  {
-    title: "Departments",
-    icon: Building2,
-  },
-  {
-    title: "Students",
-    icon: GraduationCap,
-  },
-  {
-    title: "Courses",
-    icon: BookOpen,
-  },
-  {
-    title: "Assessments",
-    icon: ClipboardCheck,
-  },
-  {
-    title: "Placements",
-    icon: Briefcase,
-  },
-  {
-    title: "Recruiters",
-    icon: Users,
-  },
-   { title: "Scholarships", icon: Award },
-
-  { 
-      title: "Events", icon: Calendar
-  },
-
-  {
-    title: "Analytics",
-    icon: BarChart3,
-  },
-  {
-    title: "Reports",
-    icon: FileBarChart2,
-  },
-  {
-    title: "Settings",
-    icon: Settings,
-  },
-  {
-    title: "Sign Out",
-    icon: LogOut,
-    onClick: () => logout(),
   },
 ];
 
@@ -449,29 +371,6 @@ const departments = [
   return (
     <div className="dashboard-shell h-screen bg-slate-50 flex overflow-hidden">
 
-      <Sidebar
-        portalLabel="College Portal"
-        items={menuItems}
-        footer={
-          <div className="rounded-xl bg-white/5 border border-white/10 p-5">
-            <p className="text-sm text-slate-400">
-              Academic Year
-            </p>
-
-            <h3 className="text-2xl font-bold mt-2">
-              2025–26
-            </h3>
-
-            <div className="mt-4 h-2 rounded-full bg-slate-700">
-              <div className="h-2 rounded-full w-3/4 bg-gradient-to-r from-indigo-400 to-violet-500" />
-            </div>
-
-            <p className="text-xs text-slate-400 mt-3">
-              Semester Progress • 75%
-            </p>
-          </div>
-        }
-      />
 
 
 

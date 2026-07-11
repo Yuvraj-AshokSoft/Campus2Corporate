@@ -24,7 +24,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ...props
 }) => {
   return (
-    <aside className={cn('dashboard-sidebar', className)} {...props}>
+    <aside className={cn('dashboard-sidebar hidden lg:flex', className)} {...props}>
       <div className="dashboard-sidebar-brand">
         <div className="dashboard-brand-mark">
           <GraduationCap className="h-5 w-5" />

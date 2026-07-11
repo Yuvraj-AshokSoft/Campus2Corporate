@@ -6,6 +6,7 @@ import {
   Calendar,
   FileText,
   CheckCheck,
+  type LucideIcon,
 } from "lucide-react";
 
 interface Notification {
@@ -14,6 +15,7 @@ interface Notification {
   description: string;
   time: string;
   read: boolean;
+  icon: LucideIcon;
   iconColor: string;
 }
 
