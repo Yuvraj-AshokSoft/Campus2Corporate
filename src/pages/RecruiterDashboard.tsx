@@ -32,7 +32,7 @@ const candidates = [
   { name: 'Rahul Sharma', role: 'Frontend Engineer', college: 'DTU', score: '94%', stage: 'Technical Round' },
   { name: 'Priya Singh', role: 'Full Stack Engineer', college: 'NIT Trichy', score: '88%', stage: 'Assessment' },
   { name: 'Anjali Gupta', role: 'Product Designer', college: 'IIT Bombay', score: '91%', stage: 'Portfolio Review' },
-  { name: 'Aman Verma', role: 'Backend Engineer', college: 'BITS Pilani', score: '85%', stage: 'Shortlisted' },
+  { name: 'Gaurav  Verma', role: 'Backend Engineer', college: 'BITS Pilani', score: '85%', stage: 'Shortlisted' },
 ];
 
 export const RecruiterDashboard: React.FC = () => {
