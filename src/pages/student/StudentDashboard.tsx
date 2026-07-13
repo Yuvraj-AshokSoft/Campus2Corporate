@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { useNavigate } from "react-router-dom";
+import StudentLayout from "../../components/student/StudentLayout";
 // ─── Icon System (matches Admin Dashboard) ────────────────────────────────────
 type IconName =
   | "activity" | "alert" | "arrow-up" | "arrow-down" | "bell" | "briefcase"
@@ -1173,132 +1173,16 @@ Be concise, warm, and actionable. Keep responses under 100 words. Use bullet poi
 export const StudentDashboard = () => {
   const { fullName, firstName, initials, email, phone } = useStudentProfile();
   const [aiOpen, setAiOpen] = useState(false);
-  const [activeSidebar, setActiveSidebar] = useState("Dashboard");
-  const [profileOpen, setProfileOpen] = useState(false);
-  const navigate = useNavigate();
   return (
-    <div className="student-dashboard min-h-screen bg-slate-50 font-sans text-slate-800">
-
-      {/* ── Header ── */}
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-[60px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-md shadow-blue-500/25">
-              <Icon name="graduation" className="h-5 w-5 text-white" />
-              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-400" />
-            </div>
-            <div>
-              <p className="text-sm font-black tracking-tight text-slate-900">C2C Student</p>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Campus2Corporate</p>
-            </div>
-          </div>
-
-          <div className="hidden w-64 cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-400 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/40 md:flex">
-            <Icon name="search" className="h-3.5 w-3.5" />
-            <span className="text-[13px]">Search portal…</span>
-            <kbd className="ml-auto rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-bold text-slate-400">⌘K</kbd>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-50">
-              <Icon name="bell" className="h-4 w-4" />
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white">3</span>
-            </button>
-            <button onClick={() => setAiOpen(true)}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-3.5 py-2 text-sm font-bold text-white shadow-md shadow-blue-500/20 transition hover:from-blue-700 hover:to-blue-800">
-              <Icon name="sparkles" className="h-3.5 w-3.5" />
-              Ask AI
-            </button>
-            <div className="relative">
-              <button onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-[10px] font-black text-white">{initials}</span>
-                <span className="hidden sm:inline">{firstName}</span>
-                <Icon name="chevron-down" className={`h-3.5 w-3.5 text-slate-400 transition-transform ${profileOpen ? "rotate-180" : ""}`} />
-              </button>
-              {profileOpen && (
-                <div className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border border-slate-100 bg-white py-1 shadow-xl">
-                  <div className="border-b border-slate-100 p-3">
-                    <p className="text-sm font-bold text-slate-900">{fullName}</p>
-                    <p className="text-xs text-slate-400">{email}</p>
-                  </div>
-                  {[
-                    { label: "My Profile", route: "/student/profile" },
-                    { label: "Certificates", route: "/student/certificates" },
-                    { label: "Settings", route: "/student/settings" },
-                  ].map((item) => (
-                    <button
-                      key={item.label}
-                      onClick={() => {
-                        navigate(item.route);
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="flex gap-6">
-
-          {/* ── Sidebar ── */}
-          <aside className="hidden w-56 flex-shrink-0 lg:block">
-            <div className="sticky top-[76px] space-y-3">
-              <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-4 shadow-lg">
-                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-blue-300">Student Hub</p>
-                <h2 className="mt-1.5 text-base font-black text-white">{fullName}</h2>
-                <p className="mt-1 text-[11px] leading-4 text-slate-400">B.Tech CSE · 4th Year</p>
-                <div className="mt-4 flex items-center gap-2">
-                  <PulseDot color="#10b981" />
-                  <span className="text-[10px] font-semibold text-emerald-400">Placement track active</span>
-                </div>
-              </div>
-
-              <nav className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-                {sidebarItems.map((item) => (
-                  <button key={item.label}
-                    onClick={() => {
-                      setActiveSidebar(item.label);
-                      navigate(item.route);
-                    }}
-                    className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] font-semibold transition ${
-                      activeSidebar === item.label ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                    }`}>
-                    <Icon name={item.icon} className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="flex-1 truncate">{item.label}</span>
-                    {item.badge && (
-                      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black ${activeSidebar === item.label ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"}`}>
-                        {item.badge}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </nav>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-[11px] font-bold text-slate-700">
-                  <Icon name="chart" className="h-3.5 w-3.5 text-blue-600" />
-                  Overall progress
-                </div>
-                <div className="mt-3 flex items-end justify-between">
-                  <span className="text-4xl font-black text-slate-900">65</span>
-                  <span className="mb-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 ring-1 ring-blue-100">Semester 8</span>
-                </div>
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full w-[65%] rounded-full bg-gradient-to-r from-blue-500 to-blue-600" />
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          {/* ── Main Content ── */}
-          <main className="min-w-0 flex-1 space-y-5">
+    <StudentLayout
+      sidebarItems={sidebarItems}
+      sidebarHighlight="Dashboard"
+      userSummary={{ fullName, role: "B.Tech CSE · 4th Year", status: "Placement track active" }}
+      stats={{ label: "Overall progress", value: "65", subtitle: "Semester 8", accent: "Semester 8" }}
+      showAiButton
+      onAiButtonClick={() => setAiOpen(true)}
+    >
+      <>
 
             {/* Hero banner */}
             <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -1316,19 +1200,19 @@ export const StudentDashboard = () => {
                   <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
                     Track your courses, placement readiness, and AI-powered career tools — all in one place.
                   </p>
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {[
-                      { label: "View courses", icon: "book" as IconName },
-                      { label: "Resume score", icon: "resume" as IconName },
-                      { label: "Book mentor", icon: "users" as IconName },
-                      { label: "Schedule mock", icon: "calendar" as IconName },
-                    ].map((a) => (
-                      <button key={a.label}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-[13px] font-semibold text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">
-                        <Icon name={a.icon} className="h-3.5 w-3.5" />
-                        {a.label}
-                      </button>
-                    ))}
+                  <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
+                    <div className="flex items-center gap-2">
+                      <Icon name="lightbulb" className="h-4 w-4 text-blue-600" />
+                      <h3 className="text-sm font-bold text-slate-900">
+                        AI Career Suggestions
+                      </h3>
+                    </div>
+
+                    <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                      <li>• Update your resume after completing every new project.</li>
+                      <li>• Apply to at least 3 internships every week to improve your chances.</li>
+                      <li>• Keep your GitHub active with regular commits and deployments.</li>
+                    </ul>
                   </div>
                 </div>
 
@@ -1542,9 +1426,7 @@ export const StudentDashboard = () => {
                 </div>
               </section>
             </div>
-          </main>
-        </div>
-      </div>
+          </>
 
       {/* ── AI Chat Drawer ── */}
       {aiOpen && (
@@ -1562,7 +1444,7 @@ export const StudentDashboard = () => {
           <Icon name="sparkles" className="h-6 w-6 text-white" />
         </button>
       )}
-    </div>
+    </StudentLayout>
   );
 };
 
