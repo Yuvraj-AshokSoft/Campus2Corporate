@@ -13,8 +13,6 @@ import {
   Monitor,
   ChevronRight,
   UserCheck,
-  Calendar,
-  FileText,
   Database,
   Lock,
   Globe,

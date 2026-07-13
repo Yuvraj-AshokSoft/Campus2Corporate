@@ -13,7 +13,6 @@ import {
   Monitor,
   ChevronRight,
   UserCheck,
-  Calendar,
   FileText,
   UserPlus,
   BarChart3,
