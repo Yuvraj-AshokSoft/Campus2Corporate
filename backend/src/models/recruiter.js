@@ -25,6 +25,10 @@ const recruiterSchema = new mongoose.Schema(
     companyLogo: {
       type: String,
     },
+    company: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Company",
+},
   },
   {
     timestamps: true,
