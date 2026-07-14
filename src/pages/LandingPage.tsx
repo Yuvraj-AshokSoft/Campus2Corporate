@@ -979,7 +979,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* 2. Trusted Value Section */}
-      <ScrollReveal className="relative z-10 py-24 bg-slate-50/50 border-y border-slate-200">
+      <ScrollReveal className="relative z-10 py-20 md:py-28 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] bg-gradient-to-b from-white via-slate-50/50 to-slate-100/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-xs font-bold text-[#5e17eb] uppercase tracking-widest">PLACEMENT ECOSYSTEM</h2>
@@ -989,8 +989,8 @@ export const LandingPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
 
             {/* Student Card */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-indigo-400 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group shadow-lg">
-              <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-5 group-hover:bg-indigo-600 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
+            <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300 group">
+              <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-5 group-hover:bg-indigo-650 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
                 <GraduationCap className="w-5.5 h-5.5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2">{stakeholders[0].name}</h3>
@@ -1000,7 +1000,7 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* College Card */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-violet-400 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group shadow-lg">
+            <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300 group">
               <div className="w-11 h-11 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600 mb-5 group-hover:bg-violet-600 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
                 <Building className="w-5.5 h-5.5" />
               </div>
@@ -1011,7 +1011,7 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Recruiter Card */}
-            <div className="bg-gradient-to-b from-[#5e17eb]/5 to-white border-2 border-[#5e17eb] rounded-2xl p-6 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group shadow-xl scale-105 relative z-10">
+            <div className="bg-white/85 backdrop-blur-md border-2 border-[#5e17eb]/80 shadow-[0_8px_30px_rgb(94,23,235,0.06)] rounded-3xl p-6 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.08)] transition-all duration-300 group scale-105 relative z-10">
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#5e17eb] to-purple-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-md uppercase tracking-widest border border-white/20 whitespace-nowrap">
                 AI Powered
               </span>
@@ -1027,9 +1027,9 @@ export const LandingPage: React.FC = () => {
             {/* Mentor Card */}
             <div 
               onClick={() => navigate('/mentor-dashboard')}
-              className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-fuchsia-400 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group shadow-lg cursor-pointer"
+              className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300 group cursor-pointer"
             >
-              <div className="w-11 h-11 rounded-xl bg-fuchsia-50 flex items-center justify-center text-fuchsia-600 mb-5 group-hover:bg-fuchsia-600 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
+              <div className="w-11 h-11 rounded-xl bg-fuchsia-50 flex items-center justify-center text-fuchsia-600 mb-5 group-hover:bg-fuchsia-650 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
                 <Users className="w-5.5 h-5.5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2">{stakeholders[2].name}</h3>
@@ -1039,8 +1039,8 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Company Card */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-6 hover:border-purple-400 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group shadow-lg">
-              <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 mb-5 group-hover:bg-purple-600 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
+            <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300 group">
+              <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center text-purple-650 mb-5 group-hover:bg-purple-600 group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
                 <Target className="w-5.5 h-5.5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2">{stakeholders[4].name}</h3>
@@ -1088,12 +1088,11 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
           </div>
-
         </div>
       </ScrollReveal>
 
       {/* 3. Problem Section */}
-      <ScrollReveal id="problem" className="relative z-10 py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <ScrollReveal id="problem" className="relative z-10 py-20 md:py-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] bg-gradient-to-b from-white via-slate-50/50 to-slate-100/70 rounded-3xl shadow-sm">
         {/* Ambient Background Bloom */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#5e17eb]/5 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -1104,7 +1103,7 @@ export const LandingPage: React.FC = () => {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mt-5 tracking-tight leading-tight">
             Why Traditional Placement Systems No Longer Work
           </h2>
-          <p className="text-slate-500 mt-4 text-base font-medium leading-relaxed">
+          <p className="text-slate-600 antialiased leading-relaxed max-w-2xl mx-auto mt-4 text-base font-medium">
             Fragmented workflows, outdated assessments, and limited visibility prevent institutions from delivering enterprise-ready talent at scale.
           </p>
         </div>
@@ -1112,7 +1111,7 @@ export const LandingPage: React.FC = () => {
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
 
           {/* Problem 1 */}
-          <div className="bg-white/90 backdrop-blur-sm border border-slate-200/70 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-2xl hover:border-[#5e17eb]/30 transition-all duration-500 hover:-translate-y-1">
+          <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 relative overflow-hidden group hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300">
             <div className="absolute top-0 right-0 w-36 h-36 bg-[#5e17eb]/5 rounded-full blur-xl pointer-events-none group-hover:bg-[#5e17eb]/10 transition-all duration-500"></div>
             <div className="text-[#5e17eb] text-xs font-mono font-black tracking-widest mb-4">01 / LOWER PLACEMENT SUCCESS</div>
             <h3 className="text-lg font-bold text-slate-900 mb-2.5">Industry-Academia Disconnect</h3>
@@ -1122,7 +1121,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Problem 2 */}
-          <div className="bg-white/90 backdrop-blur-sm border border-slate-200/70 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-2xl hover:border-[#5e17eb]/30 transition-all duration-500 hover:-translate-y-1">
+          <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 relative overflow-hidden group hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300">
             <div className="absolute top-0 right-0 w-36 h-36 bg-[#5e17eb]/5 rounded-full blur-xl pointer-events-none group-hover:bg-[#5e17eb]/10 transition-all duration-500"></div>
             <div className="text-[#5e17eb] text-xs font-mono font-black tracking-widest mb-4">02 / POOR DECISION MAKING</div>
             <h3 className="text-lg font-bold text-slate-900 mb-2.5">Limited Performance Insights</h3>
@@ -1132,7 +1131,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Problem 3 */}
-          <div className="bg-white/90 backdrop-blur-sm border border-slate-200/70 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-2xl hover:border-[#5e17eb]/30 transition-all duration-500 hover:-translate-y-1">
+          <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 relative overflow-hidden group hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300">
             <div className="absolute top-0 right-0 w-36 h-36 bg-[#5e17eb]/5 rounded-full blur-xl pointer-events-none group-hover:bg-[#5e17eb]/10 transition-all duration-500"></div>
             <div className="text-[#5e17eb] text-xs font-mono font-black tracking-widest mb-4">03 / SLOWER HIRING PROCESS</div>
             <h3 className="text-lg font-bold text-slate-900 mb-2.5">Unverified Student Profiles</h3>
@@ -1142,7 +1141,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Problem 4 */}
-          <div className="bg-white/90 backdrop-blur-sm border border-slate-200/70 rounded-2xl p-6 relative overflow-hidden group shadow-sm hover:shadow-2xl hover:border-[#5e17eb]/30 transition-all duration-500 hover:-translate-y-1">
+          <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 relative overflow-hidden group hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300">
             <div className="absolute top-0 right-0 w-36 h-36 bg-[#5e17eb]/5 rounded-full blur-xl pointer-events-none group-hover:bg-[#5e17eb]/10 transition-all duration-500"></div>
             <div className="text-[#5e17eb] text-xs font-mono font-black tracking-widest mb-4">04 / HIGHER TRAINING COSTS</div>
             <h3 className="text-lg font-bold text-slate-900 mb-2.5">Extended Onboarding Cycles</h3>
@@ -1150,12 +1149,11 @@ export const LandingPage: React.FC = () => {
               Hiring candidates without validated skills increases onboarding time, training costs, and productivity delays.
             </p>
           </div>
-
         </div>
       </ScrollReveal>
 
-      {/* 4. Solution Section */}
-      <ScrollReveal id="solution" className="relative z-10 py-24 bg-slate-50/50 border-t border-slate-200 overflow-hidden">
+        {/* 4. Solution Section */}
+      <ScrollReveal id="solution" className="relative z-10 py-20 md:py-28 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] bg-gradient-to-b from-white via-slate-50/50 to-slate-100/70 overflow-hidden">
         {/* Ambient Background Bloom */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#5e17eb]/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
 
@@ -1167,7 +1165,7 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mt-5 tracking-tight leading-tight">
               One Intelligent Journey. From Learning to Hiring.
             </h2>
-            <p className="text-slate-500 mt-4 text-base font-medium leading-relaxed">
+            <p className="text-slate-600 antialiased leading-relaxed max-w-2xl mx-auto mt-4 text-base font-medium">
               Every stage of the student journey—from skill development to enterprise hiring—is connected through one AI-powered platform.
             </p>
           </div>
@@ -1190,7 +1188,7 @@ export const LandingPage: React.FC = () => {
               ].map((item, idx, arr) => {
                 const isAI = item.title === 'AI Job Matching';
                 return (
-                  <div key={idx} className={`relative flex flex-col items-center text-center ${isAI ? 'bg-gradient-to-b from-purple-50 to-white border-2 border-[#5e17eb] shadow-xl scale-105 z-20 hover:-translate-y-2' : 'bg-white border border-slate-200/80 hover:border-[#5e17eb]/40 hover:shadow-2xl shadow-sm hover:-translate-y-1 z-10'} rounded-2xl p-5 transition-all duration-300 group h-full`}>
+                  <div key={idx} className={`relative flex flex-col items-center text-center ${isAI ? 'bg-white/85 backdrop-blur-md border-2 border-[#5e17eb] shadow-[0_12px_40px_rgb(94,23,235,0.08)] scale-105 z-20 hover:-translate-y-1.5' : 'bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] z-10'} rounded-3xl p-5 transition-all duration-300 group h-full`}>
                     
                     {/* Arrow connecting to next card (visible only on lg+ screens) */}
                     {idx < arr.length - 1 && (
@@ -1228,7 +1226,7 @@ export const LandingPage: React.FC = () => {
       </ScrollReveal>
 
       {/* 5. Core Features Section (Asymmetric Bento Grid Layout) */}
-      <ScrollReveal id="features" className="relative z-10 py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px] opacity-95">
+      <ScrollReveal id="features" className="relative z-10 py-20 md:py-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] bg-gradient-to-b from-white via-slate-50/50 to-slate-100/70 opacity-95 rounded-3xl shadow-sm">
         {/* Ambient Background Bloom */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-[#5e17eb]/5 rounded-full blur-[150px] pointer-events-none z-[-1]"></div>
 
@@ -1239,7 +1237,7 @@ export const LandingPage: React.FC = () => {
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mt-5 tracking-tight">
             A Complete Platform for Campus-to-Corporate Success
           </h2>
-          <p className="text-slate-550 text-slate-500 mt-4 text-base font-medium leading-relaxed">
+          <p className="text-slate-600 antialiased leading-relaxed max-w-2xl mx-auto mt-4 text-base font-medium">
             Manage learning, assessments, mentorship, recruitment, and placement through one unified ecosystem.
           </p>
         </div>
@@ -1248,10 +1246,10 @@ export const LandingPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
 
           {/* Card 1 - ATS Analysis (Span 2) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 group-hover:border-transparent hover:shadow-[0_8px_30px_rgb(94,23,235,0.12)] hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between min-h-[260px] lg:col-span-2 relative overflow-hidden">
+          <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 lg:p-8 group flex flex-col justify-between min-h-[260px] lg:col-span-2 relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300">
             {/* Hover Gradient Border */}
             <div 
-              className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-20" 
+              className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-20" 
               style={{
                 padding: '1.5px',
                 background: 'linear-gradient(to bottom right, rgba(94, 23, 235, 0.4), rgba(168, 85, 247, 0.1), rgba(94, 23, 235, 0.4))',
@@ -1291,7 +1289,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 2 - Skill Assessment (Span 1, Tall Card / row-span-2) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-slate-300 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 group flex flex-col justify-between lg:row-span-2 relative overflow-hidden">
+          <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 group flex flex-col justify-between lg:row-span-2 relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-4 right-4 w-24 h-24 text-slate-200/50 pointer-events-none transform group-hover:scale-105 group-hover:-rotate-6 transition-all duration-500 ease-out z-0">
               <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1301,7 +1299,7 @@ export const LandingPage: React.FC = () => {
               </svg>
             </div>
             <div className="relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 mb-5 group-hover:bg-slate-100 group-hover:text-slate-900 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-650 mb-5 group-hover:bg-slate-100 group-hover:text-slate-900 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
                 <Brain className="w-5 h-5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2.5 tracking-tight">Skill Assessments</h3>
@@ -1313,7 +1311,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 3 - Learning Roadmap (Span 1) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-slate-300 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 group flex flex-col justify-between col-span-1 relative overflow-hidden">
+          <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 group flex flex-col justify-between col-span-1 relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-4 right-4 w-24 h-24 text-slate-200/50 pointer-events-none transform group-hover:scale-105 group-hover:rotate-12 transition-all duration-500 ease-out z-0">
               <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1336,7 +1334,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 6 - College Analytics (Span 1) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-slate-300 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 group flex flex-col justify-between col-span-1 relative overflow-hidden">
+          <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 group flex flex-col justify-between col-span-1 relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-4 right-4 w-24 h-24 text-slate-200/50 pointer-events-none transform group-hover:scale-105 group-hover:translate-x-1 transition-all duration-500 ease-out z-0">
               <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1360,7 +1358,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 7 - Mentorship Tracking (Span 1, Tall Card / row-span-2) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-slate-300 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 group flex flex-col justify-between lg:row-span-2 col-span-1 relative overflow-hidden">
+          <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 group flex flex-col justify-between lg:row-span-2 col-span-1 relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-4 right-4 w-24 h-24 text-slate-200/50 pointer-events-none transform group-hover:scale-105 group-hover:-translate-y-1 transition-all duration-500 ease-out z-0">
               <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1375,7 +1373,7 @@ export const LandingPage: React.FC = () => {
                 <MessageSquare className="w-5 h-5" />
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-2.5 tracking-tight">Mentor Reviews</h3>
-              <p className="text-xs text-slate-500 leading-relaxed font-medium">
+              <p className="text-xs text-slate-505 leading-relaxed font-medium">
                 Coordinate mock technical panels and portfolio reviews within an integrated audit trail. Connect cohorts with industry professionals for specialized code check-ins.
               </p>
             </div>
@@ -1383,10 +1381,10 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 4 - Candidate Matching (Span 2) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 group-hover:border-transparent hover:shadow-[0_8px_30px_rgb(94,23,235,0.12)] hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between min-h-[220px] lg:col-span-2 relative overflow-hidden">
+          <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 lg:p-8 group flex flex-col justify-between min-h-[220px] lg:col-span-2 relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300">
             {/* Hover Gradient Border */}
             <div 
-              className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-20" 
+              className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-20" 
               style={{
                 padding: '1.5px',
                 background: 'linear-gradient(to bottom right, rgba(94, 23, 235, 0.4), rgba(168, 85, 247, 0.1), rgba(94, 23, 235, 0.4))',
@@ -1424,7 +1422,7 @@ export const LandingPage: React.FC = () => {
                 <Cpu className="w-5 h-5" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2.5 tracking-tight group-hover:text-[#5e17eb] transition-colors duration-300">AI Job Matching</h3>
-              <p className="text-xs text-slate-500 leading-relaxed font-medium max-w-2xl">
+              <p className="text-xs text-slate-555 leading-relaxed font-medium max-w-2xl">
                 Filter out noise by matching candidate competency embeddings against specific functional roles. Bypasses keyword stuffing with semantic index matching.
               </p>
             </div>
@@ -1432,7 +1430,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Card 5 - Recruiter Hub (Span 2) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-slate-300 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between min-h-[220px] lg:col-span-2 relative overflow-hidden">
+          <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 lg:p-8 group flex flex-col justify-between min-h-[220px] lg:col-span-2 relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-4 right-4 w-24 h-24 text-slate-200/50 pointer-events-none transform group-hover:scale-105 group-hover:scale-110 transition-all duration-500 ease-out z-0">
               <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1448,7 +1446,7 @@ export const LandingPage: React.FC = () => {
               </svg>
             </div>
             <div className="relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 mb-5 group-hover:bg-slate-100 group-hover:text-slate-900 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-650 mb-5 group-hover:bg-slate-100 group-hover:text-slate-900 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm">
                 <BarChart3 className="w-5 h-5" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2.5 tracking-tight">Recruiter Workspace</h3>
@@ -1456,11 +1454,11 @@ export const LandingPage: React.FC = () => {
                 Manage pipeline stages, schedule panel interviews, verify credential checks, and initiate outreach. Optimize screening cycles by up to 10x with validated cohorts.
               </p>
             </div>
-            <span className="text-[10px] font-semibold text-slate-500 mt-4 flex items-center gap-1 relative z-10 uppercase tracking-wide">Enterprise Sourcing Portal</span>
+            <span className="text-[10px] font-semibold text-slate-505 mt-4 flex items-center gap-1 relative z-10 uppercase tracking-wide">Enterprise Sourcing Portal</span>
           </div>
 
           {/* Card 8 - Placement Monitoring (Span 1) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 hover:border-slate-300 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 group flex flex-col justify-between col-span-1 relative overflow-hidden">
+          <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 group flex flex-col justify-between col-span-1 relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-4 right-4 w-24 h-24 text-slate-200/50 pointer-events-none transform group-hover:scale-105 group-hover:-rotate-12 transition-all duration-500 ease-out z-0">
               <svg className="w-full h-full" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1478,14 +1476,14 @@ export const LandingPage: React.FC = () => {
                 Audit formal offers, coordinate onboarding compliance, verify credentials, and generate institutional verification reports.
               </p>
             </div>
-            <span className="text-[10px] font-semibold text-slate-500 mt-4 block relative z-10 uppercase tracking-wide">Validation Ledger</span>
+            <span className="text-[10px] font-semibold text-slate-505 mt-4 block relative z-10 uppercase tracking-wide">Validation Ledger</span>
           </div>
 
           {/* Card 9 - AI Mock Interviews (Span 2) */}
-          <div className="bg-white/85 backdrop-blur-md border border-slate-200/80 group-hover:border-transparent hover:shadow-[0_8px_30px_rgb(94,23,235,0.12)] hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group flex flex-col justify-between min-h-[220px] lg:col-span-2 relative overflow-hidden">
+          <div className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl p-6 lg:p-8 group flex flex-col justify-between min-h-[220px] lg:col-span-2 relative overflow-hidden hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300">
             {/* Hover Gradient Border */}
             <div 
-              className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-20" 
+              className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-20" 
               style={{
                 padding: '1.5px',
                 background: 'linear-gradient(to bottom right, rgba(94, 23, 235, 0.4), rgba(168, 85, 247, 0.1), rgba(94, 23, 235, 0.4))',
@@ -1495,7 +1493,7 @@ export const LandingPage: React.FC = () => {
               }}
             ></div>
             {/* Subtle Purple Glow */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#5e17eb]/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-0"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-[#5e17eb]/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-505 pointer-events-none z-0"></div>
             
             {/* AI Powered Badge */}
             <span className="absolute top-6 right-6 px-2.5 py-1 bg-gradient-to-r from-[#5e17eb]/10 to-purple-500/10 border border-[#5e17eb]/20 rounded-full text-[9px] font-bold text-[#5e17eb] uppercase tracking-widest z-20 shadow-sm backdrop-blur-md">
@@ -1519,14 +1517,14 @@ export const LandingPage: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2.5 tracking-tight group-hover:text-[#5e17eb] transition-colors duration-300">AI Interview Coach</h3>
               <p className="text-xs text-slate-500 leading-relaxed font-medium max-w-2xl">
-                Conduct realistic mock panels, receive instant feedback, and refine communication metrics. Use speech analytics to evaluate technical vocabularies.
+                Conduct realistic proctored panels, receive instant feedback, and refine communication metrics. Use speech analytics to evaluate technical vocabularies.
               </p>
             </div>
             <span className="text-[10px] font-semibold text-[#5e17eb] mt-4 flex items-center gap-1 relative z-10 uppercase tracking-wide">Speech Analytics System</span>
           </div>
 
           {/* Card 10 - Book A Demo (Span 3 / Full Width Bento Bottom Banner) */}
-          <div className="bg-[#5e17eb] border border-[#5e17eb]/80 hover:shadow-2xl hover:shadow-[#5e17eb]/20 hover:-translate-y-1 transition-all duration-300 rounded-2xl p-6 lg:p-8 group col-span-1 md:col-span-2 lg:col-span-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+          <div className="bg-gradient-to-r from-[#5e17eb] to-indigo-955 border border-white/10 hover:shadow-2xl hover:shadow-[#5e17eb]/20 hover:-translate-y-1 transition-all duration-300 rounded-3xl p-6 lg:p-8 group col-span-1 md:col-span-2 lg:col-span-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
             {/* Decorative SVG Graphic Accent */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] pointer-events-none transform group-hover:scale-110 transition-transform duration-500"></div>
             <div className="max-w-2xl relative z-10">
@@ -1552,7 +1550,7 @@ export const LandingPage: React.FC = () => {
       </ScrollReveal>
 
       {/* 6. Stakeholder Ecosystem Section */}
-      <ScrollReveal id="ecosystem" className="relative z-10 py-24 bg-slate-50/50 border-y border-slate-200">
+      <ScrollReveal id="ecosystem" className="relative z-10 py-20 md:py-28 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] bg-gradient-to-b from-white via-slate-50/50 to-slate-100/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
 
@@ -1564,7 +1562,7 @@ export const LandingPage: React.FC = () => {
               <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
                 One Ecosystem. Infinite Opportunities.
               </h2>
-              <p className="text-slate-500 text-base font-medium leading-relaxed">
+              <p className="text-slate-600 antialiased leading-relaxed max-w-2xl mx-auto mt-4 text-base font-medium">
                 C2C connects students, institutions, mentors, recruiters, and enterprises through one intelligent platform—eliminating fragmented workflows and enabling seamless collaboration.
               </p>
 
@@ -1577,12 +1575,12 @@ export const LandingPage: React.FC = () => {
                     <div
                       key={sh.id}
                       onClick={() => setActiveStakeholder(isActive ? null : sh.id)}
-                      className={`p-5 rounded-2xl border cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                      className={`p-5 rounded-3xl border cursor-pointer transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                         isActive
-                          ? 'bg-white border-[#5e17eb] shadow-2xl shadow-[#5e17eb]/10 scale-[1.03] z-10'
+                          ? 'bg-white/90 border-[#5e17eb] shadow-2xl shadow-[#5e17eb]/10 scale-[1.03] z-10'
                           : isAnyActive
-                            ? 'bg-white/40 border-slate-100 opacity-50 scale-[0.97] blur-[0.3px]'
-                            : 'bg-white/75 border-slate-200/60 hover:border-slate-350 hover:scale-[1.01]'
+                            ? 'bg-white/40 border-white/20 opacity-50 scale-[0.97] blur-[0.3px]'
+                            : 'bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgb(99,102,241,0.03)]'
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -1591,7 +1589,7 @@ export const LandingPage: React.FC = () => {
                       </div>
                       {isActive && (
                         <div className="mt-3.5 pt-3.5 border-t border-slate-100 transition-all duration-500 animate-in fade-in slide-in-from-top-2">
-                          <p className="text-xs text-slate-500 leading-relaxed font-medium mb-4">
+                          <p className="text-xs text-slate-505 leading-relaxed font-medium mb-4">
                             {sh.desc}
                           </p>
                           
@@ -1601,7 +1599,7 @@ export const LandingPage: React.FC = () => {
                                 <div className="w-4 h-4 rounded-full bg-[#5e17eb]/10 flex items-center justify-center shrink-0">
                                   <Check className="w-2.5 h-2.5 text-[#5e17eb]" />
                                 </div>
-                                <span className="text-[11px] font-semibold text-slate-700 leading-tight">{feature}</span>
+                                <span className="text-[11px] font-semibold text-slate-705 leading-tight">{feature}</span>
                               </div>
                             ))}
                           </div>
@@ -1625,7 +1623,7 @@ export const LandingPage: React.FC = () => {
               <div className="absolute inset-0 bg-[#5e17eb]/10 rounded-full blur-[100px] pointer-events-none w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
 
               {/* Main Visual Node Map container */}
-              <div className="relative w-full max-w-[500px] aspect-square flex items-center justify-center bg-white border border-slate-200/80 rounded-3xl p-8 shadow-xl overflow-hidden">
+              <div className="relative w-full max-w-[500px] aspect-square flex items-center justify-center bg-white/80 backdrop-blur-md border border-white/60 rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden">
 
                 {/* SVG Connections with Animations */}
                 <svg viewBox="0 0 500 500" className="absolute inset-0 w-full h-full z-0 pointer-events-none">
@@ -1729,7 +1727,7 @@ export const LandingPage: React.FC = () => {
                         {/* Hover ring effect */}
                         {isActive && <div className="absolute inset-0 rounded-2xl border-2 border-[#5e17eb] animate-ping opacity-20"></div>}
                       </div>
-                      <span className={`text-[9px] font-bold mt-2 px-2.5 py-1 rounded-md border shadow-sm transition-all duration-300 ${isActive ? 'bg-[#5e17eb] border-[#5e17eb] text-white' : 'bg-white border-slate-200/80 text-slate-700'}`}>
+                      <span className={`text-[9px] font-bold mt-2 px-2.5 py-1 rounded-md border shadow-sm transition-all duration-305 ${isActive ? 'bg-[#5e17eb] border-[#5e17eb] text-white' : 'bg-white border-slate-200/80 text-slate-700'}`}>
                         {node.name}
                       </span>
                     </div>
@@ -1754,7 +1752,7 @@ export const LandingPage: React.FC = () => {
       </div>
 
       {/* 9. How It Works Section */}
-      <ScrollReveal id="how-it-works" className="relative z-10 py-24 bg-white overflow-hidden">
+      <ScrollReveal id="how-it-works" className="relative z-10 py-20 md:py-28 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] bg-gradient-to-b from-white via-slate-50/50 to-slate-100/70 overflow-hidden">
         <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-purple-100/40 rounded-full blur-[100px] pointer-events-none"></div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1765,7 +1763,7 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mt-5 tracking-tight font-sans">
               How the Campus Bridge Works
             </h2>
-            <p className="text-slate-600 mt-4 text-base font-medium leading-relaxed">
+            <p className="text-slate-600 antialiased leading-relaxed max-w-2xl mx-auto mt-4 text-base font-medium">
               A transparent, end-to-end talent verification and pipeline delivery process mapping campus readiness straight to recruiter screens.
             </p>
           </div>
@@ -1797,7 +1795,7 @@ export const LandingPage: React.FC = () => {
                 color: 'text-orange-500 border-orange-100 bg-orange-50/50'
               }
             ].map((item) => (
-              <div key={item.step} className="bg-white/70 backdrop-blur-md border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.02)] p-6 rounded-[24px] relative group hover:-translate-y-1 transition-all duration-300 text-left">
+              <div key={item.step} className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] p-6 rounded-3xl relative group hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.05)] transition-all duration-300 text-left">
                 <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center text-lg font-black ${item.color} mb-5`}>
                   {item.step}
                 </div>
@@ -1810,7 +1808,7 @@ export const LandingPage: React.FC = () => {
       </ScrollReveal>
 
       {/* 10. Placement Success Stories Section */}
-      <ScrollReveal id="success-stories" className="relative z-10 py-24 bg-slate-50/50 border-t border-slate-200/50">
+      <ScrollReveal id="success-stories" className="relative z-10 py-20 md:py-28 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] bg-gradient-to-b from-white via-slate-50/50 to-slate-100/70 border-t border-slate-200/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-xs font-bold text-emerald-700 shadow-sm">
@@ -1819,7 +1817,7 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mt-5 tracking-tight">
               Real Paths. Verified Success.
             </h2>
-            <p className="text-slate-600 mt-4 text-base font-medium leading-relaxed">
+            <p className="text-slate-600 antialiased leading-relaxed max-w-2xl mx-auto mt-4 text-base font-medium">
               See how verified technical credentials and institutional pipelines transform student career trajectories.
             </p>
           </div>
@@ -1845,7 +1843,7 @@ export const LandingPage: React.FC = () => {
                 after: 'Direct matching sync triggered an interview request on the Recruiter Hub within 48 hours of verification.'
               }
             ].map((story) => (
-              <div key={story.id} className="bg-white border border-slate-200/60 rounded-[28px] p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.03)] flex flex-col justify-between text-left">
+              <div key={story.id} className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-[28px] p-6 sm:p-8 flex flex-col justify-between text-left hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.04)] transition-all duration-300">
                 <div>
                   <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                     <div>
@@ -1876,7 +1874,7 @@ export const LandingPage: React.FC = () => {
       </ScrollReveal>
 
       {/* 11. Upcoming Workshops & Live Career Events */}
-      <ScrollReveal id="events" className="relative z-10 py-24 bg-white border-t border-slate-200/50">
+      <ScrollReveal id="events" className="relative z-10 py-20 md:py-28 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] bg-gradient-to-b from-white via-slate-50/50 to-slate-100/70 border-t border-slate-200/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-xs font-bold text-blue-700 shadow-sm">
@@ -1885,7 +1883,7 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mt-5 tracking-tight">
               Upcoming Workshops & Live Events
             </h2>
-            <p className="text-slate-600 mt-4 text-base font-medium leading-relaxed">
+            <p className="text-slate-600 antialiased leading-relaxed max-w-2xl mx-auto mt-4 text-base font-medium">
               Accelerate candidate prep work and connect with active industry mentors during our weekly live ecosystem interactions.
             </p>
           </div>
@@ -1909,7 +1907,7 @@ export const LandingPage: React.FC = () => {
                 tagColor: 'bg-blue-50 text-blue-700 border-blue-100'
               }
             ].map((event) => (
-              <div key={event.id} className="bg-white border border-slate-200/60 rounded-[28px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.03)] hover:border-slate-350 transition-all duration-300 flex flex-col justify-between text-left">
+              <div key={event.id} className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-[28px] p-6 flex flex-col justify-between text-left hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.04)] transition-all duration-300">
                 <div>
                   <span className={`px-2.5 py-1 rounded-lg border text-[9px] font-black uppercase tracking-wider ${event.tagColor}`}>
                     {event.tag}
@@ -1935,7 +1933,7 @@ export const LandingPage: React.FC = () => {
       </ScrollReveal>
 
       {/* 12. Latest Career Resources Hub Section */}
-      <ScrollReveal id="resources" className="relative z-10 py-24 bg-slate-50/50 border-t border-slate-200/50">
+      <ScrollReveal id="resources" className="relative z-10 py-20 md:py-28 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] bg-gradient-to-b from-white via-slate-50/50 to-slate-100/70 border-t border-slate-200/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="px-3.5 py-1.5 rounded-full bg-orange-50 border border-orange-100 text-xs font-bold text-orange-700 shadow-sm">
@@ -1944,7 +1942,7 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mt-5 tracking-tight">
               Latest Prep & Placement Insights
             </h2>
-            <p className="text-slate-600 mt-4 text-base font-medium leading-relaxed">
+            <p className="text-slate-600 antialiased leading-relaxed max-w-2xl mx-auto mt-4 text-base font-medium">
               Boost placement preparedness using curated guides, sheets, and experience blueprints.
             </p>
           </div>
@@ -1973,13 +1971,13 @@ export const LandingPage: React.FC = () => {
                 color: 'text-blue-600'
               }
             ].map((res) => (
-              <div key={res.id} className="bg-white border border-slate-200/60 p-6 rounded-[24px] shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between group hover:-translate-y-1 transition-all duration-300 cursor-pointer text-left">
+              <div key={res.id} className="bg-white/80 backdrop-blur-md border border-white/60 p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between group hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(99,102,241,0.04)] transition-all duration-300 cursor-pointer text-left">
                 <div>
                   <span className={`text-[9px] font-black uppercase tracking-wider ${res.color}`}>
                     {res.category}
                   </span>
                   <h3 className="text-sm font-extrabold text-slate-800 tracking-tight mt-3 group-hover:text-[#5e17eb] transition-colors">{res.title}</h3>
-                  <p className="text-xs text-slate-500 mt-2 leading-relaxed font-semibold">{res.desc}</p>
+                  <p className="text-xs text-slate-505 mt-2 leading-relaxed font-semibold">{res.desc}</p>
                 </div>
                 <div className="flex items-center text-xs font-bold text-[#5e17eb] mt-6 gap-1 group-hover:gap-2 transition-all">
                   <span>Read Article</span>
@@ -1992,7 +1990,7 @@ export const LandingPage: React.FC = () => {
       </ScrollReveal>
 
       {/* 13. Frequently Asked Questions (FAQ) Section */}
-      <ScrollReveal id="faq" className="relative z-10 py-24 bg-white border-t border-slate-200/50">
+      <ScrollReveal id="faq" className="relative z-10 py-20 md:py-28 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] bg-gradient-to-b from-white via-slate-50/50 to-slate-100/70 border-t border-slate-200/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <span className="px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-bold text-slate-600 shadow-sm">
@@ -2001,7 +1999,7 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mt-5 tracking-tight">
               Frequently Asked Questions
             </h2>
-            <p className="text-slate-600 mt-4 text-base font-medium leading-relaxed">
+            <p className="text-slate-600 antialiased leading-relaxed max-w-2xl mx-auto mt-4 text-base font-medium">
               Find instant clarification regarding single-role locks, campus metrics, and candidate coding badge validations.
             </p>
           </div>
@@ -2026,7 +2024,7 @@ export const LandingPage: React.FC = () => {
             ].map((faq) => {
               const isOpen = activeFaq === faq.id;
               return (
-                <div key={faq.id} className="border border-slate-200/60 rounded-[20px] overflow-hidden bg-white shadow-sm transition-all duration-300 text-left">
+                <div key={faq.id} className="bg-white/80 backdrop-blur-md border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] rounded-3xl overflow-hidden hover:shadow-[0_20px_40px_rgb(99,102,241,0.03)] hover:border-[#5e17eb]/30 transition-all duration-305 text-left">
                   <button
                     onClick={() => setActiveFaq(isOpen ? null : faq.id)}
                     className="w-full px-6 py-5 text-left font-bold text-slate-800 text-sm flex items-center justify-between hover:bg-slate-50 transition-colors"
@@ -2047,8 +2045,8 @@ export const LandingPage: React.FC = () => {
       </ScrollReveal>
 
       {/* 14. CTA Section */}
-      <ScrollReveal id="cta" className="relative z-10 py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative rounded-[28px] overflow-hidden bg-gradient-to-r from-slate-900 to-indigo-950 border border-slate-800 p-8 md:p-16 text-center shadow-2xl">
+      <ScrollReveal id="cta" className="relative z-10 py-20 md:py-28 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-slate-900 via-purple-950 to-indigo-955 border border-slate-800 p-8 md:p-16 text-center shadow-2xl">
           <div className="absolute top-0 left-0 w-80 h-80 bg-[#5e17eb]/15 rounded-full blur-[100px] pointer-events-none"></div>
           <div className="absolute bottom-0 right-0 w-80 h-80 bg-purple-500/15 rounded-full blur-[100px] pointer-events-none"></div>
 
@@ -2056,7 +2054,7 @@ export const LandingPage: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
               Ready to transform your campus into a career powerhouse?
             </h2>
-            <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto font-medium">
+            <p className="text-base sm:text-lg text-slate-200 leading-relaxed max-w-2xl mx-auto font-medium">
               Join thousands of students, elite academic institutions, and corporate recruiters already optimizing employability outcomes today.
             </p>
             <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -2085,26 +2083,31 @@ export const LandingPage: React.FC = () => {
       </ScrollReveal>
 
       {/* ENTERPRISE-GRADE DIRECTORY FOOTER */}
-      <footer className="relative z-10 border-t border-slate-800 bg-slate-900 text-slate-400 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <footer className="relative z-10 bg-gradient-to-b from-slate-50 to-slate-100 border-t border-slate-200/60 pt-16 pb-8 text-slate-600 overflow-hidden">
+        {/* Decorative Top Glow Bar */}
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-purple-500 via-[#5e17eb] to-indigo-500"></div>
+        {/* Ambient Background Bloom */}
+        <div className="absolute bottom-0 right-10 w-96 h-96 bg-[#5e17eb]/5 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
           {/* Footer Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 pb-12">
 
             {/* Column 1: Brand (logo, description, social) */}
             <div className="lg:col-span-5 space-y-6">
-              <LogoSVG className="h-9 w-auto" iconColor="text-[#5e17eb]" textColor="text-white" />
-              <p className="text-xs text-slate-400 leading-relaxed max-w-sm font-medium">
+              <LogoSVG className="h-9 w-auto" iconColor="text-[#5e17eb]" textColor="text-slate-900" />
+              <p className="text-xs text-slate-500 leading-relaxed max-w-sm font-medium">
                 Bridging the gap between academic potential and corporate excellence through verifiable skill metrics, proctored competency audits, and direct recruitment pathways.
               </p>
               <div className="flex items-center space-x-4 pt-2">
-                <a href="#" className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white hover:bg-[#5e17eb] hover:border-[#5e17eb] transition-all duration-300 shadow-sm" aria-label="LinkedIn">
+                <a href="#" className="w-8 h-8 rounded-lg bg-white border border-slate-200/60 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#5e17eb] hover:border-[#5e17eb] transition-all duration-300 shadow-sm" aria-label="LinkedIn">
                   <Linkedin className="w-4 h-4" />
                 </a>
-                <a href="#" className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white hover:bg-[#5e17eb] hover:border-[#5e17eb] transition-all duration-300 shadow-sm" aria-label="Twitter">
+                <a href="#" className="w-8 h-8 rounded-lg bg-white border border-slate-200/60 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#5e17eb] hover:border-[#5e17eb] transition-all duration-300 shadow-sm" aria-label="Twitter">
                   <Twitter className="w-4 h-4" />
                 </a>
-                <a href="#" className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:text-white hover:bg-[#5e17eb] hover:border-[#5e17eb] transition-all duration-300 shadow-sm" aria-label="Website">
+                <a href="#" className="w-8 h-8 rounded-lg bg-white border border-slate-200/60 flex items-center justify-center text-slate-400 hover:text-white hover:bg-[#5e17eb] hover:border-[#5e17eb] transition-all duration-300 shadow-sm" aria-label="Website">
                   <Globe className="w-4 h-4" />
                 </a>
               </div>
@@ -2112,53 +2115,56 @@ export const LandingPage: React.FC = () => {
 
             {/* Column 2: Platform */}
             <div className="lg:col-span-2 space-y-4">
-              <h4 className="text-xs font-black text-white uppercase tracking-widest">Platform</h4>
-              <ul className="space-y-3.5 text-xs font-semibold text-slate-400">
-                <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Solutions</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Enterprise</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Security</a></li>
+              <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest">Platform</h4>
+              <ul className="space-y-3.5 text-xs font-semibold text-slate-500">
+                <li><a href="#" className="hover:text-[#5e17eb] transition-all duration-300 hover:translate-x-1.5 inline-block transform">Features</a></li>
+                <li><a href="#" className="hover:text-[#5e17eb] transition-all duration-300 hover:translate-x-1.5 inline-block transform">Solutions</a></li>
+                <li><a href="#" className="hover:text-[#5e17eb] transition-all duration-300 hover:translate-x-1.5 inline-block transform">Enterprise</a></li>
+                <li><a href="#" className="hover:text-[#5e17eb] transition-all duration-300 hover:translate-x-1.5 inline-block transform">Security</a></li>
               </ul>
             </div>
 
             {/* Column 3: Resources */}
             <div className="lg:col-span-2 space-y-4">
-              <h4 className="text-xs font-black text-white uppercase tracking-widest">Resources</h4>
-              <ul className="space-y-3.5 text-xs font-semibold text-slate-400">
-                <li><a href="#" className="hover:text-white transition-colors">Case Studies</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Whitepapers</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+              <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest">Resources</h4>
+              <ul className="space-y-3.5 text-xs font-semibold text-slate-500">
+                <li><a href="#" className="hover:text-[#5e17eb] transition-all duration-300 hover:translate-x-1.5 inline-block transform">Case Studies</a></li>
+                <li><a href="#" className="hover:text-[#5e17eb] transition-all duration-300 hover:translate-x-1.5 inline-block transform">Whitepapers</a></li>
+                <li><a href="#" className="hover:text-[#5e17eb] transition-all duration-300 hover:translate-x-1.5 inline-block transform">Documentation</a></li>
+                <li><a href="#" className="hover:text-[#5e17eb] transition-all duration-300 hover:translate-x-1.5 inline-block transform">Blog</a></li>
               </ul>
             </div>
 
             {/* Column 4: Company */}
             <div className="lg:col-span-3 space-y-4">
-              <h4 className="text-xs font-black text-white uppercase tracking-widest">Company</h4>
-              <ul className="space-y-3.5 text-xs font-semibold text-slate-400">
-                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Press</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+              <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest">Company</h4>
+              <ul className="space-y-3.5 text-xs font-semibold text-slate-500">
+                <li><a href="#" className="hover:text-[#5e17eb] transition-all duration-300 hover:translate-x-1.5 inline-block transform">About Us</a></li>
+                <li><a href="#" className="hover:text-[#5e17eb] transition-all duration-300 hover:translate-x-1.5 inline-block transform">Careers</a></li>
+                <li><a href="#" className="hover:text-[#5e17eb] transition-all duration-300 hover:translate-x-1.5 inline-block transform">Press</a></li>
+                <li><a href="#" className="hover:text-[#5e17eb] transition-all duration-300 hover:translate-x-1.5 inline-block transform">Contact</a></li>
               </ul>
             </div>
 
           </div>
 
           {/* Footer Bottom Row */}
-          <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="pt-8 border-t border-slate-200/60 flex flex-col md:flex-row items-center justify-between gap-4">
 
             <div className="flex flex-col md:flex-row items-center gap-4 text-xs font-semibold text-slate-500">
-              <span>&copy; {new Date().getFullYear()} Ashoksoft Technologies. All rights reserved.</span>
-              <div className="flex space-x-3 md:border-l md:border-slate-800 md:pl-4">
-                <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+              <div className="flex items-center gap-2">
+                <LogoSVG className="h-5 w-auto" iconColor="text-[#5e17eb]" textColor="text-slate-900" />
+                <span>&copy; {new Date().getFullYear()} Ashoksoft Technologies. All rights reserved.</span>
+              </div>
+              <div className="flex space-x-3 md:border-l md:border-slate-200 md:pl-4">
+                <a href="#" className="hover:text-[#5e17eb] transition-colors">Privacy Policy</a>
                 <span>•</span>
-                <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+                <a href="#" className="hover:text-[#5e17eb] transition-colors">Terms of Service</a>
               </div>
             </div>
 
             {/* Language/Region selector */}
-            <div className="flex items-center space-x-2 bg-slate-800 border border-slate-700 px-3.5 py-2 rounded-xl text-xs text-slate-300 font-bold cursor-pointer hover:bg-slate-700 hover:text-white transition-all shadow-sm">
+            <div className="flex items-center space-x-2 bg-white border border-slate-200 px-3.5 py-2 rounded-xl text-xs text-slate-505 font-bold cursor-pointer hover:bg-slate-50 hover:text-slate-950 transition-all shadow-sm">
               <Globe className="w-3.5 h-3.5 text-slate-400" />
               <span>Global (English)</span>
             </div>
@@ -2428,7 +2434,7 @@ export const LandingPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-655 cursor-pointer"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
                       >
                         {showPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
                       </button>
@@ -2548,7 +2554,7 @@ export const LandingPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-655 cursor-pointer"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
                       >
                         {showPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
                       </button>
@@ -2775,7 +2781,7 @@ export const LandingPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-655 cursor-pointer"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
                       >
                         {showPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
                       </button>
@@ -2803,7 +2809,7 @@ export const LandingPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-655 cursor-pointer"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
                       >
                         {showConfirmPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
                       </button>

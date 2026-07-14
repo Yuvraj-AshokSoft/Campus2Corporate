@@ -17,10 +17,11 @@ const studentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    college: {
-      type: String,
-      required: true,
-    },
+   college: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "College",
+  required: true,
+},
     branch: {
       type: String,
       required: true,
