@@ -25,8 +25,8 @@ import Certificates from "../pages/student/Certificates";
 
 import CollegeProfile from "../pages/college/Profile";
 import CollegeSettings from "../pages/college/Settings";
-import CollegeStudent from "../pages/college/Student";
-
+import CollegeStudentManagement from "../pages/college/Student";
+import CollegeRecruiterManagement from "../pages/college/RecruiterManagement";
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 export const AppRoutes: React.FC = () => {
@@ -124,7 +124,7 @@ export const AppRoutes: React.FC = () => {
 
             {/* College routes */}
             <Route 
-              path="/college/dashboard" 
+              path="/college-dashboard" 
               element={
                 <ProtectedRoute allowedRoles={['college']}>
                   <CollegeDashboard />
@@ -140,10 +140,18 @@ export const AppRoutes: React.FC = () => {
               }
             />
             <Route
-              path="/college/students"
+              path="/college/students-management"
               element={
                 <ProtectedRoute allowedRoles={["college"]}>
-                  <CollegeStudent />
+                  <CollegeStudentManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/college/recruiter-management"
+              element={
+                <ProtectedRoute allowedRoles={["college"]}>
+                  <CollegeRecruiterManagement />
                 </ProtectedRoute>
               }
             />
