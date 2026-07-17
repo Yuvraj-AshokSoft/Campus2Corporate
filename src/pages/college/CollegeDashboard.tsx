@@ -172,7 +172,7 @@ const sidebarItems: Array<{
   { label: "Placement Statistics", icon: "briefcase", route: "/college/placement-statistics", badge: 5 },
   { label: "Notifications", icon: "bell", route: "/college/notifications", badge: 3 },
   { label: "Profile", icon: "settings", route: "/college/profile" },
-  { label: "Setting", icon: "settings", route: "/college/setting" },
+  { label: "Settings", icon: "settings", route: "/college/settings" },
   
 ];
 
@@ -1157,7 +1157,7 @@ const PlacementEligibilityMonitor = () => {
               strokeDasharray={circumference} strokeDashoffset={circumference - (circumference * pct) / 100}
               transform="rotate(-90 36 36)" />
           </svg>
-          <p className="-mt-12 text-2xl font-black text-blue-700">{pct}%</p>
+          <p className="-mt-12 text-1xl font-black text-blue-700">{pct}%</p>
           <p className="mt-8 text-[10px] font-bold uppercase tracking-wider text-slate-400">Readiness</p>
         </div>
 
@@ -1679,7 +1679,7 @@ export const CollegeDashboard = () => {
   // codebase for future use. Re-enable by restoring `aiOpen` usage below,
   // the `showAiButton` / `onAiButtonClick` props on CollegeLayout, and the
   // drawer + floating button JSX at the bottom of this component.
-  // const [aiOpen, setAiOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
 
   return (
     <CollegeLayout
@@ -1687,8 +1687,8 @@ export const CollegeDashboard = () => {
       sidebarHighlight="Dashboard"
       userSummary={{ fullName, role: "Training & Placement Officer", status: "Placement cycle active" }}
       stats={{ label: "Overall placement rate", value: "82", subtitle: "This cycle", accent: "This cycle" }}
-      // showAiButton
-      // onAiButtonClick={() => setAiOpen(true)}
+      showAiButton
+      onAiButtonClick={() => setAiOpen(true)}
     >
       <>
         {/* Hero banner */}
@@ -1979,21 +1979,21 @@ export const CollegeDashboard = () => {
       </>
 
       {/* ── AI Chat Drawer — commented out per client scope, kept for future use ── */}
-      {/* {aiOpen && (
+      {aiOpen && (
         <div className="pointer-events-none fixed inset-0 z-50 flex items-end justify-end p-4 sm:items-start sm:pr-6 sm:pt-[72px]">
           <div className="pointer-events-auto flex h-[560px] w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl shadow-slate-900/50">
             <AIPlacementCoachPanel onClose={() => setAiOpen(false)} />
           </div>
         </div>
-      )} */}
+      )}
 
       {/* ── Floating AI button (mobile) — commented out per client scope ── */}
-      {/* {!aiOpen && (
+      {!aiOpen && (
         <button onClick={() => setAiOpen(true)}
           className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-xl shadow-blue-500/30 transition hover:from-blue-700 hover:to-blue-800 sm:hidden">
           <Icon name="sparkles" className="h-6 w-6 text-white" />
         </button>
-      )} */}
+      )}
     </CollegeLayout>
   );
 };
