@@ -114,11 +114,11 @@ const CollegeSidebar = ({
   const statusLabel = userSummary?.status || "Placement drive active";
 
   const sidebarItems = items || [
-    { label: "Dashboard", icon: "dashboard" as CollegeSidebarIconName, route: "/college/dashboard" },
-    { label: "Students Management", icon: "users" as CollegeSidebarIconName, route: "/college/students" },
-    { label: "Recruiter Management", icon: "building" as CollegeSidebarIconName, route: "/college/companies" },
-    { label: "Placement Statics", icon: "briefcase" as CollegeSidebarIconName, route: "/college/drives" },
-    { label: "Learning Analytics", icon: "clipboard" as CollegeSidebarIconName, route: "/college/applications" },
+    { label: "Dashboard", icon: "dashboard" as CollegeSidebarIconName, route: "/college-dashboard" },
+    { label: "Students Management", icon: "users" as CollegeSidebarIconName, route: "/college/students-management" },
+    { label: "Recruiter Management", icon: "building" as CollegeSidebarIconName, route: "/college/recruiter-management" },
+    { label: "Placement Statistics", icon: "briefcase" as CollegeSidebarIconName, route: "/college/placement-statistics" },
+    //{ label: "Learning Analytics", icon: "clipboard" as CollegeSidebarIconName, route: "/college/applications" },
     { label: "Notifications", icon: "bell" as CollegeSidebarIconName, route: "/college/notifications" },
     { label: "Profile", icon: "chart" as CollegeSidebarIconName, route: "/college/profile" },
     { label: "Settings", icon: "settings" as CollegeSidebarIconName, route: "/college/settings" },

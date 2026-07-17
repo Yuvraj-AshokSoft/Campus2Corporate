@@ -122,13 +122,14 @@ const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#2563eb" }:
 );
 
 const sidebarItems: Array<{ label: string; icon: StudentSidebarIconName; route: string; badge?: number }> = [
-  { label: "Dashboard", icon: "dashboard", route: "/student/dashboard" },
+  { label: "Dashboard", icon: "dashboard", route: "/student-dashboard" },
   { label: "My Profile", icon: "user-check", route: "/student/profile" },
   { label: "Project List", icon: "briefcase", route: "/student/projects" },
   { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects", badge: 2 },
   { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
   { label: "Certificates", icon: "award", route: "/student/certificates" },
   { label: "Settings", icon: "settings", route: "/student/settings" },
+  { label: "AI Resume Builder", icon: "resume" , route: "/student/airesume" },
 ];
 
 // ─── Toggle switch ─────────────────────────────────────────────────────────────
