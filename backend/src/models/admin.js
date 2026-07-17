@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
-const recruiterSchema = new mongoose.Schema(
+const adminSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Recruiter name is required"],
+      required: [true, "Admin name is required"],
       trim: true,
       minlength: [3, "Name must be at least 3 characters"],
       maxlength: [50, "Name cannot exceed 50 characters"],
@@ -25,25 +25,23 @@ const recruiterSchema = new mongoose.Schema(
     phone: {
       type: String,
       required: [true, "Phone number is required"],
+      unique: true,
       match: [/^[6-9]\d{9}$/, "Please enter a valid 10-digit phone number"],
     },
 
-    designation: {
+    password: {
       type: String,
-      required: [true, "Designation is required"],
-      trim: true,
+      required: [true, "Password is required"],
+      minlength: [8, "Password must be at least 8 characters long"],
     },
 
-    company: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      required: [true, "Company is required"],
-    },
-
-    linkedin: {
+    role: {
       type: String,
-      trim: true,
-      default: "",
+      enum: {
+        values: ["Super Admin", "Admin"],
+        message: "Role must be either Super Admin or Admin",
+      },
+      default: "Admin",
     },
 
     status: {
@@ -54,10 +52,20 @@ const recruiterSchema = new mongoose.Schema(
       },
       default: "Active",
     },
+
+    profileImage: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    lastLogin: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-export default mongoose.model("Recruiter", recruiterSchema);
+export default mongoose.model("Admin", adminSchema);
