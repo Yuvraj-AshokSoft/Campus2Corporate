@@ -1,12 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth as useClerkAuth, useUser as useClerkUser, useSignIn, useSignUp } from '@clerk/clerk-react';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { getApiErrorMessage, studentApi, type StudentProfile } from "../services/studentApi";
 
-interface User {
-  id: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  role: 'student' | 'mentor' | 'college' | 'recruiter';
+interface User extends StudentProfile {
   isVerified?: boolean;
 }
 
@@ -25,83 +20,87 @@ interface AuthContextType {
   verifyOtp: (code: string, role: string) => Promise<any>;
   forgotPassword: (email: string) => Promise<any>;
   resetPassword: (code: string, newPassword: string) => Promise<any>;
+  refreshUser: () => Promise<void>;
+  updateCurrentUser: (user: User) => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isLoaded: isAuthLoaded, isSignedIn, signOut } = useClerkAuth();
-  const { isLoaded: isUserLoaded, user } = useClerkUser();
-  const { isLoaded: isSignInLoaded, signIn, setActive: setSignInActive } = useSignIn();
-  const { isLoaded: isSignUpLoaded, signUp, setActive: setSignUpActive } = useSignUp();
+const TOKEN_KEY = "c2c_student_token";
+const USER_KEY = "c2c_student_user";
 
+const normalizeStudent = (student: StudentProfile): User => ({
+  ...student,
+  id: student.id,
+  fullName: student.fullName || student.name || "",
+  email: student.email || "",
+  phone: student.phone || "",
+  role: "student",
+  isVerified: true,
+});
+
+const saveSession = (token: string, student: StudentProfile) => {
+  const user = normalizeStudent(student);
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  return user;
+};
+
+const clearSession = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [localUser, setLocalUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const refreshUser = async () => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      setCurrentUser(null);
+      return;
+    }
+
+    const student = await studentApi.me();
+    const user = normalizeStudent(student);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    setCurrentUser(user);
+  };
 
   useEffect(() => {
-    const savedSession = localStorage.getItem('c2c_local_session');
-    if (savedSession) {
-      try {
-        setLocalUser(JSON.parse(savedSession));
-      } catch {
-        localStorage.removeItem('c2c_local_session');
+    const bootstrap = async () => {
+      const savedUser = localStorage.getItem(USER_KEY);
+      if (savedUser) {
+        try {
+          setCurrentUser(JSON.parse(savedUser));
+        } catch {
+          clearSession();
+        }
       }
-    }
+
+      try {
+        await refreshUser();
+      } catch {
+        clearSession();
+        setCurrentUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    bootstrap();
   }, []);
 
-  // Map Clerk user to our custom User format
-  useEffect(() => {
-    if (isUserLoaded && isSignedIn && user) {
-      setCurrentUser({
-        id: user.id,
-        fullName: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
-        email: user.primaryEmailAddress?.emailAddress || '',
-        phone: (user.unsafeMetadata?.phone as string) || user.primaryPhoneNumber?.phoneNumber || '',
-        role: (user.unsafeMetadata?.role as any) || 'student',
-        isVerified: user.emailAddresses.find(e => e.emailAddress === user.primaryEmailAddress?.emailAddress)?.verification.status === 'verified',
-      });
-    } else {
-      setCurrentUser(localUser);
-    }
-  }, [isUserLoaded, isSignedIn, user, localUser]);
-
   const login = async (email: string, password: string) => {
-    // Check local credentials bypass database first
-    const localCreds = JSON.parse(localStorage.getItem('c2c_local_creds') || '[]');
-    const matchingLocal = localCreds.find((u: any) => u.email.trim().toLowerCase() === email.trim().toLowerCase() && u.password === password);
-    
-    if (matchingLocal) {
-      const localSessionUser = {
-        id: 'local_' + Date.now(),
-        fullName: matchingLocal.fullName,
-        email: matchingLocal.email,
-        phone: matchingLocal.phone || '',
-        role: matchingLocal.role.toLowerCase(),
-        isVerified: true
-      };
-      localStorage.setItem('c2c_local_session', JSON.stringify(localSessionUser));
-      setLocalUser(localSessionUser);
-      return { success: true };
-    }
-
-    if (!isSignInLoaded) {
-      return { success: false, message: 'Clerk login engine is loading...' };
-    }
     try {
-      const result = await signIn.create({
-        identifier: email,
-        password,
-      });
-
-      if (result.status === 'complete') {
-        await setSignInActive({ session: result.createdSessionId });
-        return { success: true };
-      }
-      return { success: false, message: 'Additional verification required.' };
-    } catch (error: any) {
-      const msg = error.errors?.[0]?.message || 'Authentication failed';
-      return { success: false, message: msg };
+      const { token, student } = await studentApi.login(email, password);
+      const user = saveSession(token, student);
+      setCurrentUser(user);
+      return { success: true, user };
+    } catch (error) {
+      return { success: false, message: getApiErrorMessage(error, "Invalid email or password") };
     }
   };
 
@@ -112,157 +111,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password: string;
     role: string;
   }) => {
-    if (!isSignUpLoaded) {
-      return { success: false, message: 'Clerk registration engine is loading...' };
+    if (userData.role.toLowerCase() !== "student") {
+      return {
+        success: false,
+        message: `Missing backend endpoint for ${userData.role} registration.`,
+      };
     }
+
     try {
-      // Create user details in Clerk
-      await signUp.create({
-        emailAddress: userData.email,
-        password: userData.password,
-        firstName: userData.fullName.split(' ')[0],
-        lastName: userData.fullName.split(' ').slice(1).join(' ') || '',
-        unsafeMetadata: {
-          role: userData.role.toLowerCase(),
-          phone: userData.phone
-        }
-      });
-
-      // Send OTP email verification
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-
-      return { success: true };
-    } catch (error: any) {
-      let msg = error.errors?.[0]?.message || 'Account creation failed';
-      
-      // Auto local-bypass when Clerk blocks passwords via HIBP database breach filters
-      if (error.errors?.[0]?.code === 'form_password_pwned' || msg.toLowerCase().includes('data breach') || msg.toLowerCase().includes('breach')) {
-        // Save local credentials
-        const localCreds = JSON.parse(localStorage.getItem('c2c_local_creds') || '[]');
-        localCreds.push({
-          fullName: userData.fullName,
-          email: userData.email,
-          phone: userData.phone,
-          password: userData.password,
-          role: userData.role
-        });
-        localStorage.setItem('c2c_local_creds', JSON.stringify(localCreds));
-        
-        // Save pending flag
-        localStorage.setItem('c2c_pending_local_signup', JSON.stringify({
-          fullName: userData.fullName,
-          email: userData.email,
-          phone: userData.phone,
-          password: userData.password,
-          role: userData.role
-        }));
-
-        return { success: true };
-      }
-      return { success: false, message: msg };
+      const { token, student } = await studentApi.register(userData);
+      const user = saveSession(token, student);
+      setCurrentUser(user);
+      return { success: true, requiresOtp: false, user };
+    } catch (error) {
+      return { success: false, message: getApiErrorMessage(error, "Registration failed") };
     }
   };
 
-  const verifyOtp = async (code: string, _role: string) => {
-    // Check if we have a pending local credentials bypass
-    const pendingLocal = localStorage.getItem('c2c_pending_local_signup');
-    if (pendingLocal) {
-      try {
-        const parsed = JSON.parse(pendingLocal);
-        const localSessionUser = {
-          id: 'local_' + Date.now(),
-          fullName: parsed.fullName,
-          email: parsed.email,
-          phone: parsed.phone || '',
-          role: parsed.role.toLowerCase(),
-          isVerified: true
-        };
-        localStorage.setItem('c2c_local_session', JSON.stringify(localSessionUser));
-        setLocalUser(localSessionUser);
-        localStorage.removeItem('c2c_pending_local_signup');
-        return { success: true };
-      } catch (err) {
-        // Fallback to clerk below
-      }
-    }
+  const verifyOtp = async (_code: string, _role: string) => ({
+    success: false,
+    message: "Missing backend endpoint: OTP verification is not available.",
+  });
 
-    if (!isSignUpLoaded) {
-      return { success: false, message: 'Clerk engine is loading...' };
-    }
-    try {
-      const result = await signUp.attemptEmailAddressVerification({ code });
+  const forgotPassword = async (_email: string) => ({
+    success: false,
+    message: "Missing backend endpoint: forgot password is not available.",
+  });
 
-      if (result.status === 'complete') {
-        await setSignUpActive({ session: result.createdSessionId });
-        return { success: true };
-      }
-      return { success: false, message: 'OTP verification failed.' };
-    } catch (error: any) {
-      const msg = error.errors?.[0]?.message || 'Verification failed';
-      return { success: false, message: msg };
-    }
-  };
+  const resetPassword = async (_code: string, _newPassword: string) => ({
+    success: false,
+    message: "Missing backend endpoint: reset password is not available.",
+  });
 
-  const forgotPassword = async (email: string) => {
-    if (!isSignInLoaded) {
-      return { success: false, message: 'Clerk engine is loading...' };
-    }
-    try {
-      await signIn.create({
-        strategy: 'reset_password_email_code',
-        identifier: email,
-      });
-      return { success: true };
-    } catch (error: any) {
-      const msg = error.errors?.[0]?.message || 'Verification dispatcher failed';
-      return { success: false, message: msg };
-    }
-  };
-
-  const resetPassword = async (code: string, newPassword: string) => {
-    if (!isSignInLoaded) {
-      return { success: false, message: 'Clerk engine is loading...' };
-    }
-    try {
-      const result = await signIn.attemptFirstFactor({
-        strategy: 'reset_password_email_code',
-        code,
-        password: newPassword,
-      });
-
-      if (result.status === 'complete') {
-        await setSignInActive({ session: result.createdSessionId });
-        return { success: true };
-      }
-      return { success: false, message: 'Password reset failed.' };
-    } catch (error: any) {
-      let msg = error.errors?.[0]?.message || 'Failed to update password';
-      if (error.errors?.[0]?.code === 'form_password_pwned' || msg.includes('data breach')) {
-        msg = "Password has been found in an online data breach. For account safety, please use a more unique password (e.g., Khu$h1_Smar7).";
-      }
-      return { success: false, message: msg };
-    }
+  const updateCurrentUser = (user: User) => {
+    setCurrentUser(user);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
   };
 
   const logout = () => {
-    localStorage.removeItem('c2c_local_session');
-    setLocalUser(null);
-    signOut().then(() => {
-      window.location.href = '/';
-    });
+    studentApi.logout().catch(() => undefined);
+    clearSession();
+    setCurrentUser(null);
+    window.location.href = "/";
   };
 
   return (
     <AuthContext.Provider
       value={{
         currentUser,
-        isAuthenticated: isSignedIn || localUser !== null,
-        loading: !isAuthLoaded || !isUserLoaded,
+        isAuthenticated: Boolean(currentUser && localStorage.getItem(TOKEN_KEY)),
+        loading,
         login,
         register,
         verifyOtp,
         forgotPassword,
         resetPassword,
+        refreshUser,
+        updateCurrentUser,
         logout,
       }}
     >
@@ -274,7 +179,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

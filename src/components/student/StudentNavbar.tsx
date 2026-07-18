@@ -76,7 +76,7 @@ const Icon = ({ name, className = "h-4 w-4" }: { name: IconName; className?: str
 };
 
 const getInitials = (name: string) =>
-  name.trim().split(/\s+/).map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "YS";
+  name.trim().split(/\s+/).map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "ST";
 
 interface StudentNavbarProps {
   showAiButton?: boolean;
@@ -89,11 +89,12 @@ const StudentNavbar = ({ showAiButton = true, onAiButtonClick }: StudentNavbarPr
   const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const fullName = currentUser?.fullName || "Yuvraj Singh";
-  const firstName = fullName.split(" ")[0] || "Yuvraj";
+  const fullName = currentUser?.fullName || currentUser?.name || "Student";
+  const firstName = fullName.split(" ")[0] || "Student";
   const initials = getInitials(fullName);
-  const email = currentUser?.email || "yuvraj@example.com";
-  const shouldShowAi = showAiButton && location.pathname === "/student/dashboard";
+  const email = currentUser?.email || "";
+  const shouldShowAi = showAiButton && location.pathname === "/student-dashboard";
+  const unreadCount = 0;
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
@@ -121,9 +122,11 @@ const StudentNavbar = ({ showAiButton = true, onAiButtonClick }: StudentNavbarPr
             className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600 shadow-sm transition hover:bg-blue-100"
           >
             <Icon name="bell" className="h-4 w-4" />
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white">
-              3
-            </span>
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white">
+                {unreadCount}
+              </span>
+            )}
           </button>
 
           {shouldShowAi && (
@@ -132,7 +135,7 @@ const StudentNavbar = ({ showAiButton = true, onAiButtonClick }: StudentNavbarPr
                 if (onAiButtonClick) {
                   onAiButtonClick();
                 } else {
-                  navigate("/student/dashboard");
+                  navigate("/student-dashboard");
                 }
               }}
               className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-3.5 py-2 text-sm font-bold text-white shadow-md shadow-blue-500/20 transition hover:from-blue-700 hover:to-blue-800"
@@ -190,7 +193,7 @@ const StudentNavbar = ({ showAiButton = true, onAiButtonClick }: StudentNavbarPr
                 <button
                   onClick={() => {
                     logout?.();
-                    navigate("/login");
+                    navigate("/");
                   }}
                   className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
                 >
