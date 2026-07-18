@@ -150,3 +150,87 @@ export const getDashboardAnalytics = async (req, res) => {
     return errorResponse(res, error.message, 500);
   }
 };
+
+// Get All Students
+export const getAllStudents = async (req, res) => {
+  try {
+    const students = await Student.find().populate("college");
+
+    return successResponse(
+      res,
+      "Students fetched successfully",
+      students,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Get Student By ID
+export const getStudentById = async (req, res) => {
+  try {
+    const student = await Student.findById(req.params.id).populate("college");
+
+    if (!student) {
+      return errorResponse(res, "Student not found", 404);
+    }
+
+    return successResponse(
+      res,
+      "Student fetched successfully",
+      student,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+
+// Update Student
+export const updateStudent = async (req, res) => {
+  try {
+    const student = await Student.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,          // Return updated document
+        runValidators: true // Apply schema validations
+      }
+    ).populate("college");
+
+    if (!student) {
+      return errorResponse(res, "Student not found", 404);
+    }
+
+    return successResponse(
+      res,
+      "Student updated successfully",
+      student,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Delete Student
+export const deleteStudent = async (req, res) => {
+  try {
+    const student = await Student.findByIdAndDelete(req.params.id);
+
+    if (!student) {
+      return errorResponse(res, "Student not found", 404);
+    }
+
+    return successResponse(
+      res,
+      "Student deleted successfully",
+      null,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};

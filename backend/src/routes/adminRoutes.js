@@ -4,6 +4,11 @@ import {
   loginAdmin,
   getAdminProfile,
   getDashboardAnalytics,
+    getAllStudents ,
+    getStudentById  ,
+    updateStudent ,
+    deleteStudent 
+
 } from "../controllers/adminController.js";
 
 import adminAuth from "../middleware/adminAuth.js";
@@ -19,6 +24,12 @@ router.post("/login", loginAdmin);
 router.get("/profile", adminAuth, getAdminProfile);
 
 router.get("/dashboard", adminAuth, getDashboardAnalytics);
+
+router.get("/students", adminAuth, getAllStudents);
+router.get("/students/:id", adminAuth, getStudentById);
+router.put("/students/:id", adminAuth, updateStudent);
+router.delete("/students/:id", adminAuth, deleteStudent);
+
 
 
 
