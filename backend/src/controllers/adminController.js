@@ -234,3 +234,364 @@ export const deleteStudent = async (req, res) => {
     return errorResponse(res, error.message, 500);
   }
 };
+
+// Create College
+export const createCollege = async (req, res) => {
+  try {
+    const college = await College.create(req.body);
+
+    return successResponse(
+      res,
+      "College created successfully",
+      college,
+      201
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+
+// Get All Colleges
+export const getAllColleges = async (req, res) => {
+  try {
+    const colleges = await College.find();
+
+    return successResponse(
+      res,
+      "Colleges fetched successfully",
+      colleges,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Get College By ID
+export const getCollegeById = async (req, res) => {
+  try {
+    const college = await College.findById(req.params.id);
+
+    if (!college) {
+      return errorResponse(res, "College not found", 404);
+    }
+
+    return successResponse(
+      res,
+      "College fetched successfully",
+      college,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+// Update College
+export const updateCollege = async (req, res) => {
+  try {
+    const college = await College.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!college) {
+      return errorResponse(res, "College not found", 404);
+    }
+
+    return successResponse(
+      res,
+      "College updated successfully",
+      college,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+// Delete College
+export const deleteCollege = async (req, res) => {
+  try {
+    const college = await College.findByIdAndDelete(req.params.id);
+
+    if (!college) {
+      return errorResponse(res, "College not found", 404);
+    }
+
+    return successResponse(
+      res,
+      "College deleted successfully",
+      null,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+
+// ================= Recruiter Management APIs =================
+
+// Create Recruiter
+export const createRecruiter = async (req, res) => {
+  try {
+    const recruiter = await Recruiter.create(req.body);
+
+    return successResponse(
+      res,
+      "Recruiter created successfully",
+      recruiter,
+      201
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Get All Recruiters
+export const getAllRecruiters = async (req, res) => {
+  try {
+    const recruiters = await Recruiter.find().populate("company");
+
+    return successResponse(
+      res,
+      "Recruiters fetched successfully",
+      recruiters,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Get Recruiter By ID
+export const getRecruiterById = async (req, res) => {
+  try {
+    const recruiter = await Recruiter.findById(req.params.id).populate("company");
+
+    if (!recruiter) {
+      return errorResponse(res, "Recruiter not found", 404);
+    }
+
+    return successResponse(
+      res,
+      "Recruiter fetched successfully",
+      recruiter,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Update Recruiter
+export const updateRecruiter = async (req, res) => {
+  try {
+    const recruiter = await Recruiter.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).populate("company");
+
+    if (!recruiter) {
+      return errorResponse(res, "Recruiter not found", 404);
+    }
+
+    return successResponse(
+      res,
+      "Recruiter updated successfully",
+      recruiter,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Delete Recruiter
+export const deleteRecruiter = async (req, res) => {
+  try {
+    const recruiter = await Recruiter.findByIdAndDelete(req.params.id);
+
+    if (!recruiter) {
+      return errorResponse(res, "Recruiter not found", 404);
+    }
+
+    return successResponse(
+      res,
+      "Recruiter deleted successfully",
+      null,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// ================= Project Management APIs =================
+
+// Create Project
+export const createProject = async (req, res) => {
+  try {
+    const project = await Project.create(req.body);
+
+    return successResponse(
+      res,
+      "Project created successfully",
+      project,
+      201
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Get All Projects
+export const getAllProjects = async (req, res) => {
+  try {
+    const projects = await Project.find()
+      .populate("company")
+      .populate("recruiter");
+
+    return successResponse(
+      res,
+      "Projects fetched successfully",
+      projects,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Get Project By ID
+export const getProjectById = async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id)
+      .populate("company")
+      .populate("recruiter");
+
+    if (!project) {
+      return errorResponse(res, "Project not found", 404);
+    }
+
+    return successResponse(
+      res,
+      "Project fetched successfully",
+      project,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Update Project
+export const updateProject = async (req, res) => {
+  try {
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!project) {
+      return errorResponse(res, "Project not found", 404);
+    }
+
+    return successResponse(
+      res,
+      "Project updated successfully",
+      project,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Approve Project
+export const approveProject = async (req, res) => {
+  try {
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: "Approved",
+      },
+      {
+        new: true,
+      }
+    );
+
+    if (!project) {
+      return errorResponse(res, "Project not found", 404);
+    }
+
+    return successResponse(
+      res,
+      "Project approved successfully",
+      project,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Reject Project
+export const rejectProject = async (req, res) => {
+  try {
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      {
+        status: "Rejected",
+      },
+      {
+        new: true,
+      }
+    );
+
+    if (!project) {
+      return errorResponse(res, "Project not found", 404);
+    }
+
+    return successResponse(
+      res,
+      "Project rejected successfully",
+      project,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
+// Delete Project
+export const deleteProject = async (req, res) => {
+  try {
+    const project = await Project.findByIdAndDelete(req.params.id);
+
+    if (!project) {
+      return errorResponse(res, "Project not found", 404);
+    }
+
+    return successResponse(
+      res,
+      "Project deleted successfully",
+      null,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
