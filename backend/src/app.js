@@ -3,12 +3,14 @@ import cors from "cors";
 import errorHandler from "./middleware/errorHandler.js";
 import notFound from "./middleware/notFoundMiddleware.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import collegeRoutes from "./routes/collegeRoutes.js";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use("/api/admin", adminRoutes);
+app.use("/api/college", collegeRoutes);
 
 app.get("/", (req, res) => {
   res.json({
