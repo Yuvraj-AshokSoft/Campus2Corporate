@@ -487,3 +487,22 @@ export const deleteProject = async (req, res) => {
     return errorResponse(res, error.message, 500);
   }
 };
+
+// Get Eligible Students (70% and above)
+export const getEligibleStudents = async (req, res) => {
+  try {
+    const students = await Student.find({
+      percentage:  80 ,
+      status: "Active",
+    }).select("-password");
+
+    return successResponse(
+      res,
+      "Eligible students fetched successfully",
+      students,
+      200
+    );
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};

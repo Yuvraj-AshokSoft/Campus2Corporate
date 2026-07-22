@@ -19,6 +19,7 @@ import {
   getProjectById,
   updateProject,
   deleteProject,
+   getEligibleStudents
 } from "../controllers/collegeController.js";
 
 import collegeAuth from "../middleware/collegeAuth.js";
@@ -36,6 +37,7 @@ router.get("/dashboard", collegeAuth, getCollegeDashboard);
 // Student Management
 router.post("/students", collegeAuth, createStudent);
 router.get("/students", collegeAuth, getAllStudents);
+router.get("/students/eligible", collegeAuth, getEligibleStudents);
 router.get("/students/:id", collegeAuth, getStudentById);
 router.put("/students/:id", collegeAuth, updateStudent);
 router.delete("/students/:id", collegeAuth, deleteStudent);

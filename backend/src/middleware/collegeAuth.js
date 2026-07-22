@@ -3,6 +3,8 @@ import College from "../models/college.js";
 import { errorResponse } from "../utils/apiResponse.js";
 
 const collegeAuth = async (req, res, next) => {
+    console.log(req.headers);
+  console.log(req.headers.authorization);
   try {
     let token;
 

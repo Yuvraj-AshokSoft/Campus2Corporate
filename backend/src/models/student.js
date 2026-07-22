@@ -142,6 +142,12 @@ const studentSchema = new mongoose.Schema(
       min: 1,
       max: 12,
     },
+    percentage: {
+  type: Number,
+  required: true,
+  min: 0,
+  max: 100,
+},
     skills: [
       {
         type: String,
@@ -194,14 +200,13 @@ const studentSchema = new mongoose.Schema(
   }
 );
 
-studentSchema.pre("save", async function (next) {
+studentSchema.pre("save", async function () {
   if (!this.isModified("password") || !this.password) {
-    return next();
+    return;
   }
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 studentSchema.methods.comparePassword = async function (enteredPassword) {
