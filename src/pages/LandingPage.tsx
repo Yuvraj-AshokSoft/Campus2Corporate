@@ -248,7 +248,7 @@ export const LandingPage: React.FC = () => {
   const redirectUserByRole = (role: string) => {
     switch (role.toLowerCase()) {
       case 'student':
-        navigate('/student/dashboard');
+        navigate('/student-dashboard');
         break;
       case 'mentor':
         navigate('/mentor-dashboard');
@@ -957,7 +957,233 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
+      {/* ================= Placement Impact ================= */}
 
+      {/* ================= Placement Intelligence ================= */}
+
+      <ScrollReveal className="relative z-10 py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+          {/* Heading */}
+
+          <div className="text-center max-w-3xl mx-auto mb-16">
+
+            <span className="inline-flex items-center px-4 py-2 rounded-full bg-violet-50 border border-violet-100 text-violet-700 text-xs font-bold tracking-widest uppercase">
+
+              Placement Intelligence
+
+            </span>
+
+            <h2 className="mt-5 text-4xl font-extrabold tracking-tight text-slate-900">
+
+              Real Outcomes. Measurable Impact.
+
+            </h2>
+
+            <p className="mt-4 text-slate-500 text-lg leading-relaxed">
+
+              AI continuously measures student readiness, hiring success,
+              recruiter engagement, and placement outcomes across the ecosystem.
+
+            </p>
+
+          </div>
+
+          {/* Main Card */}
+
+          <div className="rounded-[32px] border border-slate-200 bg-white shadow-xl overflow-hidden">
+
+            {/* Top */}
+
+            <div className="flex flex-col lg:flex-row">
+
+              {/* Left */}
+
+              <div className="lg:w-2/3 p-10 border-b lg:border-b-0 lg:border-r border-slate-200">
+
+                <div className="flex items-center justify-between mb-8">
+
+                  <div>
+
+                    <h3 className="text-xl font-bold text-slate-900">
+
+                      Placement Performance
+
+                    </h3>
+
+                    <p className="text-sm text-slate-500 mt-1">
+
+                      Last updated 2 minutes ago
+
+                    </p>
+
+                  </div>
+
+                  <span className="px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-bold">
+
+                    ↑ 12.8% Growth
+
+                  </span>
+
+                </div>
+
+                {/* Fake Graph */}
+
+                <div className="h-52 relative">
+
+                  <svg
+                    className="absolute inset-0 w-full h-full"
+                    viewBox="0 0 800 250"
+                    fill="none"
+                  >
+
+                    <defs>
+
+                      <linearGradient id="lineGradient" x1="0" x2="1">
+
+                        <stop offset="0%" stopColor="#5e17eb"/>
+
+                        <stop offset="100%" stopColor="#8b5cf6"/>
+
+                      </linearGradient>
+
+                    </defs>
+
+                    <path
+
+                      d="M0 180
+                      C80 160,
+                      150 120,
+                      230 135
+                      S380 80,
+                      470 95
+                      S650 35,
+                      800 45"
+
+                      stroke="url(#lineGradient)"
+
+                      strokeWidth="6"
+
+                      fill="none"
+
+                      strokeLinecap="round"
+
+                    />
+
+                  </svg>
+
+                </div>
+
+              </div>
+
+              {/* Right */}
+
+              <div className="lg:w-1/3 grid grid-cols-2">
+
+                {[
+                  {
+                    value: "95%",
+                    label: "Placement Success",
+                  },
+                  {
+                    value: "4,280+",
+                    label: "Students Placed",
+                  },
+                  {
+                    value: "620+",
+                    label: "Hiring Partners",
+                  },
+                  {
+                    value: "₹18.6L",
+                    label: "Highest Package",
+                  },
+                ].map((item) => (
+
+                  <div
+                    key={item.label}
+                    className="border-b border-r border-slate-200 last:border-b-0 even:border-r-0 p-8 hover:bg-violet-50/40 transition-all duration-300"
+                  >
+
+                    <div className="text-4xl font-black text-slate-900">
+
+                      {item.value}
+
+                    </div>
+
+                    <div className="mt-2 text-sm text-slate-500 leading-relaxed">
+
+                      {item.label}
+
+                    </div>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            </div>
+
+            {/* Bottom */}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 border-t border-slate-200">
+
+              <div className="p-8">
+
+                <p className="text-xs uppercase tracking-widest text-slate-400 font-bold">
+
+                  AI Matching Accuracy
+
+                </p>
+
+                <h3 className="mt-3 text-3xl font-black text-violet-700">
+
+                  92%
+
+                </h3>
+
+              </div>
+
+              <div className="p-8 border-y md:border-y-0 md:border-x border-slate-200">
+
+                <p className="text-xs uppercase tracking-widest text-slate-400 font-bold">
+
+                  Average Hiring Time
+
+                </p>
+
+                <h3 className="mt-3 text-3xl font-black text-violet-700">
+
+                  5 Days
+
+                </h3>
+
+              </div>
+
+              <div className="p-8">
+
+                <p className="text-xs uppercase tracking-widest text-slate-400 font-bold">
+
+                  Recruiter Satisfaction
+
+                </p>
+
+                <h3 className="mt-3 text-3xl font-black text-violet-700">
+
+                  4.9/5
+
+                </h3>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </ScrollReveal>
+      
+      
       {/* 2. Trusted Value Section */}
       <ScrollReveal className="relative z-10 py-20 md:py-28 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] bg-gradient-to-b from-white via-slate-50/50 to-slate-100/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

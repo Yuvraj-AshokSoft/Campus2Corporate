@@ -1,13 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth as useClerkAuth, useUser as useClerkUser, useSignIn, useSignUp } from '@clerk/clerk-react';
 
-interface User {
+export interface User {
   id: string;
   fullName: string;
+  name?: string;
   email: string;
   phone: string;
   role: 'student' | 'mentor' | 'college' | 'recruiter';
   isVerified?: boolean;
+  branch?: string;
+  semester?: string;
 }
 
 interface AuthContextType {
@@ -25,6 +28,8 @@ interface AuthContextType {
   verifyOtp: (code: string, role: string) => Promise<any>;
   forgotPassword: (email: string) => Promise<any>;
   resetPassword: (code: string, newPassword: string) => Promise<any>;
+  refreshUser?: () => Promise<any>;
+  updateCurrentUser?: (user: User) => void;
   logout: () => void;
 }
 
@@ -53,42 +58,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Map Clerk user to custom User format
   useEffect(() => {
     if (isUserLoaded && isSignedIn && user) {
+      const fn = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User';
       setCurrentUser({
         id: user.id,
-        fullName: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
+        fullName: fn,
+        name: fn,
         email: user.primaryEmailAddress?.emailAddress || '',
         phone: (user.unsafeMetadata?.phone as string) || user.primaryPhoneNumber?.phoneNumber || '',
         role: (user.unsafeMetadata?.role as any) || 'student',
         isVerified: user.emailAddresses.find(e => e.emailAddress === user.primaryEmailAddress?.emailAddress)?.verification.status === 'verified',
+        branch: 'Computer Science',
+        semester: 'Sem 6',
+      });
+    } else if (localUser) {
+      setCurrentUser({
+        ...localUser,
+        name: localUser.name || localUser.fullName,
+        branch: localUser.branch || 'Computer Science',
+        semester: localUser.semester || 'Sem 6',
       });
     } else {
-      setCurrentUser(localUser);
+      setCurrentUser(null);
     }
   }, [isUserLoaded, isSignedIn, user, localUser]);
 
   const login = async (email: string, password: string) => {
     const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Check local credentials bypass first
     const localCreds = JSON.parse(localStorage.getItem('c2c_local_creds') || '[]');
     const matchingLocal = localCreds.find((u: any) => u.email.trim().toLowerCase() === cleanEmail && u.password === password);
     
     if (matchingLocal) {
-      const localSessionUser = {
+      const localSessionUser: User = {
         id: 'local_' + Date.now(),
         fullName: matchingLocal.fullName,
+        name: matchingLocal.fullName,
         email: matchingLocal.email,
         phone: matchingLocal.phone || '',
         role: matchingLocal.role.toLowerCase(),
-        isVerified: true
+        isVerified: true,
+        branch: 'Computer Science',
+        semester: 'Sem 6',
       };
       localStorage.setItem('c2c_local_session', JSON.stringify(localSessionUser));
       setLocalUser(localSessionUser);
-      return { success: true };
+      return { success: true, user: localSessionUser };
     }
 
     if (!isSignInLoaded) {
-      return { success: false, message: 'Clerk login engine is loading...' };
+      return { success: false, message: 'Authentication engine loading...' };
     }
 
     try {
@@ -127,11 +145,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const cleanEmail = userData.email.trim().toLowerCase();
 
     if (!isSignUpLoaded) {
-      return { success: false, message: 'Clerk registration engine is loading...' };
+      return { success: false, message: 'Authentication engine loading...' };
     }
 
     try {
-      // Create user details in Clerk
       await signUp.create({
         emailAddress: cleanEmail,
         password: userData.password,
@@ -143,14 +160,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
 
-      // Dispatch real email verification OTP via Clerk
       await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
 
       return { success: true, message: 'Verification code dispatched to your email inbox.' };
     } catch (error: any) {
       let msg = error.errors?.[0]?.message || 'Account creation failed';
       
-      // Auto local-bypass when Clerk blocks passwords via breach filters or configuration rules
       if (error.errors?.[0]?.code === 'form_password_pwned' || msg.toLowerCase().includes('data breach') || msg.toLowerCase().includes('breach')) {
         const localCreds = JSON.parse(localStorage.getItem('c2c_local_creds') || '[]');
         const existingIdx = localCreds.findIndex((u: any) => u.email.trim().toLowerCase() === cleanEmail);
@@ -168,13 +183,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localCreds.push(newUserObj);
         }
         localStorage.setItem('c2c_local_creds', JSON.stringify(localCreds));
-        
         localStorage.setItem('c2c_pending_local_signup', JSON.stringify(newUserObj));
 
         return { 
           success: true, 
           isDemo: true, 
-          message: 'Verification code generated for your email (Demo Verification Code: 123456).' 
+          message: 'Verification code generated (Demo Verification Code: 123456).' 
         };
       }
 
@@ -183,25 +197,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const verifyOtp = async (code: string, _role: string) => {
-    // Check if we have a pending local credentials bypass
     const pendingLocal = localStorage.getItem('c2c_pending_local_signup');
     if (pendingLocal) {
       try {
         const parsed = JSON.parse(pendingLocal);
-        const localSessionUser = {
+        const localSessionUser: User = {
           id: 'local_' + Date.now(),
           fullName: parsed.fullName,
+          name: parsed.fullName,
           email: parsed.email,
           phone: parsed.phone || '',
           role: parsed.role.toLowerCase(),
-          isVerified: true
+          isVerified: true,
+          branch: 'Computer Science',
+          semester: 'Sem 6',
         };
         localStorage.setItem('c2c_local_session', JSON.stringify(localSessionUser));
         setLocalUser(localSessionUser);
         localStorage.removeItem('c2c_pending_local_signup');
-        return { success: true };
+        return { success: true, user: localSessionUser };
       } catch (err) {
-        // Fallback to clerk below
+        // Fallback
       }
     }
 
@@ -212,10 +228,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (!isSignUpLoaded && !isSignInLoaded) {
-      return { success: false, message: 'Clerk engine is loading...' };
+      return { success: false, message: 'Authentication engine loading...' };
     }
 
-    // Try verifying Clerk sign-up code
     try {
       if (signUp) {
         const result = await signUp.attemptEmailAddressVerification({ code });
@@ -228,7 +243,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Continue to sign-in factor verification below
     }
 
-    // Try verifying Clerk sign-in factor code
     try {
       if (signIn) {
         const result = await signIn.attemptFirstFactor({
@@ -258,7 +272,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (!isSignInLoaded) {
-      return { success: false, message: 'Clerk engine is loading...' };
+      return { success: false, message: 'Authentication engine loading...' };
     }
 
     try {
@@ -275,7 +289,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (code: string, newPassword: string) => {
     if (!isSignInLoaded) {
-      return { success: false, message: 'Clerk engine is loading...' };
+      return { success: false, message: 'Authentication engine loading...' };
     }
     try {
       const result = await signIn.attemptFirstFactor({
@@ -298,25 +312,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const refreshUser = async () => {
+    return currentUser;
+  };
+
+  const updateCurrentUser = (user: User) => {
+    const updated = {
+      ...user,
+      name: user.name || user.fullName,
+      branch: user.branch || 'Computer Science',
+      semester: user.semester || 'Sem 6',
+    };
+    setCurrentUser(updated);
+    localStorage.setItem('c2c_local_session', JSON.stringify(updated));
+  };
+
   const logout = () => {
     localStorage.removeItem('c2c_local_session');
     setLocalUser(null);
-    signOut().then(() => {
+    setCurrentUser(null);
+    if (signOut) {
+      signOut().catch(() => undefined).finally(() => {
+        window.location.href = '/';
+      });
+    } else {
       window.location.href = '/';
-    });
+    }
   };
 
   return (
     <AuthContext.Provider
       value={{
         currentUser,
-        isAuthenticated: isSignedIn || localUser !== null,
+        isAuthenticated: (isSignedIn || localUser !== null || currentUser !== null),
         loading: !isAuthLoaded || !isUserLoaded,
         login,
         register,
         verifyOtp,
         forgotPassword,
         resetPassword,
+        refreshUser,
+        updateCurrentUser,
         logout,
       }}
     >

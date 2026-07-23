@@ -93,7 +93,7 @@ const CollegeNavbar = ({ showAiButton = true, onAiButtonClick }: CollegeNavbarPr
   const firstName = fullName.split(" ")[0] || "Admin";
   const initials = getInitials(fullName);
   const email = currentUser?.email || "tpo@college.edu";
-  const shouldShowAi = showAiButton && location.pathname === "/college/dashboard";
+  const shouldShowAi = showAiButton && location.pathname === "/college-dashboard";
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
@@ -132,7 +132,7 @@ const CollegeNavbar = ({ showAiButton = true, onAiButtonClick }: CollegeNavbarPr
                 if (onAiButtonClick) {
                   onAiButtonClick();
                 } else {
-                  navigate("/college/dashboard");
+                  navigate("/college-dashboard");
                 }
               }}
               className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-3.5 py-2 text-sm font-bold text-white shadow-md shadow-blue-500/20 transition hover:from-blue-700 hover:to-blue-800"
@@ -171,7 +171,7 @@ const CollegeNavbar = ({ showAiButton = true, onAiButtonClick }: CollegeNavbarPr
                 </button>
                 <button
                   onClick={() => {
-                    navigate("/college/students");
+                    navigate("/college/students-management");
                     setProfileOpen(false);
                   }}
                   className="w-full px-4 py-2 text-left text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"

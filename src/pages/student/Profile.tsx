@@ -121,7 +121,7 @@ const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#2563eb" }:
 );
 
 const sidebarItems: Array<{ label: string; icon: StudentSidebarIconName; route: string; badge?: number }> = [
-  { label: "Dashboard", icon: "dashboard", route: "/student/dashboard" },
+  { label: "Dashboard", icon: "dashboard", route: "/student-dashboard" },
   { label: "My Profile", icon: "user-check", route: "/student/profile" },
   { label: "Project List", icon: "briefcase", route: "/student/projects" },
   { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects", badge: 2 },
@@ -247,7 +247,7 @@ export const StudentProfile = () => {
                     { label: "Readiness score", value: "82%", icon: "target" as IconName, color: "#10b981" },
                     { label: "Applied projects", value: "6", icon: "briefcase" as IconName, color: "#2563eb" },
                     { label: "Certificates", value: "1", icon: "award" as IconName, color: "#f59e0b" },
-                    { label: "Coding streak", value: "12d", icon: "zap" as IconName, color: "#f43f5e" },
+                    { label: "Daily streak", value: "12d", icon: "zap" as IconName, color: "#f43f5e" },
                   ].map((s) => (
                     <div key={s.label} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
                       <div className="flex items-center gap-1.5">

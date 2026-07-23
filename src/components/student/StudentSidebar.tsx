@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
-export type StudentSidebarIconName =
+export type IconName =
   | "activity" | "alert" | "arrow-up" | "arrow-down" | "bell" | "briefcase"
   | "building" | "calendar" | "chart" | "check" | "clock" | "dashboard"
   | "database" | "file" | "graduation" | "lock" | "plug" | "search"
@@ -14,8 +14,10 @@ export type StudentSidebarIconName =
   | "x-circle" | "hourglass" | "map-pin" | "trash" | "check-circle" | "info"
   | "smartphone" | "eye-off" | "key" | "share2";
 
-const Icon = ({ name, className = "h-4 w-4" }: { name: StudentSidebarIconName; className?: string }) => {
-  const paths: Record<StudentSidebarIconName, React.ReactNode> = {
+export type StudentSidebarIconName = IconName;
+
+const Icon = ({ name, className = "h-4 w-4" }: { name: IconName; className?: string }) => {
+  const paths: Record<IconName, React.ReactNode> = {
     activity: <path d="M4 12h3l2-6 4 12 2-6h5" />,
     alert: <><path d="M12 4 3.5 18.5h17L12 4Z" /><path d="M12 9v4" /><path d="M12 16h.01" /></>,
     "arrow-up": <><path d="M7 17 17 7" /><path d="M9 7h8v8" /></>,
@@ -92,7 +94,7 @@ const Icon = ({ name, className = "h-4 w-4" }: { name: StudentSidebarIconName; c
 };
 
 interface StudentSidebarProps {
-  items?: Array<{ label: string; icon: StudentSidebarIconName; route: string; badge?: string | number; }>;
+  items?: Array<{ label: string; icon: IconName; route: string; badge?: string | number; }>;
   highlight?: string;
   userSummary?: { fullName?: string; role?: string; status?: string };
   stats?: { label: string; value: string; subtitle?: string; accent?: string };
@@ -108,21 +110,27 @@ const StudentSidebar = ({
   const location = useLocation();
   const { currentUser } = useAuth();
 
-  const fullName = userSummary?.fullName || currentUser?.fullName || "Yuvraj Singh";
-  const roleLabel = userSummary?.role || "B.Tech CSE · 4th Year";
+  const fullName = userSummary?.fullName || currentUser?.fullName || currentUser?.name || "Student";
+  const roleLabel =
+    userSummary?.role ||
+    [currentUser?.branch, currentUser?.semester ? `Semester ${currentUser.semester}` : ""]
+      .filter(Boolean)
+      .join(" · ") ||
+    "Student";
   const statusLabel = userSummary?.status || "Placement track active";
 
-  const sidebarItems = items || [
-    { label: "Dashboard", icon: "dashboard" as StudentSidebarIconName, route: "/student/dashboard" },
-    { label: "Projects", icon: "briefcase" as StudentSidebarIconName, route: "/student/projects" },
-    { label: "Applied Projects", icon: "clipboard" as StudentSidebarIconName, route: "/student/applied-projects" },
-    { label: "Notifications", icon: "bell" as StudentSidebarIconName, route: "/student/notifications" },
-    { label: "Certificates", icon: "award" as StudentSidebarIconName, route: "/student/certificates" },
-    { label: "Profile", icon: "user-check" as StudentSidebarIconName, route: "/student/profile" },
-    { label: "Settings", icon: "settings" as StudentSidebarIconName, route: "/student/settings" },
-  ];
-
-  const activeSidebar = highlight || sidebarItems.find((item) => location.pathname === item.route)?.label || "Dashboard";
+const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?: number }> = [
+  { label: "Dashboard", icon: "dashboard", route: "/student-dashboard" },
+  { label: "My Profile", icon: "user-check", route: "/student/profile" },
+  { label: "Project List", icon: "briefcase", route: "/student/projects" },
+  { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects" },
+  { label: "Notifications", icon: "bell", route: "/student/notifications" },
+  { label: "Certificates", icon: "award", route: "/student/certificates" },
+  { label: "Settings", icon: "settings", route: "/student/settings" },
+  { label: "AI Resume Builder", icon: "resume" , route: "/student/airesume" },
+];
+  const navItems = items?.length ? items : sidebarItems;
+  const activeSidebar = highlight || navItems.find((item) => location.pathname === item.route)?.label || "Dashboard";
 
   return (
     <aside className="hidden w-56 flex-shrink-0 lg:block">
@@ -138,7 +146,7 @@ const StudentSidebar = ({
         </div>
 
         <nav className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-          {sidebarItems.map((item) => (
+          {navItems.map((item) => (
             <button
               key={item.label}
               onClick={() => navigate(item.route)}

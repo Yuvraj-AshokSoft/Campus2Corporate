@@ -25,7 +25,7 @@ import Certificates from "../pages/student/Certificates";
 
 import CollegeProfile from "../pages/college/Profile";
 import CollegeSettings from "../pages/college/Settings";
-import CollegeStudentManagement from "../pages/college/Student";
+import CollegeStudentManagement from "../pages/college/StudentManagement";
 import CollegeRecruiterManagement from "../pages/college/RecruiterManagement";
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 

@@ -2,11 +2,15 @@ import express from "express";
 import cors from "cors";
 import errorHandler from "./middleware/errorHandler.js";
 import notFound from "./middleware/notFoundMiddleware.js";
+import adminRoutes from "./routes/adminRoutes.js";
+import collegeRoutes from "./routes/collegeRoutes.js";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/admin", adminRoutes);
+app.use("/api/college", collegeRoutes);
 
 app.get("/", (req, res) => {
   res.json({
@@ -25,3 +29,32 @@ app.use(errorHandler);
 app.use(notFound);
 
 export default app;
+
+/*import express from "express";
+import cors from "cors";
+import errorHandler from "./middleware/errorHandler.js";
+import notFound from "./middleware/notFoundMiddleware.js";
+import studentRoutes from "./routes/studentRoutes.js";
+import studentAuthRoutes from "./routes/studentAuthRoutes.js";
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "Campus2Corporate Backend Running ",
+  });
+});
+
+app.use("/api/auth", studentAuthRoutes);
+app.use("/api/student", studentRoutes);
+app.use("/api/students", studentRoutes);
+
+app.use(notFound);
+app.use(errorHandler);
+
+export default app;*/
