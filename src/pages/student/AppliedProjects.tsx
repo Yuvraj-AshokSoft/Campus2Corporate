@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
+import { getApiErrorMessage, studentApi, unwrapData } from "../../services/studentApi";
 
 // ─── Icon System (matches Admin Dashboard / Student Dashboard) ───────────────
 type IconName =
@@ -87,7 +88,7 @@ const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?
   { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
   { label: "Certificates", icon: "award", route: "/student/certificates" },
   { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume" , route: "/student/airesume" },
+  { label: "AI Resume Builder", icon: "resume" , route: "/student/ai-resume" },
 ];
 // ─── Applied Project Data ───────────────────────────────────────────────────
 type AppStatus = "Applied" | "Under Review" | "Interview Scheduled" | "Accepted" | "Rejected";
@@ -111,34 +112,6 @@ const statusMeta: Record<AppStatus, { icon: IconName; cls: string; dot: string }
   Rejected: { icon: "x-circle", cls: "bg-rose-50 text-rose-700 ring-rose-100", dot: "#ef4444" },
 };
 
-const appliedProjects: AppliedProject[] = [
-  {
-    id: "p1", title: "Frontend Developer Intern", company: "Nexbyte Technologies", location: "Bengaluru, IN",
-    appliedOn: "18 Jun 2026", status: "Interview Scheduled", stipend: "₹15,000/mo",
-    skills: ["React", "Tailwind CSS", "JavaScript"],
-  },
-  {
-    id: "p2", title: "Data Analyst Trainee", company: "Insight Grid Analytics", location: "Remote",
-    appliedOn: "10 Jun 2026", status: "Under Review", stipend: "₹12,000/mo",
-    skills: ["Python", "SQL", "Power BI"],
-  },
-  {
-    id: "p3", title: "Backend Engineer Intern", company: "CloudForge Systems", location: "Pune, IN",
-    appliedOn: "02 Jun 2026", status: "Applied", stipend: "₹18,000/mo",
-    skills: ["Node.js", "MongoDB", "REST APIs"],
-  },
-  {
-    id: "p4", title: "Full Stack Developer", company: "Verve Software Labs", location: "Hyderabad, IN",
-    appliedOn: "24 May 2026", status: "Accepted", stipend: "₹20,000/mo",
-    skills: ["React", "Express", "PostgreSQL"],
-  },
-  {
-    id: "p5", title: "QA Automation Intern", company: "Pixel Forge Studio", location: "Remote",
-    appliedOn: "15 May 2026", status: "Rejected", stipend: "₹10,000/mo",
-    skills: ["Selenium", "Java", "Testing"],
-  },
-];
-
 type FilterTab = "all" | AppStatus;
 const filterTabs: { key: FilterTab; label: string }[] = [
   { key: "all", label: "All" },
@@ -154,9 +127,40 @@ const filterTabs: { key: FilterTab; label: string }[] = [
 // ═══════════════════════════════════════════════════════════════════════════
 export const StudentAppliedProjects = () => {
   const { currentUser } = useAuth();
-  const fullName = currentUser?.fullName || "Yuvraj Singh";
+  const fullName = currentUser?.fullName || currentUser?.name || "Student";
 
+  const [appliedProjects, setAppliedProjects] = useState<AppliedProject[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadApplications = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await studentApi.getApplications();
+        const payload = unwrapData<{ applications: AppliedProject[] }>(response);
+        if (mounted) setAppliedProjects(payload.applications || []);
+      } catch (loadError) {
+        if (mounted) {
+          setError(getApiErrorMessage(loadError));
+          setAppliedProjects([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadApplications();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const filtered = appliedProjects.filter((p) => activeTab === "all" || p.status === activeTab);
 
@@ -173,11 +177,21 @@ export const StudentAppliedProjects = () => {
     <StudentLayout
       sidebarItems={sidebarItems}
       sidebarHighlight="Applied Projects"
-      userSummary={{ fullName, role: "B.Tech CSE · 4th Year", status: "Placement track active" }}
-      stats={{ label: "Application success", value: "75%", subtitle: "3 of 4 progressing", accent: "Good" }}
+      userSummary={{ fullName, role: "Student", status: "Placement track active" }}
+      stats={{ label: "Applications", value: String(appliedProjects.length), subtitle: "Total submitted", accent: "Live" }}
       showAiButton={false}
     >
       <div className="space-y-5">
+            {error && (
+              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                {error}
+              </div>
+            )}
+            {loading && (
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
+                Loading applications...
+              </div>
+            )}
 
             {/* Page header banner */}
             <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -236,7 +250,7 @@ export const StudentAppliedProjects = () => {
                 <Icon name="briefcase" className="h-4 w-4 text-slate-300" />
               </div>
 
-              {filtered.length === 0 ? (
+              {filtered.length === 0 && !loading ? (
                 <div className="mt-6 flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-12 text-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200">
                     <Icon name="clipboard" className="h-4 w-4 text-slate-300" />

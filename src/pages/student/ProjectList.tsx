@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
+import { getApiErrorMessage, studentApi, unwrapData } from "../../services/studentApi";
 
 // ─── Icon System (matches Student Dashboard / Admin Dashboard) ───────────────
 type IconName =
@@ -84,7 +85,7 @@ const Icon = ({ name, className = "h-4 w-4" }: { name: IconName; className?: str
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const useStudentProfile = () => {
   const { currentUser } = useAuth();
-  const fullName = currentUser?.fullName || "Yuvraj Singh";
+  const fullName = currentUser?.fullName || currentUser?.name || "Student";
   return { fullName };
 };
 const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?: number }> = [
@@ -95,7 +96,7 @@ const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?
   { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
   { label: "Certificates", icon: "award", route: "/student/certificates" },
   { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume" , route: "/student/airesume" },
+  { label: "AI Resume Builder", icon: "resume" , route: "/student/ai-resume" },
 ];
 
 
@@ -119,79 +120,6 @@ interface Project {
   stipend: string;
   featured?: boolean;
 }
-
-const projects: Project[] = [
-  {
-    id: "p1", title: "AI Resume Analyzer Dashboard", company: "NimbusTech Labs", category: "AI / ML",
-    difficulty: "Intermediate", duration: "4 weeks", techStack: ["React", "TypeScript", "Claude API", "Tailwind"],
-    description: "Build an ATS-style resume scoring dashboard that parses resumes and returns keyword and formatting feedback using an LLM.",
-    requirements: ["Comfortable with React + TypeScript", "Basic understanding of REST APIs", "Interest in applied AI"],
-    applicants: 34, slots: 6, deadline: "20 Jul", stipend: "₹8,000/mo", featured: true,
-  },
-  {
-    id: "p2", title: "E-commerce Order Tracking API", company: "CartFlow Retail", category: "Backend",
-    difficulty: "Intermediate", duration: "3 weeks", techStack: ["Node.js", "Express", "MongoDB", "JWT"],
-    description: "Design and ship a REST API for order lifecycle tracking with role-based access for customers, sellers, and admins.",
-    requirements: ["Node.js fundamentals", "Familiarity with MongoDB schema design", "Understanding of auth flows"],
-    applicants: 21, slots: 4, deadline: "18 Jul", stipend: "₹7,000/mo",
-  },
-  {
-    id: "p3", title: "Customer Churn Prediction Pipeline", company: "DataForge Analytics", category: "Data Science",
-    difficulty: "Advanced", duration: "6 weeks", techStack: ["Python", "Pandas", "Scikit-learn", "Power BI"],
-    description: "Build an end-to-end churn prediction pipeline with feature engineering, model evaluation, and a stakeholder-facing dashboard.",
-    requirements: ["Strong Python & pandas skills", "Understanding of classification metrics", "Exposure to BI tooling"],
-    applicants: 47, slots: 5, deadline: "25 Jul", stipend: "₹10,000/mo", featured: true,
-  },
-  {
-    id: "p4", title: "Real-time Collaborative Whiteboard", company: "SketchSync", category: "Full Stack",
-    difficulty: "Advanced", duration: "5 weeks", techStack: ["React", "Socket.io", "Node.js", "Canvas API"],
-    description: "Implement a multiplayer whiteboard with live cursors, shape sync, and conflict resolution over WebSockets.",
-    requirements: ["Experience with WebSockets", "Solid React state management", "Comfort with Canvas or SVG"],
-    applicants: 29, slots: 3, deadline: "22 Jul", stipend: "₹9,000/mo",
-  },
-  {
-    id: "p5", title: "Campus Event Discovery App", company: "EduSphere", category: "Mobile",
-    difficulty: "Beginner", duration: "3 weeks", techStack: ["React Native", "Expo", "Firebase"],
-    description: "Build a mobile app where students discover, RSVP to, and get reminders for campus events and workshops.",
-    requirements: ["Basic React Native knowledge", "Familiarity with Firebase Auth/Firestore"],
-    applicants: 52, slots: 8, deadline: "15 Jul", stipend: "₹5,000/mo",
-  },
-  {
-    id: "p6", title: "Sentiment Analysis for Product Reviews", company: "ReviewPulse", category: "AI / ML",
-    difficulty: "Intermediate", duration: "4 weeks", techStack: ["Python", "Hugging Face", "FastAPI"],
-    description: "Fine-tune a sentiment classifier on e-commerce reviews and expose it via a FastAPI microservice with a simple UI.",
-    requirements: ["Python + basic ML workflow", "Understanding of NLP preprocessing", "REST API basics"],
-    applicants: 38, slots: 5, deadline: "21 Jul", stipend: "₹8,500/mo",
-  },
-  {
-    id: "p7", title: "Personal Finance Tracker", company: "WalletWise", category: "Frontend",
-    difficulty: "Beginner", duration: "2 weeks", techStack: ["React", "Chart.js", "Tailwind"],
-    description: "Build a responsive expense tracker with category breakdowns, budgets, and interactive charts — no backend required.",
-    requirements: ["HTML/CSS/JS fundamentals", "Basic React hooks"],
-    applicants: 61, slots: 10, deadline: "14 Jul", stipend: "Unpaid · Certificate",
-  },
-  {
-    id: "p8", title: "DevOps CI/CD Pipeline for Microservices", company: "ShipRight Systems", category: "Backend",
-    difficulty: "Advanced", duration: "5 weeks", techStack: ["Docker", "GitHub Actions", "Kubernetes", "AWS"],
-    description: "Set up automated build, test, and deployment pipelines for a microservices architecture running on Kubernetes.",
-    requirements: ["Familiarity with Docker", "Basic CI/CD concepts", "Comfort with cloud platforms"],
-    applicants: 18, slots: 3, deadline: "28 Jul", stipend: "₹11,000/mo",
-  },
-  {
-    id: "p9", title: "AI-Powered Study Buddy Chatbot", company: "LearnLoop", category: "Full Stack",
-    difficulty: "Intermediate", duration: "4 weeks", techStack: ["React", "Claude API", "PostgreSQL"],
-    description: "Build a conversational study assistant that answers syllabus questions and generates practice quizzes on demand.",
-    requirements: ["React + API integration experience", "Basic SQL knowledge", "Interest in edtech"],
-    applicants: 44, slots: 6, deadline: "19 Jul", stipend: "₹8,000/mo",
-  },
-  {
-    id: "p10", title: "Sales Analytics Dashboard", company: "Vantage Metrics", category: "Data Science",
-    difficulty: "Beginner", duration: "3 weeks", techStack: ["Python", "Streamlit", "SQL"],
-    description: "Turn raw sales data into an interactive Streamlit dashboard with filters, trend lines, and exportable reports.",
-    requirements: ["Basic Python", "Comfort writing SQL queries"],
-    applicants: 33, slots: 7, deadline: "17 Jul", stipend: "₹6,000/mo",
-  },
-];
 
 const categories: Array<Category | "All"> = ["All", "Frontend", "Backend", "Full Stack", "AI / ML", "Data Science", "Mobile"];
 const sortOptions = ["Newest", "Deadline (soonest)", "Most applicants", "Fewest slots left"] as const;
@@ -370,6 +298,9 @@ const ProjectModal = ({ project, applied, onApply, onClose }: {
 export const ProjectListPage = () => {
   const { fullName } = useStudentProfile();
 
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<Category | "All">("All");
   const [difficulty, setDifficulty] = useState<Difficulty | "All">("All");
@@ -377,15 +308,57 @@ export const ProjectListPage = () => {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set(["p2", "p7"]));
+  const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set());
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [toast, setToast] = useState("");
 
-  const applyToProject = (id: string, title: string) => {
+  useEffect(() => {
+    let mounted = true;
+
+    const loadProjects = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await studentApi.getProjects();
+        const payload = unwrapData<{ projects: Project[]; appliedProjectIds: string[] }>(response);
+        if (!mounted) return;
+        setProjects(payload.projects || []);
+        setAppliedIds(new Set(payload.appliedProjectIds || []));
+      } catch (loadError) {
+        if (mounted) {
+          setError(getApiErrorMessage(loadError));
+          setProjects([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadProjects();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const applyToProject = async (id: string, title: string) => {
     if (appliedIds.has(id)) return;
-    setAppliedIds((s) => new Set(s).add(id));
-    setToast(`Applied to "${title}"`);
-    setTimeout(() => setToast(""), 2500);
+    setError("");
+
+    try {
+      await studentApi.applyToProject(id);
+      setAppliedIds((s) => new Set(s).add(id));
+      setProjects((list) =>
+        list.map((project) =>
+          project.id === id ? { ...project, applicants: project.applicants + 1 } : project
+        )
+      );
+      setToast(`Applied to "${title}"`);
+      setTimeout(() => setToast(""), 2500);
+    } catch (applyError) {
+      setError(getApiErrorMessage(applyError));
+    }
   };
 
   const filtered = useMemo(() => {
@@ -418,11 +391,21 @@ export const ProjectListPage = () => {
     <StudentLayout
       sidebarItems={sidebarItems}
       sidebarHighlight="Project List"
-      userSummary={{ fullName, role: "B.Tech CSE · 4th Year", status: "Placement track active" }}
+      userSummary={{ fullName, role: "Student", status: "Placement track active" }}
       stats={{ label: "Open projects", value: String(projects.length), subtitle: "Active opportunities", accent: "Live" }}
       showAiButton={false}
     >
       <main className="min-w-0 flex-1 space-y-5">
+            {error && (
+              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                {error}
+              </div>
+            )}
+            {loading && (
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
+                Loading projects...
+              </div>
+            )}
 
             {/* Header banner */}
             <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -525,7 +508,7 @@ export const ProjectListPage = () => {
               <p className="text-xs font-semibold text-slate-500">{filtered.length} project{filtered.length !== 1 ? "s" : ""} found</p>
             </div>
 
-            {filtered.length === 0 ? (
+            {filtered.length === 0 && !loading ? (
               <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center">
                 <Icon name="search" className="mx-auto h-6 w-6 text-slate-300" />
                 <p className="mt-3 text-sm font-bold text-slate-600">No projects match your filters</p>
