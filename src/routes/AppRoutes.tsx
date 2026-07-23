@@ -22,6 +22,8 @@ import AppliedProjects from "../pages/student/AppliedProjects";
 import Notifications from "../pages/student/Notifications";
 import StudentSettings from "../pages/student/Settings";
 import Certificates from "../pages/student/Certificates";
+import StudentAIResume from "../pages/student/AIResume";
+import StudentAIHiring from "../pages/student/AIHiring";
 
 import CollegeProfile from "../pages/college/Profile";
 import CollegeSettings from "../pages/college/Settings";
@@ -118,6 +120,23 @@ export const AppRoutes: React.FC = () => {
               element={
                 <ProtectedRoute allowedRoles={["student"]}>
                   <Certificates />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/ai-resume"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <StudentAIResume  />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/ai-interview"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <StudentAIHiring />
                 </ProtectedRoute>
               }
             />

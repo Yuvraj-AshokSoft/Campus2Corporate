@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { getApiErrorMessage, studentApi, type StudentProfile } from "../services/studentApi";
+import {
+  getApiErrorMessage,
+  studentApi,
+  type StudentProfile,
+} from "../services/studentApi";
 
 interface User extends StudentProfile {
   isVerified?: boolean;
@@ -34,6 +38,7 @@ const normalizeStudent = (student: StudentProfile): User => ({
   ...student,
   id: student.id,
   fullName: student.fullName || student.name || "",
+  name: student.name || student.fullName || "",
   email: student.email || "",
   phone: student.phone || "",
   role: "student",
@@ -42,8 +47,10 @@ const normalizeStudent = (student: StudentProfile): User => ({
 
 const saveSession = (token: string, student: StudentProfile) => {
   const user = normalizeStudent(student);
+
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
+
   return user;
 };
 
@@ -52,26 +59,44 @@ const clearSession = () => {
   localStorage.removeItem(USER_KEY);
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refreshUser = async () => {
     const token = localStorage.getItem(TOKEN_KEY);
+
     if (!token) {
       setCurrentUser(null);
       return;
     }
 
-    const student = await studentApi.me();
-    const user = normalizeStudent(student);
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-    setCurrentUser(user);
+    try {
+      const { data } = await studentApi.me();
+
+      const student =
+        data.student ||
+        data.user ||
+        data.data?.student;
+
+      if (!student) throw new Error("Student not found");
+
+      const user = normalizeStudent(student);
+
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+      setCurrentUser(user);
+    } catch {
+      clearSession();
+      setCurrentUser(null);
+    }
   };
 
   useEffect(() => {
     const bootstrap = async () => {
       const savedUser = localStorage.getItem(USER_KEY);
+
       if (savedUser) {
         try {
           setCurrentUser(JSON.parse(savedUser));
@@ -80,14 +105,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      try {
-        await refreshUser();
-      } catch {
-        clearSession();
-        setCurrentUser(null);
-      } finally {
-        setLoading(false);
-      }
+      await refreshUser();
+      setLoading(false);
     };
 
     bootstrap();
@@ -95,12 +114,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const { token, student } = await studentApi.login(email, password);
+      const { data } = await studentApi.login({
+        email,
+        password,
+      });
+
+      const token =
+        data.token ||
+        data.data?.token;
+
+      const student =
+        data.student ||
+        data.user ||
+        data.data?.student;
+
       const user = saveSession(token, student);
+
       setCurrentUser(user);
-      return { success: true, user };
+
+      return {
+        success: true,
+        user,
+      };
     } catch (error) {
-      return { success: false, message: getApiErrorMessage(error, "Invalid email or password") };
+      return {
+        success: false,
+        message: getApiErrorMessage(error),
+      };
     }
   };
 
@@ -114,33 +154,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (userData.role.toLowerCase() !== "student") {
       return {
         success: false,
-        message: `Missing backend endpoint for ${userData.role} registration.`,
+        message: "Only student registration is supported.",
       };
     }
 
     try {
-      const { token, student } = await studentApi.register(userData);
+      const { data } = await studentApi.register(userData);
+
+      const token =
+        data.token ||
+        data.data?.token;
+
+      const student =
+        data.student ||
+        data.user ||
+        data.data?.student;
+
       const user = saveSession(token, student);
+
       setCurrentUser(user);
-      return { success: true, requiresOtp: false, user };
+
+      return {
+        success: true,
+        requiresOtp: false,
+        user,
+      };
     } catch (error) {
-      return { success: false, message: getApiErrorMessage(error, "Registration failed") };
+      return {
+        success: false,
+        message: getApiErrorMessage(error),
+      };
     }
   };
 
   const verifyOtp = async (_code: string, _role: string) => ({
     success: false,
-    message: "Missing backend endpoint: OTP verification is not available.",
+    message: "OTP verification is not implemented.",
   });
 
   const forgotPassword = async (_email: string) => ({
     success: false,
-    message: "Missing backend endpoint: forgot password is not available.",
+    message: "Forgot password is not implemented.",
   });
 
   const resetPassword = async (_code: string, _newPassword: string) => ({
     success: false,
-    message: "Missing backend endpoint: reset password is not available.",
+    message: "Reset password is not implemented.",
   });
 
   const updateCurrentUser = (user: User) => {
@@ -149,9 +208,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    studentApi.logout().catch(() => undefined);
+    studentApi.logout().catch(() => {});
+
     clearSession();
+
     setCurrentUser(null);
+
     window.location.href = "/";
   };
 
@@ -159,7 +221,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         currentUser,
-        isAuthenticated: Boolean(currentUser && localStorage.getItem(TOKEN_KEY)),
+        isAuthenticated: !!(
+          currentUser &&
+          localStorage.getItem(TOKEN_KEY)
+        ),
         loading,
         login,
         register,
@@ -178,8 +243,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
+
   return context;
 };
