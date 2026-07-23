@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
+import { getApiErrorMessage, studentApi, unwrapData } from "../../services/studentApi";
 
 // ─── Icon System (matches Admin Dashboard / Student Dashboard) ───────────────
 type IconName =
@@ -143,7 +144,7 @@ const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?
   { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
   { label: "Certificates", icon: "award", route: "/student/certificates" },
   { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume" , route: "/student/airesume" },
+  { label: "AI Resume Builder", icon: "resume" , route: "/student/ai-resume" },
 ];
 
 // ─── Notification Data ─────────────────────────────────────────────────────
@@ -234,8 +235,8 @@ type SettingsTab = "notifications" | "preferences" | "privacy";
 // ═══════════════════════════════════════════════════════════════════════════
 export const StudentNotifications = () => {
   const { currentUser } = useAuth();
-  const fullName = currentUser?.fullName || "Yuvraj Singh";
-  const email = currentUser?.email || "yuvraj@example.com";
+  const fullName =  "Yuvraj Singh";
+  const email = "yuvraj@example.com";
 
   const [items, setItems] = useState<NotificationItem[]>(initialNotifications);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");

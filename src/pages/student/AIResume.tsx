@@ -1,15 +1,5 @@
-// src/pages/student/AIResumeBuilder.tsx
-//
-// AI Resume Builder — reuses StudentLayout (same sidebar + sticky header as
-// every other student page) and follows the same visual language as
-// StudentDashboard.tsx: rounded-2xl white cards, border-slate-200, blue-600
-// accent, slate palette, and the same stroke-based Icon system + Claude API
-// call pattern (callClaude / parseJSON) used by the other AI features.
-// This pass: fixes the two-column layout, adds a premium finish within the
-// existing design system, auto-imports the student's portal details, and
-// adds an AI assistant that files freeform notes into the right section.
-
 import { useState } from "react";
+
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
 
@@ -214,6 +204,14 @@ const Icon = ({
       </>
     ),
     zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
+    interview: (
+      <>
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <path d="M8 10h8" />
+        <path d="M8 14h5" />
+        <circle cx="18" cy="18" r="2" />
+      </>
+    ),
   };
   return (
     <svg
@@ -273,16 +271,12 @@ const sidebarItems: Array<{
   { label: "Dashboard", icon: "dashboard", route: "/student-dashboard" },
   { label: "My Profile", icon: "user-check", route: "/student/profile" },
   { label: "Project List", icon: "briefcase", route: "/student/projects" },
-  {
-    label: "Applied Projects",
-    icon: "clipboard",
-    route: "/student/applied-projects",
-    badge: 2,
-  },
+  { label: "Applied Projects",icon: "clipboard",route: "/student/applied-projects",badge: 2,},
   { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
   { label: "Certificates", icon: "award", route: "/student/certificates" },
   { label: "Settings", icon: "settings", route: "/student/settings" },
   { label: "AI Resume Builder", icon: "resume", route: "/student/airesume", active: true },
+  { label: "AI Interview", icon: "interview", route: "/ai-interview" },
 ];
 
 // ─── Portal data used to auto-fill the resume (mirrors the Dashboard's registered modules) ──
