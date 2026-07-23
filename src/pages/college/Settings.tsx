@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -59,7 +60,7 @@ const getInitials = (name: string) =>
   name.trim().split(/\s+/).map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "TP";
 
 // Sidebar kept identical to CollegeDashboard.tsx
-const sidebarItems: Array<{
+export const sidebarItems: Array<{
   label: string; icon: IconName; route: string; active?: boolean; badge?: number;
 }> = [
   { label: "Dashboard", icon: "dashboard", route: "/college-dashboard" },

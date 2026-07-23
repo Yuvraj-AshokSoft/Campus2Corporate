@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
+import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
 
 // ─── Icon System (subset needed on this page; same visual style as the rest of the app) ──
 type IconName =
@@ -265,7 +266,7 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 // ─── Sidebar (identical items/order to the rest of the student portal) ───────
 const sidebarItems: Array<{
   label: string;
-  icon: IconName;
+  icon: StudentSidebarIconName;
   route: string;
   active?: boolean;
   badge?: number;

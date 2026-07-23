@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
+import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
 
 // ─── Icon System (matches Admin Dashboard / Student Dashboard) ───────────────
 type IconName =
@@ -79,7 +80,7 @@ const Icon = ({ name, className = "h-4 w-4", style }: { name: IconName; classNam
   );
 };
 
-const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?: number }> = [
+const sidebarItems: Array<{ label: string; icon: StudentSidebarIconName; route: string; badge?: number }> = [
   { label: "Dashboard", icon: "dashboard", route: "/student-dashboard" },
   { label: "My Profile", icon: "user-check", route: "/student/profile" },
   { label: "Project List", icon: "briefcase", route: "/student/projects" },

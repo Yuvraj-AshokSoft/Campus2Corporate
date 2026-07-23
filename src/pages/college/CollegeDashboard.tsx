@@ -1017,7 +1017,7 @@ ${context}`,
 // ═══════════════════════════════════════════════════════════════════════════
 // Badges & Achievements — kept in codebase, not rendered on Dashboard Home
 // ═══════════════════════════════════════════════════════════════════════════
-const BadgesSection = () => {
+export const BadgesSection = () => {
   const badges = [
     { title: "CSE Frontrunner", icon: "⚛️", color: "from-blue-500 to-cyan-500", earned: true },
     { title: "IT Powerhouse", icon: "🗄️", color: "from-emerald-500 to-green-500", earned: true },
@@ -1086,7 +1086,7 @@ const BadgesSection = () => {
 // ═══════════════════════════════════════════════════════════════════════════
 // Drive & Onboarding Streak — kept in codebase, not rendered on Dashboard Home
 // ═══════════════════════════════════════════════════════════════════════════
-const DriveOnboardingStreak = () => (
+export const DriveOnboardingStreak = () => (
   <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
     <div className="flex items-center justify-between">
       <div>
@@ -1552,7 +1552,7 @@ const DashboardSummaryCard = () => (
 // AI Placement Coach — Chat Drawer (kept in codebase, not rendered on
 // Dashboard Home per client scope — outside current requirements)
 // ═══════════════════════════════════════════════════════════════════════════
-const AIPlacementCoachPanel = ({ onClose }: { onClose: () => void }) => {
+export const AIPlacementCoachPanel = ({ onClose }: { onClose: () => void }) => {
   const { firstName, context } = useCollegeProfile();
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([
     { role: "assistant", text: `Hi ${firstName}! I'm your AI Placement Coach. I know your institution's data — ask me anything about drives, department performance, or recruiter outreach.` },
