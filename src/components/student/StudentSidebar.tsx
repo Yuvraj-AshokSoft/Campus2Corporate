@@ -127,7 +127,8 @@ const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?
   { label: "Notifications", icon: "bell", route: "/student/notifications" },
   { label: "Certificates", icon: "award", route: "/student/certificates" },
   { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume" , route: "/student/airesume" },
+  { label: "AI Resume Builder", icon: "resume" , route: "/student/ai-resume" },
+  { label: "AI Interview", icon: "interview", route: "/student/ai-interview" },
 ];
   const navItems = items?.length ? items : sidebarItems;
   const activeSidebar = highlight || navItems.find((item) => location.pathname === item.route)?.label || "Dashboard";

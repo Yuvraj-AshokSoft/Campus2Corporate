@@ -10,6 +10,12 @@ import {
   CartesianGrid,
 } from "recharts";
 import StudentLayout from "../../components/student/StudentLayout";
+import {
+  getApiErrorMessage,
+  studentApi,
+  unwrapData,
+  type StudentProfile,
+} from "../../services/studentApi";
 
 // ─── Icon System (matches Admin Dashboard) ────────────────────────────────────
 type IconName =
@@ -445,61 +451,20 @@ const getInitials = (name: string) =>
 
 const buildStudentContext = (name: string) =>
   `Student: ${name}
-Degree: B.Tech Computer Science & Engineering, 4th Year
-University: Campus2Corporate University
-Registered Modules: React Development (70%), Python Programming (45%), Data Structures & Algorithms (60%), Aptitude Training (85%)
-Completed: 2 courses | Pending: 3 courses | Certificates: 1
-Performance Score Trend: Jan 65 → May 90 (improving)
-Upcoming: React Assignment Due Jun 25, Aptitude Assessment Jun 28, Mentor Session Jun 30, Mock Interview Jul 5`;
+Use the connected dashboard profile, learning, applications, and notification data when giving guidance.`;
 
 // Shared hook: pulls the signed-in user (with sensible fallbacks) and derives
 // everything the dashboard and AI features need from it.
 const useStudentProfile = () => {
   const { currentUser, logout } = useAuth();
-  const fullName = currentUser?.fullName || "Yuvraj Singh";
-  const firstName = fullName.split(" ")[0] || "Yuvraj";
+  const fullName = currentUser?.fullName || currentUser?.name || "Student";
+  const firstName = fullName.split(" ")[0] || "Student";
   const initials = getInitials(fullName);
-  const email = currentUser?.email || "yuvraj@example.com";
-  const phone = currentUser?.phone || "+91 9876543210";
+  const email = currentUser?.email || "";
+  const phone = currentUser?.phone || "";
   const context = buildStudentContext(fullName);
-  return { fullName, firstName, initials, email, phone, context, logout };
+  return { fullName, firstName, initials, email, phone, context, logout, currentUser };
 };
-
-// ─── Static Data ──────────────────────────────────────────────────────────────
-const performanceData = [
-  { month: "Jan", score: 65 },
-  { month: "Feb", score: 72 },
-  { month: "Mar", score: 78 },
-  { month: "Apr", score: 85 },
-  { month: "May", score: 90 },
-];
-
-const modules = [
-  {
-    title: "React Development",
-    category: "Frontend Development",
-    progress: 70,
-    color: "#2563eb",
-  },
-  {
-    title: "Python Programming",
-    category: "Programming Fundamentals",
-    progress: 45,
-    color: "#10b981",
-  },
-  {
-    title: "Data Structures & Algorithms",
-    category: "Technical Interview Prep",
-    progress: 60,
-    color: "#8b5cf6",
-  },
-  {
-    title: "Aptitude Training",
-    category: "Placement Prep",
-    progress: 85,
-    color: "#f59e0b",
-  },
-];
 
 const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?: number }> = [
   { label: "Dashboard", icon: "dashboard", route: "/student-dashboard" },
@@ -509,42 +474,7 @@ const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?
   { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
   { label: "Certificates", icon: "award", route: "/student/certificates" },
   { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume" , route: "/student/airesume" },
-];
-
-const stats = [
-  {
-    label: "Registered courses",
-    value: "5",
-    change: "+1",
-    up: true,
-    icon: "book" as IconName,
-    bg: "#eff6ff",
-  },
-  {
-    label: "Completed",
-    value: "2",
-    change: "+2",
-    up: true,
-    icon: "check" as IconName,
-    bg: "#ecfdf5",
-  },
-  {
-    label: "Pending",
-    value: "3",
-    change: "−1",
-    up: false,
-    icon: "clock" as IconName,
-    bg: "#fffbeb",
-  },
-  {
-    label: "Certificates",
-    value: "1",
-    change: "+1",
-    up: true,
-    icon: "award" as IconName,
-    bg: "#f5f3ff",
-  },
+  { label: "AI Resume Builder", icon: "resume" , route: "/student/ai-resume" },
 ];
 
 const roadmapSteps = [
@@ -589,33 +519,6 @@ const roadmapSteps = [
     title: "Placement",
     desc: "Final contract signing.",
     icon: "award" as IconName,
-  },
-];
-
-const upcomingActivities = [
-  {
-    title: "React Assignment Submission",
-    desc: "Module 3 Project Submission",
-    date: "Due: 25 Jun",
-    tone: "High",
-  },
-  {
-    title: "Aptitude Assessment",
-    desc: "Placement Prep Test",
-    date: "28 Jun",
-    tone: "Medium",
-  },
-  {
-    title: "Mentor Session",
-    desc: "One-on-One Career Guidance",
-    date: "30 Jun",
-    tone: "Normal",
-  },
-  {
-    title: "Mock Interview",
-    desc: "Technical Practice",
-    date: "05 Jul",
-    tone: "Low",
   },
 ];
 
@@ -665,6 +568,39 @@ interface SkillGapResult {
   missing_skills: { skill: string; priority: "High" | "Medium" | "Low" }[];
   suggested_modules: string[];
   tip: string;
+}
+
+interface DashboardModule {
+  id?: string;
+  title: string;
+  category: string;
+  progress: number;
+  color: string;
+}
+
+interface DashboardActivity {
+  id?: string;
+  title: string;
+  desc: string;
+  date: string;
+  tone: "High" | "Medium" | "Normal" | "Low" | string;
+}
+
+interface DashboardData {
+  profile: StudentProfile;
+  stats: {
+    registeredCourses: number;
+    completed: number;
+    pending: number;
+    certificates: number;
+    appliedProjects: number;
+    unreadNotifications: number;
+    closingThisWeek: number;
+    learningScore: number;
+  };
+  modules: DashboardModule[];
+  performanceData: Array<{ month: string; score: number }>;
+  upcomingActivities: DashboardActivity[];
 }
 
 // ─── Pulse dot ────────────────────────────────────────────────────────────────
@@ -1914,27 +1850,117 @@ Be concise, warm, and actionable. Keep responses under 100 words. Use bullet poi
 // MAIN DASHBOARD
 // ═══════════════════════════════════════════════════════════════════════════
 export const StudentDashboard = () => {
-  const { fullName, firstName, initials, email, phone } = useStudentProfile();
+  const { fullName, firstName, initials, email, phone, currentUser } = useStudentProfile();
   const [aiOpen, setAiOpen] = useState(false);
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadDashboard = async () => {
+      setDashboardLoading(true);
+      setDashboardError("");
+
+      try {
+        const response = await studentApi.getDashboard();
+        if (mounted) {
+          setDashboard(unwrapData<DashboardData>(response));
+        }
+      } catch (error) {
+        if (mounted) {
+          setDashboardError(getApiErrorMessage(error));
+          setDashboard(null);
+        }
+      } finally {
+        if (mounted) {
+          setDashboardLoading(false);
+        }
+      }
+    };
+
+    loadDashboard();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const profile = dashboard?.profile || currentUser;
+  const semesterLabel = profile?.semester ? `Semester ${profile.semester}` : "Semester not added";
+  const branchLabel = profile?.branch || "Branch not added";
+  const roleLine = [branchLabel, semesterLabel].filter(Boolean).join(" · ");
+  const learningScore = dashboard?.stats.learningScore ?? 0;
+  const modules = dashboard?.modules ?? [];
+  const performanceData = dashboard?.performanceData ?? [];
+  const upcomingActivities = dashboard?.upcomingActivities ?? [];
+  const stats = [
+    {
+      label: "Registered courses",
+      value: String(dashboard?.stats.registeredCourses ?? 0),
+      change: String(dashboard?.stats.registeredCourses ?? 0),
+      up: true,
+      icon: "book" as IconName,
+      bg: "#eff6ff",
+    },
+    {
+      label: "Completed",
+      value: String(dashboard?.stats.completed ?? 0),
+      change: String(dashboard?.stats.completed ?? 0),
+      up: true,
+      icon: "check" as IconName,
+      bg: "#ecfdf5",
+    },
+    {
+      label: "Pending",
+      value: String(dashboard?.stats.pending ?? 0),
+      change: String(dashboard?.stats.pending ?? 0),
+      up: false,
+      icon: "clock" as IconName,
+      bg: "#fffbeb",
+    },
+    {
+      label: "Certificates",
+      value: String(dashboard?.stats.certificates ?? 0),
+      change: String(dashboard?.stats.certificates ?? 0),
+      up: true,
+      icon: "award" as IconName,
+      bg: "#f5f3ff",
+    },
+  ];
+
   return (
     <StudentLayout
       sidebarItems={sidebarItems}
       sidebarHighlight="Dashboard"
       userSummary={{
         fullName,
-        role: "B.Tech CSE · 4th Year",
+        role: roleLine,
         status: "Placement track active",
       }}
       stats={{
         label: "Overall progress",
-        value: "65",
-        subtitle: "Semester 8",
-        accent: "Semester 8",
+        value: String(learningScore),
+        subtitle: semesterLabel,
+        accent: semesterLabel,
       }}
       showAiButton
       onAiButtonClick={() => setAiOpen(true)}
     >
       <>
+        {dashboardError && (
+          <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+            {dashboardError}
+          </div>
+        )}
+
+        {dashboardLoading && (
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
+            Loading dashboard data...
+          </div>
+        )}
+
         {/* Hero banner */}
         <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#e0e7ff_1px,transparent_1px)] opacity-60 [background-size:18px_18px]" />
@@ -1978,10 +2004,10 @@ export const StudentDashboard = () => {
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {[
-                  { label: "Registered", value: "5" },
-                  { label: "Completed", value: "2" },
-                  { label: "Pending", value: "3" },
-                  { label: "Certificates", value: "1" },
+                  { label: "Registered", value: String(dashboard?.stats.registeredCourses ?? 0) },
+                  { label: "Completed", value: String(dashboard?.stats.completed ?? 0) },
+                  { label: "Pending", value: String(dashboard?.stats.pending ?? 0) },
+                  { label: "Certificates", value: String(dashboard?.stats.certificates ?? 0) },
                 ].map((m) => (
                   <div
                     key={m.label}
@@ -1999,10 +2025,13 @@ export const StudentDashboard = () => {
               <div className="mt-3 rounded-xl bg-white px-3 py-2.5 ring-1 ring-slate-200">
                 <div className="flex items-center justify-between text-[11px] font-semibold">
                   <span className="text-slate-500">Learning score</span>
-                  <span className="text-blue-700">90%</span>
+                  <span className="text-blue-700">{learningScore}%</span>
                 </div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full w-[90%] rounded-full bg-gradient-to-r from-blue-500 to-blue-600" />
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600"
+                    style={{ width: `${learningScore}%` }}
+                  />
                 </div>
               </div>
             </div>
@@ -2057,11 +2086,11 @@ export const StudentDashboard = () => {
                     {fullName}
                   </h2>
                   <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
-                    STU001
+                    {profile?.id ? String(profile.id).slice(-6).toUpperCase() : "STUDENT"}
                   </span>
                 </div>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  B.Tech Computer Science & Eng.
+                  {roleLine}
                 </p>
               </div>
             </div>
@@ -2071,10 +2100,10 @@ export const StudentDashboard = () => {
                 { icon: "phone" as IconName, label: "Phone", value: phone },
                 {
                   icon: "graduation" as IconName,
-                  label: "University",
-                  value: "Campus2Corporate University",
+                  label: "College",
+                  value: String(profile?.college || "Not added"),
                 },
-                { icon: "calendar" as IconName, label: "DOB", value: "30-12-2000" },
+                { icon: "calendar" as IconName, label: "Semester", value: semesterLabel },
               ].map((f) => (
                 <div key={f.label} className="flex items-center gap-3 text-xs">
                   <Icon name={f.icon} className="h-4 w-4 flex-shrink-0 text-slate-400" />
@@ -2178,7 +2207,11 @@ export const StudentDashboard = () => {
             <Icon name="book" className="h-4 w-4 text-slate-300" />
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {modules.map((mod, i) => (
+            {modules.length === 0 && !dashboardLoading ? (
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500 sm:col-span-2">
+                No learning modules found yet.
+              </div>
+            ) : modules.map((mod, i) => (
               <div
                 key={i}
                 className="rounded-xl border border-slate-100 bg-slate-50 p-4 transition hover:border-slate-200"
@@ -2250,7 +2283,11 @@ export const StudentDashboard = () => {
               <Icon name="clock" className="h-4 w-4 text-slate-300" />
             </div>
             <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
-              {upcomingActivities.map((a, i) => {
+              {upcomingActivities.length === 0 && !dashboardLoading ? (
+                <div className="p-6 text-center text-sm font-semibold text-slate-500">
+                  No upcoming activities yet.
+                </div>
+              ) : upcomingActivities.map((a, i) => {
                 const toneCls: Record<string, string> = {
                   High: "bg-rose-50 text-rose-600",
                   Medium: "bg-amber-50 text-amber-600",
