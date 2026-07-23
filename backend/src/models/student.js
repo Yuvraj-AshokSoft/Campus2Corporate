@@ -106,6 +106,94 @@ const scoreHistorySchema = new mongoose.Schema(
   { _id: false }
 );
 
+const notificationSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ["assignment", "assessment", "mentor", "interview", "system", "achievement"],
+      default: "system",
+    },
+    title: { type: String, required: true, trim: true },
+    desc: { type: String, trim: true },
+    read: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: true }
+);
+
+const certificateSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    issuer: { type: String, trim: true },
+    issuedOn: { type: Date },
+    credentialId: { type: String, trim: true },
+    downloadUrl: { type: String, trim: true },
+    shareUrl: { type: String, trim: true },
+    color: { type: String, trim: true },
+    icon: { type: String, trim: true },
+  },
+  { timestamps: true }
+);
+
+const resumeBuilderSchema = new mongoose.Schema(
+  {
+    fullName: { type: String, trim: true },
+    title: { type: String, trim: true },
+    email: { type: String, trim: true },
+    phone: { type: String, trim: true },
+    location: { type: String, trim: true },
+    linkedin: { type: String, trim: true },
+    github: { type: String, trim: true },
+    targetRole: { type: String, trim: true },
+    summary: { type: String, trim: true },
+    skills: [{ type: String, trim: true }],
+    education: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    experience: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    certifications: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    template: {
+      type: String,
+      enum: ["modern", "minimal"],
+      default: "modern",
+    },
+  },
+  { _id: false }
+);
+
+const settingsSchema = new mongoose.Schema(
+  {
+    notifications: {
+      email: { type: Boolean, default: true },
+      sms: { type: Boolean, default: false },
+      assignments: { type: Boolean, default: true },
+      assessments: { type: Boolean, default: true },
+      mentorSessions: { type: Boolean, default: true },
+      interviews: { type: Boolean, default: true },
+      achievements: { type: Boolean, default: false },
+      push: { type: Boolean, default: true },
+      marketing: { type: Boolean, default: true },
+    },
+    privacy: {
+      recruiterVisible: { type: Boolean, default: true },
+      profileVisibleToRecruiters: { type: Boolean, default: true },
+      leaderboard: { type: Boolean, default: true },
+      showActivityStatus: { type: Boolean, default: true },
+      shareDataWithPartners: { type: Boolean, default: false },
+      twoFactor: { type: Boolean, default: false },
+      twoFactorAuth: { type: Boolean, default: false },
+    },
+    theme: {
+      type: String,
+      enum: ["light", "dark", "system"],
+      default: "light",
+    },
+    connectedAccounts: {
+      github: { type: Boolean, default: false },
+      linkedIn: { type: Boolean, default: false },
+    },
+  },
+  { _id: false }
+);
+
 const studentSchema = new mongoose.Schema(
   {
     name: {
@@ -188,6 +276,13 @@ const studentSchema = new mongoose.Schema(
     assignmentSubmissions: [assignmentSubmissionSchema],
     quizSubmissions: [quizSubmissionSchema],
     scoreHistory: [scoreHistorySchema],
+    notifications: [notificationSchema],
+    certificates: [certificateSchema],
+    resumeBuilder: resumeBuilderSchema,
+    settings: {
+      type: settingsSchema,
+      default: () => ({}),
+    },
   },
   {
     timestamps: true,

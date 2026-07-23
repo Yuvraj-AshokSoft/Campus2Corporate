@@ -1,7 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
 import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
+import {
+  getApiErrorMessage,
+  studentApi,
+  unwrapData,
+  type StudentProfile,
+} from "../../services/studentApi";
 
 // ─── Icon System (matches Student Dashboard / Admin Dashboard) ───────────────
 type IconName =
@@ -95,13 +101,13 @@ const getInitials = (name: string) =>
   name.trim().split(/\s+/).map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "YS";
 
 const useStudentProfile = () => {
-  const { currentUser } = useAuth();
-  const fullName = currentUser?.fullName || "Yuvraj Singh";
-  const firstName = fullName.split(" ")[0] || "Yuvraj";
+  const { currentUser, updateCurrentUser } = useAuth();
+  const fullName = currentUser?.fullName || currentUser?.name || "Student";
+  const firstName = fullName.split(" ")[0] || "Student";
   const initials = getInitials(fullName);
-  const email = currentUser?.email || "yuvraj@example.com";
-  const phone = currentUser?.phone || "+91 9876543210";
-  return { fullName, firstName, initials, email, phone };
+  const email = currentUser?.email || "";
+  const phone = currentUser?.phone || "";
+  return { fullName, firstName, initials, email, phone, currentUser, updateCurrentUser };
 };
 
 const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#2563eb" }:
@@ -161,34 +167,79 @@ const InputRow = ({ field, editing, onChange }: {
 // MAIN PROFILE PAGE
 // ═══════════════════════════════════════════════════════════════════════════
 export const StudentProfile = () => {
-  const { fullName, initials, email, phone } = useStudentProfile();
+  const { fullName, initials, email, phone, currentUser, updateCurrentUser } = useStudentProfile();
   const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [profile, setProfile] = useState<StudentProfile | null>(currentUser);
 
   const [personal, setPersonal] = useState<EditableField[]>([
     { key: "fullName", label: "Full Name", icon: "user-check", value: fullName },
     { key: "email", label: "Email Address", icon: "mail", value: email, disabled: true },
     { key: "phone", label: "Phone Number", icon: "phone", value: phone },
-    { key: "dob", label: "Date of Birth", icon: "calendar", value: "30-12-2000", type: "text" },
-    { key: "university", label: "University", icon: "graduation", value: "Campus2Corporate University" },
-    { key: "degree", label: "Degree & Branch", icon: "book", value: "B.Tech, Computer Science & Engineering" },
-    { key: "semester", label: "Current Semester", icon: "campus", value: "Semester 8" },
-    { key: "location", label: "Location", icon: "building", value: "Indore, India" },
+    { key: "college", label: "College", icon: "graduation", value: "" },
+    { key: "branch", label: "Branch", icon: "book", value: "" },
+    { key: "semester", label: "Current Semester", icon: "campus", value: "" },
+    { key: "location", label: "Location", icon: "building", value: "" },
   ]);
 
   const [links, setLinks] = useState<EditableField[]>([
-    { key: "github", label: "GitHub", icon: "github", value: "github.com/username" },
-    { key: "linkedin", label: "LinkedIn", icon: "linkedin", value: "linkedin.com/in/username" },
+    { key: "github", label: "GitHub", icon: "github", value: "" },
+    { key: "linkedIn", label: "LinkedIn", icon: "linkedin", value: "" },
     { key: "portfolio", label: "Portfolio", icon: "globe", value: "" },
   ]);
 
-  const [bio, setBio] = useState(
-    "Final-year CSE student passionate about building AI-powered products. Actively preparing for placements and exploring opportunities in software engineering and applied AI."
-  );
+  const [bio, setBio] = useState("");
 
-  const [skills, setSkills] = useState<string[]>(["React", "Python", "SQL", "Node.js", "Data Structures", "Machine Learning"]);
+  const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState("");
 
-  const [resumeName, setResumeName] = useState("Yuvraj_Singh_Resume.pdf");
+  const [resumeName, setResumeName] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadProfile = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await studentApi.getProfile();
+        const student = unwrapData<{ student: StudentProfile }>(response).student;
+        if (!mounted) return;
+
+        setProfile(student);
+        setPersonal([
+          { key: "fullName", label: "Full Name", icon: "user-check", value: student.fullName || student.name || "" },
+          { key: "email", label: "Email Address", icon: "mail", value: student.email || "", disabled: true },
+          { key: "phone", label: "Phone Number", icon: "phone", value: student.phone || "" },
+          { key: "college", label: "College", icon: "graduation", value: String(student.college || "") },
+          { key: "branch", label: "Branch", icon: "book", value: student.branch || "" },
+          { key: "semester", label: "Current Semester", icon: "campus", value: student.semester ? String(student.semester) : "" },
+          { key: "location", label: "Location", icon: "building", value: student.location || "" },
+        ]);
+        setLinks([
+          { key: "github", label: "GitHub", icon: "github", value: student.github || "" },
+          { key: "linkedIn", label: "LinkedIn", icon: "linkedin", value: student.linkedIn || "" },
+          { key: "portfolio", label: "Portfolio", icon: "globe", value: student.portfolio || "" },
+        ]);
+        setBio(student.bio || "");
+        setSkills(student.skills || []);
+        setResumeName(student.resumeUrl || student.resume || "");
+      } catch (loadError) {
+        if (mounted) setError(getApiErrorMessage(loadError));
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const updateField = (list: EditableField[], setList: (f: EditableField[]) => void, key: string, value: string) => {
     setList(list.map((f) => (f.key === key ? { ...f, value } : f)));
@@ -202,15 +253,76 @@ export const StudentProfile = () => {
 
   const removeSkill = (s: string) => setSkills(skills.filter((k) => k !== s));
 
+  const fieldValue = (fields: EditableField[], key: string) =>
+    fields.find((field) => field.key === key)?.value || "";
+
+  const saveProfile = async () => {
+    setSaving(true);
+    setError("");
+
+    try {
+      const payload = {
+        fullName: fieldValue(personal, "fullName"),
+        phone: fieldValue(personal, "phone"),
+        branch: fieldValue(personal, "branch"),
+        semester: fieldValue(personal, "semester"),
+        location: fieldValue(personal, "location"),
+        bio,
+        github: fieldValue(links, "github"),
+        linkedIn: fieldValue(links, "linkedIn"),
+        portfolio: fieldValue(links, "portfolio"),
+        skills,
+        resumeUrl: resumeName,
+      };
+
+      const response = await studentApi.updateProfile(payload);
+      const student = unwrapData<{ student: StudentProfile }>(response).student;
+      setProfile(student);
+      updateCurrentUser({
+        ...(currentUser || student),
+        ...student,
+        id: student.id,
+        fullName: student.fullName || student.name || "",
+        name: student.name || student.fullName || "",
+        email: student.email,
+        role: "student",
+      });
+      setEditing(false);
+    } catch (saveError) {
+      setError(getApiErrorMessage(saveError));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <StudentLayout
       sidebarItems={sidebarItems}
       sidebarHighlight="My Profile"
-      userSummary={{ fullName, role: "B.Tech CSE · 4th Year", status: "Placement track active" }}
-      stats={{ label: "Profile completeness", value: "80", subtitle: "Add portfolio", accent: "Add portfolio" }}
+      userSummary={{
+        fullName,
+        role: [profile?.branch, profile?.semester ? `Semester ${profile.semester}` : ""].filter(Boolean).join(" · ") || "Student",
+        status: "Placement track active",
+      }}
+      stats={{
+        label: "Profile completeness",
+        value: String(Math.min(100, [profile?.name, profile?.email, profile?.phone, profile?.bio, profile?.github, profile?.portfolio].filter(Boolean).length * 16)),
+        subtitle: profile?.portfolio ? "Portfolio added" : "Add portfolio",
+        accent: profile?.portfolio ? "Complete" : "Add portfolio",
+      }}
       showAiButton={false}
     >
       <>
+            {error && (
+              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                {error}
+              </div>
+            )}
+            {loading && (
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
+                Loading profile...
+              </div>
+            )}
 
             {/* Profile hero */}
             <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -227,27 +339,32 @@ export const StudentProfile = () => {
                     <div className="pb-1">
                       <div className="flex items-center gap-2">
                         <h1 className="text-xl font-black text-slate-900">{fullName}</h1>
-                        <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">STU001</span>
+                        <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                          {profile?.id ? profile.id.slice(-6).toUpperCase() : "STUDENT"}
+                        </span>
                       </div>
-                      <p className="mt-0.5 text-xs text-slate-500">B.Tech Computer Science & Engineering · Semester 8</p>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        {[profile?.branch, profile?.semester ? `Semester ${profile.semester}` : ""].filter(Boolean).join(" · ") || "Academic details not added"}
+                      </p>
                     </div>
                   </div>
                   <button
-                    onClick={() => setEditing((v) => !v)}
+                    onClick={() => (editing ? saveProfile() : setEditing(true))}
+                    disabled={saving}
                     className={`inline-flex items-center gap-1.5 self-start rounded-xl px-4 py-2 text-xs font-bold shadow-sm transition ${
                       editing ? "bg-emerald-600 text-white hover:bg-emerald-500" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                     }`}>
                     <Icon name={editing ? "check" : "edit"} className="h-3.5 w-3.5" />
-                    {editing ? "Save changes" : "Edit profile"}
+                    {saving ? "Saving..." : editing ? "Save changes" : "Edit profile"}
                   </button>
                 </div>
 
                 <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {[
-                    { label: "Readiness score", value: "82%", icon: "target" as IconName, color: "#10b981" },
-                    { label: "Applied projects", value: "6", icon: "briefcase" as IconName, color: "#2563eb" },
-                    { label: "Certificates", value: "1", icon: "award" as IconName, color: "#f59e0b" },
-                    { label: "Daily streak", value: "12d", icon: "zap" as IconName, color: "#f43f5e" },
+                    { label: "Skills", value: String(skills.length), icon: "target" as IconName, color: "#10b981" },
+                    { label: "Education", value: String(profile?.education?.length || 0), icon: "briefcase" as IconName, color: "#2563eb" },
+                    { label: "Certificates", value: String(profile?.resumeUrl || profile?.resume ? 1 : 0), icon: "award" as IconName, color: "#f59e0b" },
+                    { label: "Resume", value: resumeName ? "Yes" : "No", icon: "zap" as IconName, color: "#f43f5e" },
                   ].map((s) => (
                     <div key={s.label} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
                       <div className="flex items-center gap-1.5">
@@ -333,8 +450,8 @@ export const StudentProfile = () => {
                   <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200">
                     <Icon name="file" className="h-4 w-4 text-emerald-500" />
                   </div>
-                  <p className="truncate text-xs font-bold text-slate-700">{resumeName}</p>
-                  <p className="mt-1 text-[11px] text-slate-400">Uploaded · Last updated 2 weeks ago</p>
+                  <p className="truncate text-xs font-bold text-slate-700">{resumeName || "No resume uploaded"}</p>
+                  <p className="mt-1 text-[11px] text-slate-400">{resumeName ? "Saved to profile" : "Add a resume link or file name"}</p>
                   <div className="mt-3 flex justify-center gap-2">
                     <button className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-600 transition hover:bg-slate-50">
                       <Icon name="download" className="h-3 w-3" />

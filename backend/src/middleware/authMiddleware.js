@@ -1,68 +1,33 @@
 import jwt from "jsonwebtoken";
-import Admin from "../models/adminModel.js";
 
 const authMiddleware = async (req, res, next) => {
-    try {
+  try {
+    const authHeader = req.headers.authorization;
 
-        const token = req.headers.authorization?.split(" ")[1];
-
-        if (!token) {
-            return res.status(401).json({
-                success: false,
-                message: "No token provided"
-            });
-        }
-
-        const decoded = jwt.verify(
-            token,
-            process.env.JWT_SECRET
-        );
-
-        req.user = decoded;
-
-        next();
-
-    } catch (error) {
-        res.status(401).json({
-            success:false,
-            message:"Invalid token"
-        });
+    // Check Authorization header
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Authorization token is missing or invalid",
+      });
     }
+
+    // Extract token
+    const token = authHeader.split(" ")[1];
+
+    // Verify JWT
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Attach decoded payload to request
+    req.user = decoded;
+
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired token",
+    });
+  }
 };
 
-
 export default authMiddleware;
-/*import jwt from "jsonwebtoken";
-
-const authMiddleware = async (req, res, next) => {
-    try {
-
-        const token = req.headers.authorization?.split(" ")[1];
-
-        if (!token) {
-            return res.status(401).json({
-                success: false,
-                message: "No token provided"
-            });
-        }
-
-        const decoded = jwt.verify(
-            token,
-            process.env.JWT_SECRET || "fallback_jwt_secret_key_123456"
-        );
-
-        req.user = decoded;
-
-        next();
-
-    } catch (error) {
-        res.status(401).json({
-            success:false,
-            message:"Invalid token"
-        });
-    }
-};
-
-
-export default authMiddleware;
-*/
