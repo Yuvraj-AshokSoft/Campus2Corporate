@@ -1,4 +1,3 @@
-import React from "react";
 
 export type IconName =
   | "activity"
@@ -51,6 +50,7 @@ export type IconName =
   | "chevron-down"
   | "lightbulb"
   | "clipboard"
+  | "map-pin"
   | "logout";
 
 export const Icon = ({
@@ -111,6 +111,7 @@ export const Icon = ({
     "chevron-down": "M6 9l6 6 6-6",
     lightbulb: "M12 3a6 6 0 0 0-4 10.5",
     clipboard: "M6 4h12v17H6z",
+    "map-pin": "M12 21s7-6.3 7-11.5a7 7 0 1 0-14 0c0 5.2 7 11.5 7 11.5z M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6",
     logout: "M9 21H5V3h4M16 17l5-5-5-5M21 12H9",
   };
 

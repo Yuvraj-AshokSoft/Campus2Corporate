@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Briefcase,
@@ -29,12 +29,12 @@ import {
 // Custom Reusable Brand Logo component representing Campus2Corporate
 const LogoSVG: React.FC<{ className?: string; iconColor?: string; textColor?: string }> = ({
   className = "h-8 w-auto",
-  iconColor = "text-blue-600",
+  iconColor = "text-[#5e17eb]",
   textColor = "text-slate-900"
 }) => {
   return (
     <svg className={className} viewBox="0 0 140 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="4" y="6" width="28" height="28" rx="8" className={`fill-blue-50/50 stroke-current ${iconColor}`} strokeWidth="2" />
+      <rect x="4" y="6" width="28" height="28" rx="8" className={`fill-purple-50/60 stroke-current ${iconColor}`} strokeWidth="2" />
       <path d="M12 24C12 18.4772 16.4772 14 22 14" className={`stroke-current ${iconColor}`} strokeWidth="3" strokeLinecap="round" />
       <path d="M24 16C24 21.5228 19.5228 26 14 26" className={`stroke-current ${iconColor}`} strokeWidth="3" strokeLinecap="round" />
       <text x="42" y="26" className={`fill-current ${textColor}`} fontSize="19" fontWeight="800" letterSpacing="-0.04em">C2C</text>
@@ -179,7 +179,7 @@ export const LandingPage: React.FC = () => {
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [otpTimer, setOtpTimer] = useState(59);
   const [otpTimerActive, setOtpTimerActive] = useState(false);
-  const [otpPurpose, setOtpPurpose] = useState<'signup' | 'reset'>('signup');
+  const [otpPurpose, setOtpPurpose] = useState<'signup' | 'login' | 'reset'>('signup');
   const [resetOtpCode, setResetOtpCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -269,8 +269,9 @@ export const LandingPage: React.FC = () => {
     if (!email) {
       return 'Email address is required';
     }
-    if (!email.toLowerCase().endsWith('@gmail.com')) {
-      return 'Please provide a valid personal or professional @gmail.com address.';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return 'Please enter a valid email address.';
     }
     return '';
   };
@@ -349,7 +350,7 @@ export const LandingPage: React.FC = () => {
     setFormLoading(false);
 
     if (result.success) {
-      setFormSuccess('Verification code sent to your email. Redirecting to verification...');
+      setFormSuccess(result.message || 'Verification code dispatched to your email address.');
       setOtpTimer(59);
       setOtpTimerActive(true);
       setOtpPurpose('signup');
@@ -393,16 +394,21 @@ export const LandingPage: React.FC = () => {
     setFormLoading(false);
 
     if (result.success) {
-      setFormSuccess('Signed in successfully! Redirecting...');
-      setLoginEmail('');
-      setLoginPassword('');
-      setTimeout(() => {
-        setShowAuthFlow(false);
-        // Note: For Clerk, redirects will check current user's role metadata after setActive completes.
-        // The currentUser object gets updated via user hook propagation.
-        // Let's redirect based on the role state or retrieve it from currentUser/metadata if available.
-        redirectUserByRole(selectedRole.toLowerCase());
-      }, 1200);
+      if (result.needsOtp) {
+        setFormSuccess(result.message || 'Verification code dispatched to your email address.');
+        setOtpTimer(59);
+        setOtpTimerActive(true);
+        setOtpPurpose('login');
+        setAuthScreen('otp');
+      } else {
+        setFormSuccess('Signed in successfully! Redirecting...');
+        setLoginEmail('');
+        setLoginPassword('');
+        setTimeout(() => {
+          setShowAuthFlow(false);
+          redirectUserByRole(currentUser?.role || selectedRole.toLowerCase());
+        }, 1200);
+      }
     } else {
       setFormError(result.message || 'Invalid email or password');
     }
@@ -649,83 +655,57 @@ export const LandingPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50/30 text-slate-800 font-sans selection:bg-blue-100 selection:text-blue-800 overflow-x-hidden relative">
+    <div className="min-h-screen bg-gradient-to-b from-[#F7F5FF] via-white to-[#F0ECFF] text-slate-800 font-sans selection:bg-purple-100 selection:text-purple-900 overflow-x-hidden relative">
 
       {/* Background decoration elements (Delicate Dot Matrix Canvas & Glowing Lights) */}
-      <div className="absolute top-0 left-0 right-0 h-[800px] pointer-events-none overflow-hidden z-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:20px_20px] opacity-70">
-        <div className="absolute top-[-15%] left-[10%] w-[700px] h-[700px] rounded-full bg-blue-100/30 blur-[130px]"></div>
+      <div className="absolute top-0 left-0 right-0 h-[800px] pointer-events-none overflow-hidden z-0 bg-[radial-gradient(#e9d5ff_1px,transparent_1px)] [background-size:20px_20px] opacity-70">
+        <div className="absolute top-[-15%] left-[10%] w-[700px] h-[700px] rounded-full bg-purple-100/40 blur-[130px]"></div>
         <div className="absolute top-[20%] right-[5%] w-[600px] h-[600px] rounded-full bg-indigo-100/40 blur-[120px]"></div>
       </div>
 
       {/* Header / Navbar */}
-      <header className="relative z-50 border-b border-slate-200/50 bg-white/70 backdrop-blur-md sticky top-0 shadow-sm transition-all duration-300">
+      <header className="relative z-50 border-b border-purple-100/70 bg-white/80 backdrop-blur-md sticky top-0 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <LogoSVG iconColor="text-blue-600" textColor="text-slate-900" />
-            <div className="hidden md:block border-l border-slate-200 pl-4">
+            <LogoSVG iconColor="text-[#5e17eb]" textColor="text-slate-900" />
+            <div className="hidden md:block border-l border-purple-100 pl-4">
               <span className="text-[10px] block text-slate-400 uppercase tracking-widest font-bold leading-none">Ashoksoft</span>
               <span className="text-[10px] block text-slate-400 uppercase tracking-widest font-bold leading-none mt-1">Technologies</span>
             </div>
           </div>
 
           <nav className="hidden lg:flex items-center space-x-8 text-sm font-semibold text-slate-600">
-            <a href="#problem" className="hover:text-blue-600 transition-colors py-2 relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-blue-600 hover:after:w-full after:transition-all after:duration-300">
+            <a href="#problem" className="hover:text-[#5e17eb] transition-colors py-2 relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#5e17eb] hover:after:w-full after:transition-all after:duration-300">
               Problem
             </a>
 
-            <a href="#solution" className="hover:text-blue-600 transition-colors py-2 relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-blue-600 hover:after:w-full after:transition-all after:duration-300">
+            <a href="#solution" className="hover:text-[#5e17eb] transition-colors py-2 relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#5e17eb] hover:after:w-full after:transition-all after:duration-300">
               Solution
             </a>
 
             {/* Core Features Dropdown */}
             <div className="relative group">
-              <button className="hover:text-blue-600 transition-colors flex items-center gap-1.5 py-2 cursor-pointer">
+              <button className="hover:text-[#5e17eb] transition-colors flex items-center gap-1.5 py-2 cursor-pointer">
                 Core Features
-                <ChevronRight className="w-3.5 h-3.5 rotate-90 text-slate-400 group-hover:text-blue-600 transition-transform duration-200" />
+                <ChevronRight className="w-3.5 h-3.5 rotate-90 text-slate-400 group-hover:text-[#5e17eb] transition-transform duration-200" />
               </button>
 
-              <div className="absolute top-full left-0 mt-1 w-64 bg-white/95 backdrop-blur-md border border-slate-200/70 rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 py-2">
-                <a href="#" className="block px-4 py-2.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors font-medium">Resume Analyzer</a>
-                <a href="#" className="block px-4 py-2.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors font-medium">AI Mock Interviews</a>
-                <a href="#" className="block px-4 py-2.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors font-medium">Skill Assessments</a>
-                <a href="#" className="block px-4 py-2.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors font-medium">Placement Monitoring</a>
-                <a href="#" className="block px-4 py-2.5 text-xs text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors font-medium">Learning Roadmaps</a>
+              <div className="absolute top-full left-0 mt-1 w-64 bg-white/95 backdrop-blur-md border border-purple-100 rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 py-2">
+                <a href="#features" className="block px-4 py-2.5 text-xs text-slate-700 hover:bg-purple-50/60 hover:text-[#5e17eb] transition-colors font-medium">Resume Analyzer</a>
+                <a href="#features" className="block px-4 py-2.5 text-xs text-slate-700 hover:bg-purple-50/60 hover:text-[#5e17eb] transition-colors font-medium">AI Mock Interviews</a>
+                <a href="#features" className="block px-4 py-2.5 text-xs text-slate-700 hover:bg-purple-50/60 hover:text-[#5e17eb] transition-colors font-medium">Skill Assessments</a>
+                <a href="#features" className="block px-4 py-2.5 text-xs text-slate-700 hover:bg-purple-50/60 hover:text-[#5e17eb] transition-colors font-medium">Placement Monitoring</a>
+                <a href="#features" className="block px-4 py-2.5 text-xs text-slate-700 hover:bg-purple-50/60 hover:text-[#5e17eb] transition-colors font-medium">Learning Roadmaps</a>
               </div>
             </div>
 
-            <a href="#ecosystem" className="hover:text-blue-600 transition-colors py-2 relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-blue-600 hover:after:w-full after:transition-all after:duration-300">
+            <a href="#ecosystem" className="hover:text-[#5e17eb] transition-colors py-2 relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#5e17eb] hover:after:w-full after:transition-all after:duration-300">
               Ecosystem
             </a>
 
-            <a href="#ai" className="hover:text-blue-600 transition-colors py-2 relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-blue-600 hover:after:w-full after:transition-all after:duration-300">
+            <a href="#how-it-works" className="hover:text-[#5e17eb] transition-colors py-2 relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#5e17eb] hover:after:w-full after:transition-all after:duration-300">
               AI Engine
             </a>
-
-            {/* Dashboards Dropdown */}
-            <div className="relative group">
-              <button className="hover:text-blue-600 transition-colors flex items-center gap-1.5 py-2 cursor-pointer">
-                Dashboards
-                <ChevronRight className="w-3.5 h-3.5 rotate-90 text-slate-400 group-hover:text-blue-600 transition-transform duration-200" />
-              </button>
-
-              <div className="absolute top-full left-0 mt-1 w-64 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 py-2.5">
-                <Link to="/student-dashboard" className="block px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors font-semibold">
-                  Student Dashboard
-                </Link>
-                <Link to="/college-dashboard" className="block px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors font-semibold">
-                  College Dashboard
-                </Link>
-                <Link to="/recruiter-dashboard" className="block px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors font-semibold">
-                  Recruiter Dashboard
-                </Link>
-                <Link to="/mentor-dashboard" className="block px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors font-semibold">
-                  Mentor Dashboard
-                </Link>
-                <Link to="/admin-dashboard" className="block px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors font-semibold">
-                  Admin Dashboard
-                </Link>
-              </div>
-            </div>
           </nav>
 
           <div className="flex items-center space-x-3">
@@ -733,7 +713,7 @@ export const LandingPage: React.FC = () => {
               <div className="hidden lg:flex items-center space-x-3">
                 <button
                   onClick={() => redirectUserByRole(currentUser?.role || 'student')}
-                  className="inline-flex items-center justify-center px-4.5 py-2 border border-slate-200 bg-transparent hover:bg-slate-50 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-750 transition-all cursor-pointer"
+                  className="inline-flex items-center justify-center px-4.5 py-2 border border-purple-200 bg-white hover:bg-purple-50/50 hover:border-purple-300 rounded-xl text-xs font-semibold text-slate-750 transition-all cursor-pointer shadow-sm"
                 >
                   Go to Dashboard
                 </button>
@@ -751,7 +731,7 @@ export const LandingPage: React.FC = () => {
                     setShowAuthFlow(true);
                     setAuthScreen('select');
                   }}
-                  className="inline-flex items-center justify-center px-4.5 py-2 border border-slate-200 bg-transparent hover:bg-slate-50 hover:border-slate-300 rounded-xl text-xs font-semibold text-slate-750 transition-all cursor-pointer"
+                  className="inline-flex items-center justify-center px-4.5 py-2 border border-purple-200 bg-white hover:bg-purple-50/50 hover:border-purple-300 rounded-xl text-xs font-semibold text-slate-750 transition-all cursor-pointer shadow-sm"
                 >
                   Login
                 </button>
@@ -760,7 +740,7 @@ export const LandingPage: React.FC = () => {
                     setShowAuthFlow(true);
                     setAuthScreen('select');
                   }}
-                  className="inline-flex items-center justify-center px-5 py-2 bg-[#5e17eb] hover:bg-[#4b12bc] text-xs font-bold text-white rounded-xl shadow-sm transition-all cursor-pointer"
+                  className="inline-flex items-center justify-center px-5 py-2 bg-[#5e17eb] hover:bg-[#4b12bc] text-xs font-bold text-white rounded-xl shadow-sm shadow-purple-500/20 transition-all cursor-pointer"
                 >
                   Get Started
                 </button>
@@ -770,7 +750,7 @@ export const LandingPage: React.FC = () => {
             {/* Hamburger Mobile Menu Toggle Button */}
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="lg:hidden p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-all cursor-pointer z-50"
+              className="lg:hidden p-2.5 rounded-xl border border-purple-100 hover:bg-purple-50/50 text-slate-600 transition-all cursor-pointer z-50"
               aria-label="Toggle mobile menu"
             >
               {showMobileMenu ? <CloseIcon className="w-4 h-4" /> : (
@@ -2177,14 +2157,14 @@ export const LandingPage: React.FC = () => {
       {/* Mobile Drawer Panel */}
       {showMobileMenu && (
         <div className="fixed inset-0 z-40 lg:hidden bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300">
-          <div className="fixed top-20 left-0 right-0 bg-white border-b border-slate-200 shadow-2xl p-6 space-y-6 flex flex-col z-50 animate-in slide-in-from-top duration-300 text-left">
+          <div className="fixed top-20 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-purple-100 shadow-2xl p-6 space-y-6 flex flex-col z-50 animate-in slide-in-from-top duration-300 text-left">
             <nav className="flex flex-col space-y-4 text-sm font-bold text-slate-700">
-              <a href="#problem" onClick={() => setShowMobileMenu(false)} className="hover:text-blue-600 transition-colors">Problem</a>
-              <a href="#solution" onClick={() => setShowMobileMenu(false)} className="hover:text-blue-600 transition-colors">Solution</a>
-              <a href="#ecosystem" onClick={() => setShowMobileMenu(false)} className="hover:text-blue-600 transition-colors">Ecosystem</a>
-              <a href="#ai" onClick={() => setShowMobileMenu(false)} className="hover:text-blue-600 transition-colors">AI Engine</a>
+              <a href="#problem" onClick={() => setShowMobileMenu(false)} className="hover:text-[#5e17eb] transition-colors">Problem</a>
+              <a href="#solution" onClick={() => setShowMobileMenu(false)} className="hover:text-[#5e17eb] transition-colors">Solution</a>
+              <a href="#ecosystem" onClick={() => setShowMobileMenu(false)} className="hover:text-[#5e17eb] transition-colors">Ecosystem</a>
+              <a href="#how-it-works" onClick={() => setShowMobileMenu(false)} className="hover:text-[#5e17eb] transition-colors">AI Engine</a>
             </nav>
-            <div className="border-t border-slate-100 pt-4 flex flex-col space-y-3">
+            <div className="border-t border-purple-100 pt-4 flex flex-col space-y-3">
               {isAuthenticated ? (
                 <>
                   <button
@@ -2192,7 +2172,7 @@ export const LandingPage: React.FC = () => {
                       setShowMobileMenu(false);
                       redirectUserByRole(currentUser?.role || 'student');
                     }}
-                    className="w-full text-center py-2.5 border border-slate-200 bg-transparent hover:bg-slate-50 rounded-xl text-xs font-semibold text-slate-750 transition-all cursor-pointer"
+                    className="w-full text-center py-2.5 border border-purple-200 bg-white hover:bg-purple-50 rounded-xl text-xs font-semibold text-slate-750 transition-all cursor-pointer shadow-sm"
                   >
                     Go to Dashboard
                   </button>
@@ -2214,7 +2194,7 @@ export const LandingPage: React.FC = () => {
                       setShowAuthFlow(true);
                       setAuthScreen('select');
                     }}
-                    className="w-full text-center py-2.5 border border-slate-200 bg-transparent hover:bg-slate-50 rounded-xl text-xs font-semibold text-slate-750 transition-all cursor-pointer"
+                    className="w-full text-center py-2.5 border border-purple-200 bg-white hover:bg-purple-50 rounded-xl text-xs font-semibold text-slate-750 transition-all cursor-pointer shadow-sm"
                   >
                     Login
                   </button>
@@ -2224,7 +2204,7 @@ export const LandingPage: React.FC = () => {
                       setShowAuthFlow(true);
                       setAuthScreen('select');
                     }}
-                    className="w-full text-center py-2.5 bg-[#5e17eb] hover:bg-[#4b12bc] text-xs font-bold text-white rounded-xl shadow-sm transition-all cursor-pointer"
+                    className="w-full text-center py-2.5 bg-[#5e17eb] hover:bg-[#4b12bc] text-xs font-bold text-white rounded-xl shadow-sm shadow-purple-500/20 transition-all cursor-pointer"
                   >
                     Get Started
                   </button>
@@ -2237,7 +2217,7 @@ export const LandingPage: React.FC = () => {
 
       {showAuthFlow && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300 text-left">
-          <div className={`bg-white rounded-3xl shadow-2xl border border-slate-100 w-full ${
+          <div className={`bg-white rounded-3xl shadow-2xl border border-purple-100 w-full ${
             authScreen === 'select' ? 'max-w-2xl' : 'max-w-md'
           } p-6 md:p-8 relative overflow-hidden flex flex-col transition-all duration-300 animate-in fade-in zoom-in-95 duration-200`}>
             
@@ -2263,15 +2243,15 @@ export const LandingPage: React.FC = () => {
                       id: 'Student' as const,
                       name: 'Student',
                       sub: 'Learn skills, take assessments, build projects and get placed.',
-                      themeColor: 'bg-purple-650 hover:bg-purple-750 bg-purple-600',
-                      iconBg: 'bg-purple-50 text-purple-600 border border-purple-100',
+                      themeColor: 'bg-[#5e17eb] hover:bg-[#4b12bc]',
+                      iconBg: 'bg-purple-50 text-[#5e17eb] border border-purple-100',
                       icon: GraduationCap
                     },
                     {
                       id: 'Mentor' as const,
                       name: 'Mentor',
                       sub: 'Guide students, conduct sessions and rate projects.',
-                      themeColor: 'bg-emerald-650 hover:bg-emerald-750 bg-emerald-600',
+                      themeColor: 'bg-emerald-600 hover:bg-emerald-700',
                       iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
                       icon: Users
                     },
@@ -2279,22 +2259,22 @@ export const LandingPage: React.FC = () => {
                       id: 'College' as const,
                       name: 'College / Institute',
                       sub: 'Track students progress, assign mentors and manage placements.',
-                      themeColor: 'bg-blue-650 hover:bg-blue-750 bg-blue-600',
-                      iconBg: 'bg-blue-50 text-blue-600 border border-blue-100',
+                      themeColor: 'bg-indigo-600 hover:bg-indigo-700',
+                      iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
                       icon: Building
                     },
                     {
                       id: 'Recruiter' as const,
                       name: 'Recruiter',
                       sub: 'Post jobs, find talent, conduct interviews and hire.',
-                      themeColor: 'bg-orange-500 hover:bg-orange-600',
-                      iconBg: 'bg-orange-50 text-orange-500 border border-orange-100',
+                      themeColor: 'bg-purple-700 hover:bg-purple-800',
+                      iconBg: 'bg-purple-50 text-purple-700 border border-purple-100',
                       icon: Briefcase
                     }
                   ].map((role) => (
                     <div 
                       key={role.id}
-                      className="border border-slate-200/80 rounded-2xl p-5 flex flex-col items-center justify-between text-center bg-white hover:border-slate-350 hover:shadow-lg transition-all duration-300 group"
+                      className="border border-purple-100 rounded-2xl p-5 flex flex-col items-center justify-between text-center bg-white/90 hover:border-purple-300 hover:shadow-lg transition-all duration-300 group"
                     >
                       <div className="flex flex-col items-center">
                         <div className={`w-12 h-12 rounded-full flex items-center justify-center ${role.iconBg} shrink-0`}>
@@ -2320,10 +2300,10 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 {/* Footer Security Badge */}
-                <div className="bg-slate-50 border border-slate-100/80 p-3.5 rounded-2xl flex items-start gap-3 mt-4">
-                  <ShieldCheckIcon className="text-slate-400 w-4.5 h-4.5 mt-0.5 shrink-0" />
-                  <p className="text-[10px] text-slate-500 leading-normal font-bold">
-                    <span className="font-extrabold text-slate-700">One Email. One Identity. One Role. </span>
+                <div className="bg-purple-50/60 border border-purple-100 p-3.5 rounded-2xl flex items-start gap-3 mt-4">
+                  <ShieldCheckIcon className="text-purple-600 w-4.5 h-4.5 mt-0.5 shrink-0" />
+                  <p className="text-[10px] text-slate-600 leading-normal font-bold">
+                    <span className="font-extrabold text-slate-800">One Email. One Identity. One Role. </span>
                     {"You can create only one account with your email/phone number."}
                   </p>
                 </div>
@@ -2465,9 +2445,9 @@ export const LandingPage: React.FC = () => {
                     className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all flex items-center justify-center ${
                       formLoading ? 'opacity-70 cursor-not-allowed' : ''
                     } ${
-                      selectedRole === 'Student' ? 'bg-purple-600 hover:bg-purple-750' : 
-                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-750' : 
-                      selectedRole === 'College' ? 'bg-blue-600 hover:bg-blue-750' : 'bg-orange-500 hover:bg-orange-600'
+                      selectedRole === 'Student' ? 'bg-[#5e17eb] hover:bg-[#4b12bc]' : 
+                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-700' : 
+                      selectedRole === 'College' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-purple-700 hover:bg-purple-800'
                     }`}
                   >
                     {formLoading ? 'Creating Account...' : 'Continue'}
@@ -2581,9 +2561,9 @@ export const LandingPage: React.FC = () => {
                     className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all flex items-center justify-center ${
                       formLoading ? 'opacity-70 cursor-not-allowed' : ''
                     } ${
-                      selectedRole === 'Student' ? 'bg-purple-600 hover:bg-purple-750' : 
-                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-750' : 
-                      selectedRole === 'College' ? 'bg-blue-600 hover:bg-blue-750' : 'bg-orange-500 hover:bg-orange-600'
+                      selectedRole === 'Student' ? 'bg-[#5e17eb] hover:bg-[#4b12bc]' : 
+                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-700' : 
+                      selectedRole === 'College' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-purple-700 hover:bg-purple-800'
                     }`}
                   >
                     {formLoading ? 'Signing In...' : `Sign In as ${selectedRole === 'College' ? 'College / Institute' : selectedRole}`}
@@ -2655,9 +2635,9 @@ export const LandingPage: React.FC = () => {
                     className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all flex items-center justify-center ${
                       formLoading ? 'opacity-70 cursor-not-allowed' : ''
                     } ${
-                      selectedRole === 'Student' ? 'bg-purple-600 hover:bg-purple-750' : 
-                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-750' : 
-                      selectedRole === 'College' ? 'bg-blue-600 hover:bg-blue-750' : 'bg-orange-500 hover:bg-orange-600'
+                      selectedRole === 'Student' ? 'bg-[#5e17eb] hover:bg-[#4b12bc]' : 
+                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-700' : 
+                      selectedRole === 'College' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-purple-700 hover:bg-purple-800'
                     }`}
                   >
                     {formLoading ? 'Sending Code...' : 'Send Verification Code'}
@@ -2734,9 +2714,9 @@ export const LandingPage: React.FC = () => {
                     className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all flex items-center justify-center ${
                       formLoading ? 'opacity-70 cursor-not-allowed' : ''
                     } ${
-                      selectedRole === 'Student' ? 'bg-purple-600 hover:bg-purple-750' : 
-                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-750' : 
-                      selectedRole === 'College' ? 'bg-blue-600 hover:bg-blue-750' : 'bg-orange-500 hover:bg-orange-600'
+                      selectedRole === 'Student' ? 'bg-[#5e17eb] hover:bg-[#4b12bc]' : 
+                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-700' : 
+                      selectedRole === 'College' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-purple-700 hover:bg-purple-800'
                     }`}
                   >
                     {formLoading ? 'Verifying...' : 'Verify & Continue'}
@@ -2825,9 +2805,9 @@ export const LandingPage: React.FC = () => {
                     className={`w-full py-2.5 text-white font-bold rounded-xl text-xs cursor-pointer shadow-md transition-all flex items-center justify-center ${
                       formLoading ? 'opacity-70 cursor-not-allowed' : ''
                     } ${
-                      selectedRole === 'Student' ? 'bg-purple-600 hover:bg-purple-750' : 
-                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-750' : 
-                      selectedRole === 'College' ? 'bg-blue-600 hover:bg-blue-750' : 'bg-orange-500 hover:bg-orange-600'
+                      selectedRole === 'Student' ? 'bg-[#5e17eb] hover:bg-[#4b12bc]' : 
+                      selectedRole === 'Mentor' ? 'bg-emerald-600 hover:bg-emerald-700' : 
+                      selectedRole === 'College' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-purple-700 hover:bg-purple-800'
                     }`}
                   >
                     {formLoading ? 'Updating Password...' : 'Update Password & Sign In'}
