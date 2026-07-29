@@ -483,11 +483,11 @@ export const LandingPage: React.FC = () => {
     }
 
     setFormLoading(true);
-    if (otpPurpose === 'signup') {
+    if (otpPurpose === 'signup' || otpPurpose === 'login') {
       const result = await verifyOtp(otpCode, selectedRole.toLowerCase());
       setFormLoading(false);
       if (result.success) {
-        setFormSuccess('Account created successfully! Redirecting...');
+        setFormSuccess('Verification successful! Redirecting to dashboard...');
         setRegFullName('');
         setRegEmail('');
         setRegPhone('');
@@ -495,16 +495,16 @@ export const LandingPage: React.FC = () => {
         setRegTerms(false);
         setTimeout(() => {
           setShowAuthFlow(false);
-          redirectUserByRole(selectedRole.toLowerCase());
+          redirectUserByRole(currentUser?.role || selectedRole.toLowerCase());
         }, 1200);
       } else {
-        setFormError(result.message || 'Verification failed');
+        setFormError(result.message || 'Invalid OTP code provided. Please try again.');
       }
     } else {
       // Save code for password reset and advance screen
       setFormLoading(false);
       setResetOtpCode(otpCode);
-      setFormSuccess('Code verified successfully.');
+      setFormSuccess('Verification code confirmed. Please set your new password.');
       setAuthScreen('reset');
     }
   };
@@ -569,12 +569,13 @@ export const LandingPage: React.FC = () => {
     setFormLoading(false);
 
     if (result.success) {
-      setFormSuccess('Password updated successfully! Redirecting to sign in...');
+      setFormSuccess('Password updated successfully! Redirecting to your dashboard...');
       setNewPassword('');
       setConfirmNewPassword('');
       setTimeout(() => {
-        setAuthScreen('login');
-      }, 1500);
+        setShowAuthFlow(false);
+        redirectUserByRole(currentUser?.role || selectedRole.toLowerCase());
+      }, 1200);
     } else {
       setFormError(result.message || 'Failed to reset password.');
     }
@@ -2468,34 +2469,38 @@ export const LandingPage: React.FC = () => {
                     {
                       id: 'Student' as const,
                       name: 'Student',
+                      emoji: '👨‍🎓',
                       sub: 'Learn skills, take assessments, build projects and get placed.',
                       themeColor: 'bg-[#5e17eb] hover:bg-[#4b12bc]',
                       iconBg: 'bg-purple-50 text-[#5e17eb] border border-purple-100',
                       icon: GraduationCap
                     },
                     {
-                      id: 'Mentor' as const,
-                      name: 'Mentor',
-                      sub: 'Guide students, conduct sessions and rate projects.',
-                      themeColor: 'bg-emerald-600 hover:bg-emerald-700',
-                      iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
-                      icon: Users
+                      id: 'Recruiter' as const,
+                      name: 'Recruiter',
+                      emoji: '💼',
+                      sub: 'Post jobs, find talent, conduct interviews and hire.',
+                      themeColor: 'bg-purple-700 hover:bg-purple-800',
+                      iconBg: 'bg-purple-50 text-purple-700 border border-purple-100',
+                      icon: Briefcase
                     },
                     {
                       id: 'College' as const,
-                      name: 'College / Institute',
+                      name: 'College',
+                      emoji: '🏫',
                       sub: 'Track students progress, assign mentors and manage placements.',
                       themeColor: 'bg-indigo-600 hover:bg-indigo-700',
                       iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
                       icon: Building
                     },
                     {
-                      id: 'Recruiter' as const,
-                      name: 'Recruiter',
-                      sub: 'Post jobs, find talent, conduct interviews and hire.',
-                      themeColor: 'bg-purple-700 hover:bg-purple-800',
-                      iconBg: 'bg-purple-50 text-purple-700 border border-purple-100',
-                      icon: Briefcase
+                      id: 'Mentor' as const,
+                      name: 'Mentor',
+                      emoji: '🧠',
+                      sub: 'Guide students, conduct sessions and rate projects.',
+                      themeColor: 'bg-emerald-600 hover:bg-emerald-700',
+                      iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
+                      icon: Brain
                     }
                   ].map((role) => (
                     <div 
@@ -2503,24 +2508,36 @@ export const LandingPage: React.FC = () => {
                       className="border border-purple-100 rounded-2xl p-5 flex flex-col items-center justify-between text-center bg-white/90 hover:border-purple-300 hover:shadow-lg transition-all duration-300 group"
                     >
                       <div className="flex flex-col items-center">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${role.iconBg} shrink-0`}>
-                          <role.icon className="w-5.5 h-5.5" />
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${role.iconBg} shrink-0 text-xl`}>
+                          <span>{role.emoji}</span>
                         </div>
-                        <h3 className="text-sm font-bold text-slate-800 mt-4">{role.name}</h3>
+                        <h3 className="text-sm font-bold text-slate-800 mt-4 flex items-center gap-1.5">
+                          <span>{role.name}</span>
+                        </h3>
                         <p className="text-[11px] text-slate-500 leading-relaxed mt-2.5 px-2 font-semibold">
                           {role.sub}
                         </p>
                       </div>
-                      <button
-                        onClick={() => {
-                          setSelectedRole(role.id);
-                          setAuthScreen('signup');
-                        }}
-                        className={`w-full ${role.themeColor} text-white font-bold rounded-xl text-xs py-2.5 mt-5 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm group-hover:-translate-y-0.5`}
-                      >
-                        <span>Continue</span>
-                        <span className="font-bold">➔</span>
-                      </button>
+                      <div className="w-full flex gap-2 mt-5">
+                        <button
+                          onClick={() => {
+                            setSelectedRole(role.id);
+                            setAuthScreen('signup');
+                          }}
+                          className={`flex-1 ${role.themeColor} text-white font-bold rounded-xl text-xs py-2.5 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 shadow-sm group-hover:-translate-y-0.5`}
+                        >
+                          <span>Sign Up</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedRole(role.id);
+                            setAuthScreen('login');
+                          }}
+                          className="flex-1 bg-purple-50 hover:bg-purple-100 text-[#5e17eb] font-bold border border-purple-200 rounded-xl text-xs py-2.5 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 shadow-sm"
+                        >
+                          <span>Login</span>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
