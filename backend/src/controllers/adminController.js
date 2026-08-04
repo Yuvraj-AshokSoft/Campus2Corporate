@@ -82,7 +82,7 @@ export const loginAdmin = async (req, res) => {
     }
 
     // Generate JWT
-    const token = generateToken(admin._id);
+    const token = generateToken(admin._id, "admin");
 
     return successResponse(
       res,

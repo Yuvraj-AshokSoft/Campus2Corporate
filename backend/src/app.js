@@ -7,6 +7,7 @@ import notFound from "./middleware/notFoundMiddleware.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
 import studentAuthRoutes from "./routes/studentAuthRoutes.js";
+import recruiterRoutes from "./routes/recruiterRoutes.js";
 
 const app = express();
 
@@ -27,6 +28,9 @@ app.use("/api/admin", adminRoutes);
 // Student Routes
 app.use("/api/auth", studentAuthRoutes);
 app.use("/api/student", studentRoutes);
+
+// Recruiter Routes
+app.use("/api/recruiter", recruiterRoutes);
 
 // 404 Handler
 app.use(notFound);

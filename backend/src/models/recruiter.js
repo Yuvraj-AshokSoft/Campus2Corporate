@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const recruiterSchema = new mongoose.Schema(
   {
@@ -20,6 +21,13 @@ const recruiterSchema = new mongoose.Schema(
         /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/,
         "Please enter a valid email address",
       ],
+    },
+
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      select: false,
+      minlength: [8, "Password must be at least 8 characters"],
     },
 
     phone: {
@@ -59,5 +67,23 @@ const recruiterSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+recruiterSchema.pre("save", async function (next) {
+  if (!this.isModified("password") || !this.password) {
+    return next();
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+recruiterSchema.methods.comparePassword = async function (enteredPassword) {
+  if (!this.password) {
+    return false;
+  }
+
+  return bcrypt.compare(enteredPassword, this.password);
+};
 
 export default mongoose.model("Recruiter", recruiterSchema);
