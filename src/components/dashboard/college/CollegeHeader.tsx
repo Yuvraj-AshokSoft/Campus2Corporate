@@ -1,10 +1,10 @@
 import React from "react";
-import { Search, Plus, HelpCircle, Menu } from "lucide-react";
+import { Search, Bell, HelpCircle, Menu } from "lucide-react";
 
 interface CollegeHeaderProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  onQuickActionClick: () => void;
+  onQuickActionClick?: () => void;
   onOpenMobileSidebar?: () => void;
   userName?: string;
   userRole?: string;
@@ -13,14 +13,13 @@ interface CollegeHeaderProps {
 export const CollegeHeader: React.FC<CollegeHeaderProps> = ({
   searchQuery,
   onSearchChange,
-  onQuickActionClick,
   onOpenMobileSidebar,
   userName = "Dr. Sarah Jenkins",
-  userRole = "Chief TPO & Admin",
+  userRole = "COLLEGE ADMINISTRATOR",
 }) => {
   return (
-    <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 md:px-6 py-3 flex items-center justify-between gap-4">
-      {/* Left section: Mobile menu toggle & title context */}
+    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 md:px-6 py-3 flex items-center justify-between gap-4">
+      {/* Left section: Mobile menu toggle */}
       <div className="flex items-center gap-3">
         <button
           onClick={onOpenMobileSidebar}
@@ -29,63 +28,55 @@ export const CollegeHeader: React.FC<CollegeHeaderProps> = ({
         >
           <Menu className="w-5 h-5" />
         </button>
-
-        <div className="hidden sm:block">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-extrabold tracking-wider text-purple-700 uppercase bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100/60">
-              Campus Governance
-            </span>
-          </div>
-        </div>
       </div>
 
-      {/* Center: Search input */}
-      <div className="flex-1 max-w-md">
+      {/* Center: Global Search Input Pill */}
+      <div className="flex-1 max-w-xl">
         <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search insights..."
-            className="w-full bg-slate-100/80 hover:bg-slate-100 focus:bg-white text-slate-800 text-xs md:text-sm pl-10 pr-4 py-2 rounded-full border border-slate-200/70 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all placeholder:text-slate-400"
+            placeholder="Search students, records, or drives..."
+            className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white text-slate-800 text-xs md:text-sm pl-11 pr-4 py-2.5 rounded-full border border-slate-200/80 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/30 focus:border-[#7C3AED] transition-all placeholder:text-slate-400 font-medium"
           />
         </div>
       </div>
 
-      {/* Right controls: Quick Add (+), Help (?), Profile Avatar (AD) */}
+      {/* Right controls: Bell (🔔), Help (❓), Profile Badge */}
       <div className="flex items-center gap-2 md:gap-3">
-        {/* Quick Add Button (+) */}
+        {/* Notifications Bell Icon */}
         <button
-          onClick={onQuickActionClick}
-          title="Quick Action"
-          className="w-9 h-9 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 flex items-center justify-center transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95"
+          title="Notifications"
+          className="w-9 h-9 rounded-full bg-slate-50 hover:bg-purple-50 text-slate-600 hover:text-[#7C3AED] border border-slate-200/80 flex items-center justify-center transition-all cursor-pointer relative"
         >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <Bell className="w-4 h-4" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#7C3AED]"></span>
         </button>
 
-        {/* Help Button (?) */}
+        {/* Help Button */}
         <button
-          title="Help & Documentation"
-          className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
+          title="Help & Support"
+          className="w-9 h-9 rounded-full bg-slate-50 hover:bg-purple-50 text-slate-600 hover:text-[#7C3AED] border border-slate-200/80 flex items-center justify-center transition-all cursor-pointer"
         >
           <HelpCircle className="w-4 h-4" />
         </button>
 
-        {/* User Profile Avatar (AD) */}
-        <div className="flex items-center gap-2.5 pl-1 border-l border-slate-200/80">
-          <div className="relative cursor-pointer group">
-            <div className="w-9 h-9 rounded-full bg-purple-600 text-white font-bold text-xs flex items-center justify-center border-2 border-white shadow-sm ring-2 ring-purple-100 group-hover:ring-purple-300 transition-all">
-              AD
+        {/* College Administrator Profile Badge */}
+        <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200">
+          <div className="relative cursor-pointer">
+            <div className="w-9 h-9 rounded-full bg-[#7C3AED] text-white font-extrabold text-xs flex items-center justify-center shadow-xs ring-2 ring-purple-100">
+              SJ
             </div>
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white"></span>
           </div>
 
-          <div className="hidden xl:block text-left">
-            <div className="text-xs font-bold text-slate-800 leading-tight">
+          <div className="hidden md:block text-left">
+            <div className="text-xs font-extrabold text-slate-900 leading-tight">
               {userName}
             </div>
-            <div className="text-[10px] font-medium text-slate-400">
+            <div className="text-[9px] font-extrabold text-[#7C3AED] tracking-wider uppercase">
               {userRole}
             </div>
           </div>
@@ -94,3 +85,4 @@ export const CollegeHeader: React.FC<CollegeHeaderProps> = ({
     </header>
   );
 };
+

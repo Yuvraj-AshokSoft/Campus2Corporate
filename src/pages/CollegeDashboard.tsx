@@ -5,9 +5,9 @@ import { CollegeHeader } from "../components/dashboard/college/CollegeHeader";
 
 // View components
 import { ExecutiveOverview } from "../components/dashboard/college/views/ExecutiveOverview";
-import { StudentsView } from "../components/dashboard/college/views/StudentsView";
+import { StudentRecordsView } from "../components/dashboard/college/views/StudentRecordsView";
 import { DepartmentsView } from "../components/dashboard/college/views/DepartmentsView";
-import { PlacementCellView } from "../components/dashboard/college/views/PlacementCellView";
+import { PlacementManagementView } from "../components/dashboard/college/views/PlacementManagementView";
 import { CompaniesView } from "../components/dashboard/college/views/CompaniesView";
 import { JobsView } from "../components/dashboard/college/views/JobsView";
 import { ReadinessView } from "../components/dashboard/college/views/ReadinessView";
@@ -17,7 +17,7 @@ import { ComparisonsView } from "../components/dashboard/college/views/Compariso
 import { AssessmentsView } from "../components/dashboard/college/views/AssessmentsView";
 import { MentorsView } from "../components/dashboard/college/views/MentorsView";
 import { ReportsView } from "../components/dashboard/college/views/ReportsView";
-import { CommunicationsView } from "../components/dashboard/college/views/CommunicationsView";
+import { BroadcastCenterView } from "../components/dashboard/college/views/BroadcastCenterView";
 import { SettingsView } from "../components/dashboard/college/views/SettingsView";
 import { X, Plus, Sparkles, Download, CheckCircle2 } from "lucide-react";
 
@@ -75,11 +75,11 @@ export const CollegeDashboard: React.FC = () => {
           />
         );
       case "students":
-        return <StudentsView />;
+        return <StudentRecordsView />;
       case "departments":
         return <DepartmentsView />;
       case "placement-cell":
-        return <PlacementCellView />;
+        return <PlacementManagementView />;
       case "companies":
         return <CompaniesView />;
       case "jobs":
@@ -98,8 +98,9 @@ export const CollegeDashboard: React.FC = () => {
         return <MentorsView />;
       case "reports":
         return <ReportsView />;
+      case "broadcasts":
       case "communications":
-        return <CommunicationsView />;
+        return <BroadcastCenterView />;
       case "settings":
         return <SettingsView />;
       default:
