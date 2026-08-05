@@ -378,7 +378,7 @@ export const PlacementManagementView: React.FC = () => {
             className="bg-[#7C3AED] hover:bg-[#6B21A8] active:bg-purple-900 text-white font-bold px-4 py-2.5 rounded-xl shadow-md shadow-purple-500/20 text-xs md:text-sm flex items-center gap-2 transition-all cursor-pointer transform hover:-translate-y-0.5"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>+ Add New Drive</span>
+            <span>Add New Drive</span>
           </button>
         </div>
       </div>

@@ -8,7 +8,7 @@ import { ExecutiveOverview } from "../components/dashboard/college/views/Executi
 import { StudentRecordsView } from "../components/dashboard/college/views/StudentRecordsView";
 import { DepartmentsView } from "../components/dashboard/college/views/DepartmentsView";
 import { PlacementManagementView } from "../components/dashboard/college/views/PlacementManagementView";
-import { CompaniesView } from "../components/dashboard/college/views/CompaniesView";
+import { RecruiterCoordinationView } from "../components/dashboard/college/views/RecruiterCoordinationView";
 import { JobsView } from "../components/dashboard/college/views/JobsView";
 import { ReadinessView } from "../components/dashboard/college/views/ReadinessView";
 import { AtRiskView } from "../components/dashboard/college/views/AtRiskView";
@@ -16,7 +16,7 @@ import { ForecastView } from "../components/dashboard/college/views/ForecastView
 import { ComparisonsView } from "../components/dashboard/college/views/ComparisonsView";
 import { AssessmentsView } from "../components/dashboard/college/views/AssessmentsView";
 import { MentorsView } from "../components/dashboard/college/views/MentorsView";
-import { ReportsView } from "../components/dashboard/college/views/ReportsView";
+import { ReportsAnalyticsView } from "../components/dashboard/college/views/ReportsAnalyticsView";
 import { BroadcastCenterView } from "../components/dashboard/college/views/BroadcastCenterView";
 import { SettingsView } from "../components/dashboard/college/views/SettingsView";
 import { X, Plus, Sparkles, Download, CheckCircle2 } from "lucide-react";
@@ -81,7 +81,7 @@ export const CollegeDashboard: React.FC = () => {
       case "placement-cell":
         return <PlacementManagementView />;
       case "companies":
-        return <CompaniesView />;
+        return <RecruiterCoordinationView />;
       case "jobs":
         return <JobsView />;
       case "readiness":
@@ -97,7 +97,7 @@ export const CollegeDashboard: React.FC = () => {
       case "mentors":
         return <MentorsView />;
       case "reports":
-        return <ReportsView />;
+        return <ReportsAnalyticsView />;
       case "broadcasts":
       case "communications":
         return <BroadcastCenterView />;
@@ -262,7 +262,7 @@ export const CollegeDashboard: React.FC = () => {
                 className="p-4 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl border border-purple-200 text-left font-bold text-xs flex flex-col gap-2 transition-all"
               >
                 <Plus className="w-5 h-5 text-purple-600" />
-                <span>+ New Drive</span>
+                <span>New Drive</span>
               </button>
 
               <button

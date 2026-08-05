@@ -140,7 +140,7 @@ export const CollegeSidebar: React.FC<CollegeSidebarProps> = ({
             className="w-full bg-[#7C3AED] hover:bg-[#6B21A8] active:bg-purple-900 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md shadow-purple-500/20 transition-all transform hover:-translate-y-0.5 cursor-pointer text-xs md:text-sm"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>+ Launch New Drive</span>
+            <span>Launch New Drive</span>
           </button>
         </div>
       </aside>
