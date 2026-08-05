@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
 import { getApiErrorMessage, studentApi, unwrapData } from "../../services/studentApi";
@@ -141,10 +141,11 @@ const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?
   { label: "My Profile", icon: "user-check", route: "/student/profile" },
   { label: "Project List", icon: "briefcase", route: "/student/projects" },
   { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects", badge: 2 },
+  { label: "Hiring Process", icon: "building", route: "/student/hiring" },
   { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
   { label: "Certificates", icon: "award", route: "/student/certificates" },
   { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume" , route: "/student/ai-resume" },
+  { label: "AI Resume Builder", icon: "resume", route: "/student/ai-resume" },
 ];
 
 // ─── Notification Data ─────────────────────────────────────────────────────
@@ -167,17 +168,6 @@ const typeMeta: Record<NotificationType, { icon: IconName; bg: string; fg: strin
   system: { icon: "info", bg: "#f0f9ff", fg: "#0ea5e9" },
   achievement: { icon: "award", bg: "#ecfdf5", fg: "#10b981" },
 };
-
-const initialNotifications: NotificationItem[] = [
-  { id: "n1", type: "assignment", title: "React Assignment due soon", desc: "Module 3 Project Submission is due 25 Jun. Submit before 11:59 PM.", time: "2h ago", read: false },
-  { id: "n2", type: "assessment", title: "Aptitude Assessment scheduled", desc: "Your Placement Prep Test is scheduled for 28 Jun, 10:00 AM.", time: "5h ago", read: false },
-  { id: "n3", type: "mentor", title: "Mentor session confirmed", desc: "One-on-one career guidance with your mentor on 30 Jun, 3:00 PM.", time: "1d ago", read: false },
-  { id: "n4", type: "achievement", title: "New badge unlocked", desc: "You earned the \u201cDSA Warrior\u201d badge for completing 20 DSA problems.", time: "1d ago", read: true },
-  { id: "n5", type: "interview", title: "Mock interview reminder", desc: "Technical practice mock interview is set for 05 Jul, 11:00 AM.", time: "2d ago", read: true },
-  { id: "n6", type: "system", title: "Profile verification complete", desc: "Your academic credentials have been verified successfully.", time: "3d ago", read: true },
-  { id: "n7", type: "assignment", title: "Python module updated", desc: "New exercises added to Python Programming — 45% progress.", time: "4d ago", read: true },
-  { id: "n8", type: "mentor", title: "Feedback received", desc: "Your mentor left feedback on your last mock trial submission.", time: "5d ago", read: true },
-];
 
 type FilterTab = "all" | "unread" | NotificationType;
 
@@ -235,14 +225,53 @@ type SettingsTab = "notifications" | "preferences" | "privacy";
 // ═══════════════════════════════════════════════════════════════════════════
 export const StudentNotifications = () => {
   const { currentUser } = useAuth();
-  const fullName =  "Yuvraj Singh";
-  const email = "yuvraj@example.com";
+  const fullName = currentUser?.fullName || currentUser?.name || "Student";
+  const email = currentUser?.email || "";
 
-  const [items, setItems] = useState<NotificationItem[]>(initialNotifications);
+  const [items, setItems] = useState<NotificationItem[]>([]);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("notifications");
   const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(defaultNotificationPrefs);
   const [privacyPrefs, setPrivacyPrefs] = useState<PrivacyPrefs>(defaultPrivacyPrefs);
+  const [loading, setLoading] = useState(true);
+  const [savingPrefs, setSavingPrefs] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadNotifications = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await studentApi.getNotifications();
+        const payload = unwrapData<{
+          notifications: NotificationItem[];
+          preferences?: Partial<NotificationPrefs>;
+          privacy?: Partial<PrivacyPrefs>;
+        }>(response);
+
+        if (!mounted) return;
+        setItems(payload.notifications || []);
+        setNotifPrefs({ ...defaultNotificationPrefs, ...(payload.preferences || {}) });
+        setPrivacyPrefs({ ...defaultPrivacyPrefs, ...(payload.privacy || {}) });
+      } catch (loadError) {
+        if (mounted) {
+          setError(getApiErrorMessage(loadError));
+          setItems([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadNotifications();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const unreadCount = items.filter((n) => !n.read).length;
 
@@ -252,20 +281,78 @@ export const StudentNotifications = () => {
     return n.type === activeTab;
   });
 
-  const markAsRead = (id: string) =>
-    setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  const markAsRead = async (id: string) => {
+    setError("");
+    try {
+      const response = await studentApi.markNotificationRead(id);
+      const payload = unwrapData<{ notifications: NotificationItem[] }>(response);
+      setItems(payload.notifications || []);
+    } catch (readError) {
+      setError(getApiErrorMessage(readError));
+    }
+  };
 
-  const markAllAsRead = () =>
-    setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+  const markAllAsRead = async () => {
+    setError("");
+    try {
+      const response = await studentApi.markAllNotificationsRead();
+      const payload = unwrapData<{ notifications: NotificationItem[] }>(response);
+      setItems(payload.notifications || []);
+    } catch (readError) {
+      setError(getApiErrorMessage(readError));
+    }
+  };
 
-  const dismiss = (id: string) =>
-    setItems((prev) => prev.filter((n) => n.id !== id));
+  const dismiss = async (id: string) => {
+    setError("");
+    try {
+      const response = await studentApi.deleteNotification(id);
+      const payload = unwrapData<{ notifications: NotificationItem[] }>(response);
+      setItems(payload.notifications || []);
+    } catch (deleteError) {
+      setError(getApiErrorMessage(deleteError));
+    }
+  };
 
-  const toggleNotifPref = (key: keyof NotificationPrefs) =>
-    setNotifPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
+  const saveNotificationPrefs = async (next: NotificationPrefs) => {
+    setSavingPrefs(true);
+    setError("");
+    try {
+      const response = await studentApi.updateSettings({ settings: { notifications: next } });
+      const payload = unwrapData<{ settings?: { notifications?: Partial<NotificationPrefs> } }>(response);
+      setNotifPrefs({ ...defaultNotificationPrefs, ...(payload.settings?.notifications || next) });
+    } catch (saveError) {
+      setError(getApiErrorMessage(saveError));
+    } finally {
+      setSavingPrefs(false);
+    }
+  };
 
-  const togglePrivacyPref = (key: keyof PrivacyPrefs) =>
-    setPrivacyPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
+  const savePrivacyPrefs = async (next: PrivacyPrefs) => {
+    setSavingPrefs(true);
+    setError("");
+    try {
+      const response = await studentApi.updateSettings({ settings: { privacy: next } });
+      const payload = unwrapData<{ settings?: { privacy?: Partial<PrivacyPrefs> } }>(response);
+      setPrivacyPrefs({ ...defaultPrivacyPrefs, ...(payload.settings?.privacy || next) });
+    } catch (saveError) {
+      setError(getApiErrorMessage(saveError));
+    } finally {
+      setSavingPrefs(false);
+    }
+  };
+
+  const toggleNotifPref = (key: keyof NotificationPrefs) => {
+    const next = { ...notifPrefs, [key]: !notifPrefs[key] };
+    setNotifPrefs(next);
+    void saveNotificationPrefs(next);
+  };
+
+  const togglePrivacyPref = (key: keyof PrivacyPrefs) => {
+    const next = { ...privacyPrefs, [key]: !privacyPrefs[key] };
+    setPrivacyPrefs(next);
+    void savePrivacyPrefs(next);
+  };
 
   const settingsTabs: { key: SettingsTab; label: string; icon: IconName }[] = [
     { key: "notifications", label: "Activity feed", icon: "bell" },
@@ -277,11 +364,26 @@ export const StudentNotifications = () => {
     <StudentLayout
       sidebarItems={sidebarItems}
       sidebarHighlight="Notifications"
-      userSummary={{ fullName, role: "B.Tech CSE · 4th Year", status: "Placement track active" }}
+      userSummary={{ fullName, role: "Student", status: "Placement track active" }}
       stats={{ label: "Unread", value: String(unreadCount), subtitle: "Today", accent: unreadCount > 0 ? "New" : "All caught up" }}
       showAiButton={false}
     >
       <div className="space-y-5">
+            {error && (
+              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                {error}
+              </div>
+            )}
+            {loading && (
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
+                Loading notifications...
+              </div>
+            )}
+            {savingPrefs && (
+              <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
+                Saving preferences...
+              </div>
+            )}
 
             {/* Page header banner */}
             <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -353,7 +455,7 @@ export const StudentNotifications = () => {
                     <Icon name="filter" className="h-4 w-4 text-slate-300" />
                   </div>
 
-                  {filtered.length === 0 ? (
+                  {filtered.length === 0 && !loading ? (
                     <div className="mt-6 flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-12 text-center">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200">
                         <Icon name="bell" className="h-4 w-4 text-slate-300" />
@@ -507,3 +609,4 @@ export const StudentNotifications = () => {
 };
 
 export default StudentNotifications;
+

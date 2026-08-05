@@ -93,10 +93,11 @@ const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?
   { label: "My Profile", icon: "user-check", route: "/student/profile" },
   { label: "Project List", icon: "briefcase", route: "/student/projects" },
   { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects", badge: 2 },
+  { label: "Hiring Process", icon: "building", route: "/student/hiring" },
   { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
   { label: "Certificates", icon: "award", route: "/student/certificates" },
   { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume" , route: "/student/ai-resume" },
+  { label: "AI Resume Builder", icon: "resume", route: "/student/ai-resume" },
 ];
 
 
@@ -117,6 +118,7 @@ interface Project {
   applicants: number;
   slots: number;
   deadline: string;
+  rawDeadline?: string;
   stipend: string;
   featured?: boolean;
 }
@@ -378,13 +380,23 @@ export const ProjectListPage = () => {
     else list = [...list].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
 
     return list;
-  }, [query, category, difficulty, sort]);
+  }, [projects, query, category, difficulty, sort]);
+
+  const closingThisWeek = useMemo(() => {
+    const now = Date.now();
+    const weekFromNow = now + 7 * 24 * 60 * 60 * 1000;
+
+    return projects.filter((project) => {
+      const deadline = project.rawDeadline ? new Date(project.rawDeadline).getTime() : NaN;
+      return Number.isFinite(deadline) && deadline >= now && deadline <= weekFromNow;
+    }).length;
+  }, [projects]);
 
   const stats = [
     { label: "Open projects", value: String(projects.length), icon: "briefcase" as IconName, bg: "#eff6ff" },
     { label: "Categories", value: String(categories.length - 1), icon: "grid" as IconName, bg: "#f5f3ff" },
     { label: "You've applied", value: String(appliedIds.size), icon: "check" as IconName, bg: "#ecfdf5" },
-    { label: "Closing this week", value: "3", icon: "clock" as IconName, bg: "#fffbeb" },
+    { label: "Closing this week", value: String(closingThisWeek), icon: "clock" as IconName, bg: "#fffbeb" },
   ];
 
   return (

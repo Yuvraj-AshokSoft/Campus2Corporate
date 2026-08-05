@@ -85,10 +85,11 @@ const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?
   { label: "My Profile", icon: "user-check", route: "/student/profile" },
   { label: "Project List", icon: "briefcase", route: "/student/projects" },
   { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects", badge: 2 },
+  { label: "Hiring Process", icon: "building", route: "/student/hiring" },
   { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
   { label: "Certificates", icon: "award", route: "/student/certificates" },
   { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume" , route: "/student/ai-resume" },
+  { label: "AI Resume Builder", icon: "resume", route: "/student/ai-resume" },
 ];
 // ─── Applied Project Data ───────────────────────────────────────────────────
 type AppStatus = "Applied" | "Under Review" | "Interview Scheduled" | "Accepted" | "Rejected";

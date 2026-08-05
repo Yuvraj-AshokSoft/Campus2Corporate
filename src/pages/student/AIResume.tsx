@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
+import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
+import { getApiErrorMessage, studentApi, unwrapData } from "../../services/studentApi";
 
 // ─── Icon System (subset needed on this page; same visual style as the rest of the app) ──
 type IconName =
@@ -11,6 +13,8 @@ type IconName =
   | "clipboard"
   | "bell"
   | "award"
+  | "building"
+  | "notifications"
   | "settings"
   | "resume"
   | "sparkles"
@@ -28,7 +32,10 @@ type IconName =
   | "layout"
   | "user"
   | "lightbulb"
-  | "zap";
+  | "zap"
+  | "interview"
+  
+  ;
 
 const Icon = ({
   name,
@@ -115,6 +122,16 @@ const Icon = ({
       <>
         <path d="M12 5v14" />
         <path d="M5 12h14" />
+      </>
+    ),
+    building: (
+      <>
+        <path d="M5 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" />
+        <path d="M3 21h18" />
+        <path d="M9 7h1" />
+        <path d="M14 7h1" />
+        <path d="M9 11h1" />
+        <path d="M14 11h1" />
       </>
     ),
     trash: (
@@ -229,26 +246,7 @@ const Icon = ({
   );
 };
 
-// ─── Claude API helpers (same pattern as the rest of the app) ────────────────
-const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
-
-const callClaude = async (body: object): Promise<string> => {
-  const res = await fetch(ANTHROPIC_API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const json = await res.json();
-  return (json.content ?? [])
-    .map((b: { type: string; text?: string }) => (b.type === "text" ? b.text : ""))
-    .join("");
-};
-
-const parseJSON = <T,>(raw: string): T => {
-  const cleaned = raw.replace(/```json|```/g, "").trim();
-  return JSON.parse(cleaned) as T;
-};
-
+// ─── small helpers ────────────────────────────────────────────────────────────
 const getInitials = (name: string) =>
   name
     .trim()
@@ -260,36 +258,19 @@ const getInitials = (name: string) =>
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
+
 // ─── Sidebar (identical items/order to the rest of the student portal) ───────
-const sidebarItems: Array<{
-  label: string;
-  icon: IconName;
-  route: string;
-  active?: boolean;
-  badge?: number;
-}> = [
+const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?: number }> = [
   { label: "Dashboard", icon: "dashboard", route: "/student-dashboard" },
   { label: "My Profile", icon: "user-check", route: "/student/profile" },
   { label: "Project List", icon: "briefcase", route: "/student/projects" },
-  { label: "Applied Projects",icon: "clipboard",route: "/student/applied-projects",badge: 2,},
+  { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects", badge: 2 },
+  { label: "Hiring Process", icon: "building", route: "/student/hiring" },
   { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
   { label: "Certificates", icon: "award", route: "/student/certificates" },
   { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume", route: "/student/airesume", active: true },
-  { label: "AI Interview", icon: "interview", route: "/ai-interview" },
+  { label: "AI Resume Builder", icon: "resume", route: "/student/ai-resume" },
 ];
-
-// ─── Portal data used to auto-fill the resume (mirrors the Dashboard's registered modules) ──
-const PORTAL_MODULES = [
-  { title: "React Development", progress: 70 },
-  { title: "Python Programming", progress: 45 },
-  { title: "Data Structures & Algorithms", progress: 60 },
-  { title: "Aptitude Training", progress: 85 },
-];
-const PORTAL_UNIVERSITY = "Campus2Corporate University";
-const PORTAL_DEGREE = "B.Tech, Computer Science & Engineering";
-const PORTAL_DURATION = "2023 – 2027";
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface EducationEntry {
   id: string;
@@ -381,46 +362,66 @@ const ghostBtnCls =
 const primaryBtnCls =
   "flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:shadow-blue-600/30 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none";
 
+const emptyResumeData = (currentUser?: { fullName?: string; name?: string; email?: string; phone?: string }): ResumeData => ({
+  fullName: currentUser?.fullName || currentUser?.name || "",
+  title: "",
+  email: currentUser?.email || "",
+  phone: currentUser?.phone || "",
+  location: "",
+  linkedin: "",
+  github: "",
+  targetRole: "",
+  summary: "",
+  skills: [],
+  education: [],
+  experience: [{ id: uid(), role: "", organization: "", duration: "", bullets: "" }],
+  certifications: [],
+});
+
+const normalizeResumeData = (resume: Partial<ResumeData>, fallback: ResumeData): ResumeData => ({
+  ...fallback,
+  ...resume,
+  skills: Array.isArray(resume.skills) ? resume.skills : fallback.skills,
+  education: (Array.isArray(resume.education) ? resume.education : fallback.education).map((entry) => ({
+    id: entry.id || uid(),
+    degree: entry.degree || "",
+    institution: entry.institution || "",
+    duration: entry.duration || "",
+    gpa: entry.gpa || "",
+  })),
+  experience: (Array.isArray(resume.experience) && resume.experience.length ? resume.experience : fallback.experience).map((entry) => ({
+    id: entry.id || uid(),
+    role: entry.role || "",
+    organization: entry.organization || "",
+    duration: entry.duration || "",
+    bullets: Array.isArray((entry as any).bullets) ? (entry as any).bullets.join("\n") : entry.bullets || "",
+  })),
+  certifications: (Array.isArray(resume.certifications) ? resume.certifications : fallback.certifications).map((entry) => ({
+    id: entry.id || uid(),
+    name: entry.name || "",
+    issuer: entry.issuer || "",
+    date: entry.date || "",
+  })),
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════════════════
 export const AIResumeBuilder = () => {
   const { currentUser } = useAuth();
-  const fullNameFallback = currentUser?.fullName || "Yuvraj Singh";
-  const initials = getInitials(fullNameFallback);
+  const fallbackResume = emptyResumeData(currentUser ?? undefined);
+  const initials = getInitials(fallbackResume.fullName || "Student");
 
-  // Skills auto-derived from the student's registered modules (progress >= 50%)
-  const importedSkills = PORTAL_MODULES.filter((m) => m.progress >= 50).map((m) => m.title);
-
-  const [data, setData] = useState<ResumeData>({
-    fullName: fullNameFallback,
-    title: "B.Tech CSE Student · Aspiring Software Engineer",
-    email: currentUser?.email || "yuvraj@example.com",
-    phone: currentUser?.phone || "+91 9876543210",
-    location: "Indore, India",
-    linkedin: "",
-    github: "",
-    targetRole: "",
-    summary: "",
-    skills: importedSkills,
-    education: [
-      {
-        id: uid(),
-        degree: PORTAL_DEGREE,
-        institution: PORTAL_UNIVERSITY,
-        duration: PORTAL_DURATION,
-        gpa: "",
-      },
-    ],
-    experience: [{ id: uid(), role: "", organization: "", duration: "", bullets: "" }],
-    certifications: [],
-  });
+  const [data, setData] = useState<ResumeData>(fallbackResume);
 
   const [template, setTemplate] = useState<Template>("modern");
   const [skillInput, setSkillInput] = useState("");
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [enhancingId, setEnhancingId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [loadingResume, setLoadingResume] = useState(true);
+  const [savingResume, setSavingResume] = useState(false);
+  const [resumeLoaded, setResumeLoaded] = useState(false);
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -428,6 +429,55 @@ export const AIResumeBuilder = () => {
   const [assistantInput, setAssistantInput] = useState("");
   const [assistantLoading, setAssistantLoading] = useState(false);
   const [assistantNote, setAssistantNote] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadResume = async () => {
+      setLoadingResume(true);
+      setError("");
+
+      try {
+        const response = await studentApi.getResumeBuilder();
+        const payload = unwrapData<{ resume: Partial<ResumeData>; template?: Template }>(response);
+        if (!mounted) return;
+
+        setData(normalizeResumeData(payload.resume || {}, emptyResumeData(currentUser ?? undefined)));
+        setTemplate(payload.template || "modern");
+        setResumeLoaded(true);
+      } catch (loadError) {
+        if (mounted) {
+          setError(getApiErrorMessage(loadError));
+          setResumeLoaded(true);
+        }
+      } finally {
+        if (mounted) setLoadingResume(false);
+      }
+    };
+
+    loadResume();
+
+    return () => {
+      mounted = false;
+    };
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!resumeLoaded || loadingResume) return;
+
+    const timeoutId = window.setTimeout(async () => {
+      setSavingResume(true);
+      try {
+        await studentApi.saveResumeBuilder({ resume: data, template });
+      } catch (saveError) {
+        setError(getApiErrorMessage(saveError));
+      } finally {
+        setSavingResume(false);
+      }
+    }, 900);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [data, template, resumeLoaded, loadingResume]);
 
   // ── derived: resume completeness score, shown in the header stat card ──
   const completeness = (() => {
@@ -481,13 +531,8 @@ export const AIResumeBuilder = () => {
     setSummaryLoading(true);
     setError("");
     try {
-      const text = await callClaude({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        messages: [
-          {
-            role: "user",
-            content: `You write concise, ATS-friendly resume summaries for engineering students. Return ONLY valid JSON, no markdown, no backticks. Format: {"summary":"..."}
+      const response = await studentApi.generateResumeSummary({
+        prompt: `You write concise, ATS-friendly resume summaries for engineering students. Return ONLY valid JSON, no markdown, no backticks. Format: {"summary":"..."}
 
 Rules:
 - 2-3 sentences, under 45 words total
@@ -500,15 +545,13 @@ Target role: ${data.targetRole || "Software Engineering roles"}
 Education: ${data.education.map((e) => `${e.degree} at ${e.institution}`).join("; ") || "Not specified"}
 Skills: ${data.skills.join(", ") || "Not specified"}
 Experience/projects: ${
-              data.experience
-                .filter((e) => e.role || e.bullets)
-                .map((e) => `${e.role} — ${e.bullets.split("\n").filter(Boolean).join("; ")}`)
-                .join(" | ") || "Not specified"
-            }`,
-          },
-        ],
+          data.experience
+            .filter((e) => e.role || e.bullets)
+            .map((e) => `${e.role} — ${e.bullets.split("\n").filter(Boolean).join("; ")}`)
+            .join(" | ") || "Not specified"
+        }`,
       });
-      const parsed = parseJSON<{ summary: string }>(text);
+      const parsed = unwrapData<{ summary: string }>(response);
       setField("summary", parsed.summary);
     } catch {
       setError("Couldn't generate a summary. Please try again.");
@@ -523,13 +566,8 @@ Experience/projects: ${
     setEnhancingId(entry.id);
     setError("");
     try {
-      const text = await callClaude({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        messages: [
-          {
-            role: "user",
-            content: `You rewrite rough notes into strong, ATS-friendly resume bullet points. Return ONLY valid JSON, no markdown, no backticks. Format: {"bullets":["...","..."]}
+      const response = await studentApi.enhanceResumeExperience({
+        prompt: `You rewrite rough notes into strong, ATS-friendly resume bullet points. Return ONLY valid JSON, no markdown, no backticks. Format: {"bullets":["...","..."]}
 
 Rules:
 - 3-4 bullets max
@@ -540,10 +578,8 @@ Rules:
 Role: ${entry.role || "Not specified"}
 Organization: ${entry.organization || "Not specified"}
 Raw notes: ${entry.bullets || "Not specified"}`,
-          },
-        ],
       });
-      const parsed = parseJSON<{ bullets: string[] }>(text);
+      const parsed = unwrapData<{ bullets: string[] }>(response);
       updateExperience(entry.id, "bullets", parsed.bullets.join("\n"));
     } catch {
       setError("Couldn't enhance those bullet points. Please try again.");
@@ -560,30 +596,21 @@ Raw notes: ${entry.bullets || "Not specified"}`,
     setError("");
     setAssistantNote("");
     try {
-      const text = await callClaude({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        messages: [
-          {
-            role: "user",
-            content: `Classify this note from a student building their resume, then extract structured data. Return ONLY valid JSON, no markdown, no backticks.
+      const response = await studentApi.classifyResumeNote({
+        prompt: `You classify freeform notes into the right resume section. Return ONLY valid JSON, no markdown, no backticks. Format: {"type":"...","...":"...","confirmation":"..."}
 
-Format: {"type":"experience","experience":{"role":"","organization":"","duration":"","bullets":["",""]},"certification":null,"skills":[],"confirmation":"Added to Experience / Projects."}
-
-Rules:
+Rules:  
 - "type" must be exactly one of "experience", "certification", "skill"
 - Use "experience" for internships, jobs, hackathons, or projects
 - Use "certification" for courses, certificates, or credentials completed
-- Use "skill" for standalone tools/technologies/languages with no other context
-- Only fill the object matching the chosen type; set the others to null / empty array
-- bullets: 2-4 short resume-style bullets built from the note, action-verb first, no invented numbers
-- confirmation: one short sentence telling the student which section it was added to
+- Use "skill" for standalone tools, technologies, or languages
+- Only fill the object matching the chosen type; set the others to null or empty arrays
+- bullets: 2-4 short resume-style bullets built from the note
+- Do not invent metrics or credentials
 
-Student's note: "${note}"`,
-          },
-        ],
+Note: ${note}`,
       });
-      const parsed = parseJSON<AssistantExtraction>(text);
+      const parsed = unwrapData<AssistantExtraction>(response);
       if (parsed.type === "experience" && parsed.experience) {
         setField("experience", [
           ...data.experience,
@@ -666,8 +693,8 @@ Student's note: "${note}"`,
       sidebarItems={sidebarItems}
       sidebarHighlight="AI Resume Builder"
       userSummary={{
-        fullName: data.fullName,
-        role: "B.Tech CSE · 4th Year",
+        fullName: data.fullName || "Student",
+        role: data.title || "Student",
         status: "Placement track active",
       }}
       stats={{
@@ -728,6 +755,18 @@ Student's note: "${note}"`,
             {error}
           </div>
         )}
+        {loadingResume && (
+          <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs text-slate-500 shadow-sm">
+            <Icon name="refresh" className="h-3.5 w-3.5 flex-shrink-0 animate-spin" />
+            Loading resume data...
+          </div>
+        )}
+        {savingResume && (
+          <div className="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700 shadow-sm">
+            <Icon name="refresh" className="h-3.5 w-3.5 flex-shrink-0 animate-spin" />
+            Saving resume...
+          </div>
+        )}
 
         {/* AI Import & Assistant — full width */}
         <section className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/60 via-white to-white p-6 shadow-sm">
@@ -738,7 +777,7 @@ Student's note: "${note}"`,
             title="Imported from your student profile"
           />
           <div className="mt-4 flex flex-wrap gap-1.5">
-            {[data.fullName, data.email, data.phone, PORTAL_UNIVERSITY, PORTAL_DEGREE, ...data.skills].map(
+            {[data.fullName, data.title, data.email, data.phone, data.location, data.linkedin, data.github, ...data.skills].map(
               (chip, i) =>
                 chip && (
                   <span

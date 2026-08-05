@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import StudentLayout from "../../components/student/StudentLayout";
 import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
+import { getApiErrorMessage, studentApi, unwrapData } from "../../services/studentApi";
 
 // ─── Icon System (matches Student Dashboard / Admin Dashboard) ───────────────
 type IconName =
@@ -98,10 +99,10 @@ const getInitials = (name: string) =>
 
 const useStudentProfile = () => {
   const { currentUser, logout } = useAuth();
-  const fullName = currentUser?.fullName || "Yuvraj Singh";
+  const fullName = currentUser?.fullName || currentUser?.name || "Student";
   const initials = getInitials(fullName);
-  const email = currentUser?.email || "yuvraj@example.com";
-  const phone = currentUser?.phone || "+91 9876543210";
+  const email = currentUser?.email || "";
+  const phone = currentUser?.phone || "";
   return { fullName, initials, email, phone, logout };
 };
 
@@ -121,17 +122,17 @@ const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#2563eb" }:
   </div>
 );
 
-const sidebarItems: Array<{ label: string; icon: StudentSidebarIconName; route: string; badge?: number }> = [
+const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?: number }> = [
   { label: "Dashboard", icon: "dashboard", route: "/student-dashboard" },
   { label: "My Profile", icon: "user-check", route: "/student/profile" },
   { label: "Project List", icon: "briefcase", route: "/student/projects" },
   { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects", badge: 2 },
+  { label: "Hiring Process", icon: "building", route: "/student/hiring" },
   { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
   { label: "Certificates", icon: "award", route: "/student/certificates" },
   { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume" , route: "/student/ai-resume" },
+  { label: "AI Resume Builder", icon: "resume", route: "/student/ai-resume" },
 ];
-
 // ─── Toggle switch ─────────────────────────────────────────────────────────────
 const Toggle = ({
   checked,
@@ -157,6 +158,38 @@ const Toggle = ({
 );
 
 interface ToggleRow { key: string; label: string; sub: string; icon: IconName; value: boolean }
+
+interface StudentSettingsPayload {
+  email: string;
+  settings: {
+    notifications: Record<string, boolean>;
+    privacy: Record<string, boolean>;
+    theme: "light" | "dark" | "system";
+    connectedAccounts?: {
+      github?: boolean;
+      linkedIn?: boolean;
+    };
+  };
+}
+
+const notificationRows: Omit<ToggleRow, "value">[] = [
+  { key: "email", label: "Email notifications", sub: "Assignment updates, deadlines & results", icon: "mail" },
+  { key: "sms", label: "SMS alerts", sub: "Time-sensitive reminders via text", icon: "smartphone" },
+  { key: "assignments", label: "Assignment reminders", sub: "Notify before submission deadlines", icon: "clipboard" },
+  { key: "mentorSessions", label: "Mentor session reminders", sub: "Alerts before scheduled sessions", icon: "users" },
+  { key: "marketing", label: "Placement drive updates", sub: "New opportunities matching your profile", icon: "briefcase" },
+];
+
+const privacyRows: Omit<ToggleRow, "value">[] = [
+  { key: "recruiterVisible", label: "Visible to recruiters", sub: "Allow verified recruiters to view your profile", icon: "eye" },
+  { key: "leaderboard", label: "Show me on leaderboards", sub: "Display your rank on public leaderboards", icon: "trending-up" },
+  { key: "twoFactor", label: "Two-factor authentication", sub: "Extra security step at every login", icon: "shield" },
+];
+
+const rowsFromSettings = (
+  rows: Omit<ToggleRow, "value">[],
+  values: Record<string, boolean> = {}
+): ToggleRow[] => rows.map((row) => ({ ...row, value: Boolean(values[row.key]) }));
 
 const ToggleList = ({ items, onToggle }: { items: ToggleRow[]; onToggle: (key: string) => void }) => (
   <div className="divide-y divide-slate-100">
@@ -184,45 +217,154 @@ export const StudentSettings = () => {
   const { fullName, email, logout } = useStudentProfile();
   const navigate = useNavigate();
   const [savedToast, setSavedToast] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const [accountEmail, setAccountEmail] = useState(email);
   const [currentPwd, setCurrentPwd] = useState("");
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
 
-  const [notifications, setNotifications] = useState<ToggleRow[]>([
-    { key: "email", label: "Email notifications", sub: "Assignment updates, deadlines & results", icon: "mail", value: true },
-    { key: "sms", label: "SMS alerts", sub: "Time-sensitive reminders via text", icon: "smartphone", value: false },
-    { key: "assignments", label: "Assignment reminders", sub: "Notify before submission deadlines", icon: "clipboard", value: true },
-    { key: "mentor", label: "Mentor session reminders", sub: "Alerts before scheduled sessions", icon: "users", value: true },
-    { key: "marketing", label: "Placement drive updates", sub: "New opportunities matching your profile", icon: "briefcase", value: true },
-  ]);
-
-  const [privacy, setPrivacy] = useState<ToggleRow[]>([
-    { key: "recruiterVisible", label: "Visible to recruiters", sub: "Allow verified recruiters to view your profile", icon: "eye", value: true },
-    { key: "leaderboard", label: "Show me on leaderboards", sub: "Display your rank on public leaderboards", icon: "trending-up", value: true },
-    { key: "twoFactor", label: "Two-factor authentication", sub: "Extra security step at every login", icon: "shield", value: false },
-  ]);
+  const [notifications, setNotifications] = useState<ToggleRow[]>(rowsFromSettings(notificationRows));
+  const [privacy, setPrivacy] = useState<ToggleRow[]>(rowsFromSettings(privacyRows));
 
   const [theme, setTheme] = useState<"light" | "dark" | "system">("light");
+  const [connectedAccounts, setConnectedAccounts] = useState({ github: false, linkedIn: false });
 
-  const toggle = (list: ToggleRow[], setList: (v: ToggleRow[]) => void, key: string) =>
-    setList(list.map((i) => (i.key === key ? { ...i, value: !i.value } : i)));
+  useEffect(() => {
+    let mounted = true;
+
+    const loadSettings = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await studentApi.getSettings();
+        const payload = unwrapData<StudentSettingsPayload>(response);
+        if (!mounted) return;
+
+        setAccountEmail(payload.email || email);
+        setNotifications(rowsFromSettings(notificationRows, payload.settings?.notifications));
+        setPrivacy(rowsFromSettings(privacyRows, payload.settings?.privacy));
+        setTheme(payload.settings?.theme || "light");
+        setConnectedAccounts({
+          github: Boolean(payload.settings?.connectedAccounts?.github),
+          linkedIn: Boolean(payload.settings?.connectedAccounts?.linkedIn),
+        });
+      } catch (loadError) {
+        if (mounted) setError(getApiErrorMessage(loadError));
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadSettings();
+
+    return () => {
+      mounted = false;
+    };
+  }, [email]);
+
+  const rowValues = (rows: ToggleRow[]) =>
+    rows.reduce<Record<string, boolean>>((acc, row) => {
+      acc[row.key] = row.value;
+      return acc;
+    }, {});
 
   const showSaved = () => {
     setSavedToast(true);
     setTimeout(() => setSavedToast(false), 2200);
   };
 
+  const persistSettings = async (payload: Partial<StudentSettingsPayload>) => {
+    setSaving(true);
+    setError("");
+    try {
+      const response = await studentApi.updateSettings(payload);
+      const next = unwrapData<StudentSettingsPayload>(response);
+      setAccountEmail(next.email || accountEmail);
+      setNotifications(rowsFromSettings(notificationRows, next.settings?.notifications));
+      setPrivacy(rowsFromSettings(privacyRows, next.settings?.privacy));
+      setTheme(next.settings?.theme || theme);
+      showSaved();
+    } catch (saveError) {
+      setError(getApiErrorMessage(saveError));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggle = (
+    list: ToggleRow[],
+    setList: (v: ToggleRow[]) => void,
+    key: string,
+    section: "notifications" | "privacy"
+  ) => {
+    const next = list.map((i) => (i.key === key ? { ...i, value: !i.value } : i));
+    setList(next);
+    void persistSettings({ settings: { [section]: rowValues(next) } as any });
+  };
+
+  const saveAccount = () =>
+    persistSettings({
+      email: accountEmail,
+      settings: {
+        notifications: rowValues(notifications),
+        privacy: rowValues(privacy),
+        theme,
+      },
+    });
+
+  const updatePassword = () => {
+    if (newPwd !== confirmPwd) {
+      setError("New password and confirmation do not match.");
+      return;
+    }
+
+    void persistSettings({
+      currentPassword: currentPwd,
+      newPassword: newPwd,
+    } as any);
+    setCurrentPwd("");
+    setNewPwd("");
+    setConfirmPwd("");
+  };
+
+  const updateTheme = (nextTheme: typeof theme) => {
+    setTheme(nextTheme);
+    void persistSettings({ settings: { theme: nextTheme } as any });
+  };
+
   return (
     <StudentLayout
       sidebarItems={sidebarItems}
       sidebarHighlight="Settings"
-      userSummary={{ fullName, role: "B.Tech CSE · 4th Year", status: "Placement track active" }}
-      stats={{ label: "Account security", value: "Off", subtitle: "Two-factor authentication", accent: "Off" }}
+      userSummary={{ fullName, role: "Student", status: "Placement track active" }}
+      stats={{
+        label: "Account security",
+        value: privacy.find((item) => item.key === "twoFactor")?.value ? "On" : "Off",
+        subtitle: "Two-factor authentication",
+        accent: privacy.find((item) => item.key === "twoFactor")?.value ? "On" : "Off",
+      }}
       showAiButton={false}
     >
       <>
+            {error && (
+              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                {error}
+              </div>
+            )}
+            {loading && (
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
+                Loading settings...
+              </div>
+            )}
+            {saving && (
+              <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
+                Saving settings...
+              </div>
+            )}
 
             {/* Header banner */}
             <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -253,7 +395,7 @@ export const StudentSettings = () => {
                     <input value={accountEmail} onChange={(e) => setAccountEmail(e.target.value)}
                       className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-50" />
                   </div>
-                  <button onClick={showSaved}
+                  <button onClick={saveAccount} disabled={saving}
                     className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800">
                     <Icon name="check" className="h-3.5 w-3.5" />
                     Save changes
@@ -270,7 +412,7 @@ export const StudentSettings = () => {
                     className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-50" />
                   <input type="password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} placeholder="Confirm new password"
                     className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-50" />
-                  <button onClick={showSaved}
+                  <button onClick={updatePassword} disabled={saving || !currentPwd || !newPwd || !confirmPwd}
                     className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800">
                     <Icon name="lock" className="h-3.5 w-3.5" />
                     Update password
@@ -284,14 +426,14 @@ export const StudentSettings = () => {
               <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <SectionHeader eyebrow="Alerts" title="Notification preferences" icon="bell" iconColor="#8b5cf6" />
                 <div className="mt-4">
-                  <ToggleList items={notifications} onToggle={(k) => toggle(notifications, setNotifications, k)} />
+                  <ToggleList items={notifications} onToggle={(k) => toggle(notifications, setNotifications, k, "notifications")} />
                 </div>
               </section>
 
               <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <SectionHeader eyebrow="Visibility" title="Privacy & security" icon="shield" iconColor="#10b981" />
                 <div className="mt-4">
-                  <ToggleList items={privacy} onToggle={(k) => toggle(privacy, setPrivacy, k)} />
+                  <ToggleList items={privacy} onToggle={(k) => toggle(privacy, setPrivacy, k, "privacy")} />
                 </div>
               </section>
             </div>
@@ -306,7 +448,7 @@ export const StudentSettings = () => {
                     { key: "dark", label: "Dark", icon: "moon" as IconName },
                     { key: "system", label: "System", icon: "monitor" as IconName },
                   ].map((t) => (
-                    <button key={t.key} onClick={() => setTheme(t.key as typeof theme)}
+                    <button key={t.key} onClick={() => updateTheme(t.key as typeof theme)}
                       className={`flex flex-col items-center gap-2 rounded-xl border p-3.5 text-xs font-bold transition ${
                         theme === t.key ? "border-blue-300 bg-blue-50 text-blue-700 ring-1 ring-blue-100" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
                       }`}>
@@ -321,8 +463,8 @@ export const StudentSettings = () => {
                 <SectionHeader eyebrow="Integrations" title="Connected accounts" icon="link" iconColor="#f43f5e" />
                 <div className="mt-4 space-y-2.5">
                   {[
-                    { label: "GitHub", icon: "github" as IconName, connected: true },
-                    { label: "LinkedIn", icon: "linkedin" as IconName, connected: false },
+                    { label: "GitHub", icon: "github" as IconName, connected: connectedAccounts.github },
+                    { label: "LinkedIn", icon: "linkedin" as IconName, connected: connectedAccounts.linkedIn },
                   ].map((acc) => (
                     <div key={acc.label} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-2.5">
                       <div className="flex items-center gap-2.5">

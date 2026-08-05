@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
+import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
+import { getApiErrorMessage, studentApi, unwrapData } from "../../services/studentApi";
 
 // ─── Icon System (matches Admin Dashboard / Student Dashboard) ───────────────
 type IconName =
@@ -84,10 +86,11 @@ const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?
   { label: "My Profile", icon: "user-check", route: "/student/profile" },
   { label: "Project List", icon: "briefcase", route: "/student/projects" },
   { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects", badge: 2 },
+  { label: "Hiring Process", icon: "building", route: "/student/hiring" },
   { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
   { label: "Certificates", icon: "award", route: "/student/certificates" },
   { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume" , route: "/student/ai-resume" },
+  { label: "AI Resume Builder", icon: "resume", route: "/student/ai-resume" },
 ];
 
 // ─── Certificate Data ───────────────────────────────────────────────────────
@@ -97,6 +100,8 @@ interface EarnedCertificate {
   issuer: string;
   issuedOn: string;
   credentialId: string;
+  downloadUrl?: string;
+  shareUrl?: string;
   color: string;
   icon: IconName;
 }
@@ -109,23 +114,6 @@ interface InProgressCertificate {
   icon: IconName;
 }
 
-const earnedCertificates: EarnedCertificate[] = [
-  {
-    id: "c1", title: "Aptitude Training — Placement Prep", issuer: "Campus2Corporate University",
-    issuedOn: "02 May 2026", credentialId: "C2C-APT-20260502-YS1", color: "#f59e0b", icon: "target",
-  },
-  {
-    id: "c2", title: "Foundations of React Development", issuer: "Campus2Corporate University",
-    issuedOn: "18 Mar 2026", credentialId: "C2C-REACT-20260318-YS1", color: "#2563eb", icon: "cpu",
-  },
-];
-
-const inProgressCertificates: InProgressCertificate[] = [
-  { id: "ip1", title: "React Development", progress: 70, color: "#2563eb", icon: "cpu" },
-  { id: "ip2", title: "Python Programming", progress: 45, color: "#10b981", icon: "book" },
-  { id: "ip3", title: "Data Structures & Algorithms", progress: 60, color: "#8b5cf6", icon: "database" },
-];
-
 type FilterTab = "all" | "earned" | "in-progress";
 const filterTabs: { key: FilterTab; label: string }[] = [
   { key: "all", label: "All" },
@@ -133,14 +121,75 @@ const filterTabs: { key: FilterTab; label: string }[] = [
   { key: "in-progress", label: "In progress" },
 ];
 
+const toIconName = (icon?: string): IconName => {
+  const allowed = new Set<IconName>([
+    "activity", "alert", "arrow-up", "arrow-down", "bell", "briefcase",
+    "building", "calendar", "chart", "check", "clock", "dashboard",
+    "database", "file", "graduation", "lock", "plug", "search",
+    "settings", "shield", "sparkles", "target", "user-check", "users",
+    "ai-brain", "placement", "resume", "interview", "risk", "campus",
+    "automation", "monitor", "send", "refresh", "close", "chevron-right",
+    "wand", "zap", "trending-up", "cpu", "mail", "phone", "book",
+    "award", "upload", "eye", "message", "chevron-down", "lightbulb",
+    "clipboard", "logout", "download", "share", "lock-open",
+  ]);
+
+  return allowed.has(icon as IconName) ? (icon as IconName) : "award";
+};
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════════════════
 export const StudentCertificates = () => {
   const { currentUser } = useAuth();
-  const fullName = currentUser?.fullName || "Yuvraj Singh";
+  const fullName = currentUser?.fullName || currentUser?.name || "Student";
 
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [earnedCertificates, setEarnedCertificates] = useState<EarnedCertificate[]>([]);
+  const [inProgressCertificates, setInProgressCertificates] = useState<InProgressCertificate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadCertificates = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await studentApi.getCertificates();
+        const payload = unwrapData<{
+          earned: Array<Omit<EarnedCertificate, "icon"> & { icon?: string }>;
+          inProgress: Array<Omit<InProgressCertificate, "icon"> & { icon?: string }>;
+        }>(response);
+
+        if (!mounted) return;
+        setEarnedCertificates((payload.earned || []).map((certificate) => ({
+          ...certificate,
+          icon: toIconName(certificate.icon),
+        })));
+        setInProgressCertificates((payload.inProgress || []).map((certificate) => ({
+          ...certificate,
+          progress: Math.max(0, Math.min(100, Number(certificate.progress) || 0)),
+          icon: toIconName(certificate.icon),
+        })));
+      } catch (loadError) {
+        if (mounted) {
+          setError(getApiErrorMessage(loadError));
+          setEarnedCertificates([]);
+          setInProgressCertificates([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadCertificates();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const showEarned = activeTab === "all" || activeTab === "earned";
   const showInProgress = activeTab === "all" || activeTab === "in-progress";
@@ -149,11 +198,26 @@ export const StudentCertificates = () => {
     <StudentLayout
       sidebarItems={sidebarItems}
       sidebarHighlight="Certificates"
-      userSummary={{ fullName, role: "B.Tech CSE · 4th Year", status: "Placement track active" }}
-      stats={{ label: "Certificate count", value: "5", subtitle: "Verified", accent: "Verified" }}
+      userSummary={{ fullName, role: "Student", status: "Placement track active" }}
+      stats={{
+        label: "Certificate count",
+        value: String(earnedCertificates.length + inProgressCertificates.length),
+        subtitle: "Verified",
+        accent: "Verified",
+      }}
       showAiButton={false}
     >
       <>
+            {error && (
+              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                {error}
+              </div>
+            )}
+            {loading && (
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
+                Loading certificates...
+              </div>
+            )}
 
             {/* Page header banner */}
             <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -288,3 +352,5 @@ export const StudentCertificates = () => {
 };
 
 export default StudentCertificates;
+
+

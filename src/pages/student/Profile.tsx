@@ -6,7 +6,7 @@ import {
   getApiErrorMessage,
   studentApi,
   unwrapData,
-  type StudentProfile,
+  type StudentProfile as StudentProfileType,
 } from "../../services/studentApi";
 
 // ─── Icon System (matches Student Dashboard / Admin Dashboard) ───────────────
@@ -126,16 +126,17 @@ const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#2563eb" }:
   </div>
 );
 
-const sidebarItems: Array<{ label: string; icon: StudentSidebarIconName; route: string; badge?: number }> = [
+const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?: number }> = [
   { label: "Dashboard", icon: "dashboard", route: "/student-dashboard" },
   { label: "My Profile", icon: "user-check", route: "/student/profile" },
   { label: "Project List", icon: "briefcase", route: "/student/projects" },
   { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects", badge: 2 },
+  { label: "Hiring Process", icon: "building", route: "/student/hiring" },
   { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
   { label: "Certificates", icon: "award", route: "/student/certificates" },
   { label: "Settings", icon: "settings", route: "/student/settings" },
+  { label: "AI Resume Builder", icon: "resume", route: "/student/ai-resume" },
 ];
-
 // ─── Field types ──────────────────────────────────────────────────────────────
 interface EditableField {
   key: string; label: string; icon: IconName; value: string; type?: string; disabled?: boolean;
@@ -172,7 +173,7 @@ export const StudentProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [profile, setProfile] = useState<StudentProfile | null>(currentUser);
+  const [profile, setProfile] = useState<StudentProfileType | null>(currentUser);
 
   const [personal, setPersonal] = useState<EditableField[]>([
     { key: "fullName", label: "Full Name", icon: "user-check", value: fullName },
@@ -206,7 +207,7 @@ export const StudentProfile = () => {
 
       try {
         const response = await studentApi.getProfile();
-        const student = unwrapData<{ student: StudentProfile }>(response).student;
+        const student = unwrapData<{ student: StudentProfileType }>(response).student;
         if (!mounted) return;
 
         setProfile(student);
@@ -276,7 +277,7 @@ export const StudentProfile = () => {
       };
 
       const response = await studentApi.updateProfile(payload);
-      const student = unwrapData<{ student: StudentProfile }>(response).student;
+      const student = unwrapData<{ student: StudentProfileType }>(response).student;
       setProfile(student);
       updateCurrentUser({
         ...(currentUser || student),
