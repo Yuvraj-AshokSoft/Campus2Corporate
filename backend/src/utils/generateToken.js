@@ -1,7 +1,10 @@
 import jwt from "jsonwebtoken";
 
+export const getJwtSecret = () =>
+  process.env.JWT_SECRET || "fallback_jwt_secret_key_123456";
+
 const generateToken = (userOrId, role = "student") => {
-  const secret = process.env.JWT_SECRET || "fallback_jwt_secret_key_123456";
+  const secret = getJwtSecret();
 
   let id;
   let userRole = role;

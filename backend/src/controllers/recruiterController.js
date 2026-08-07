@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Recruiter from "../models/recruiter.js";
 import Company from "../models/company.js";
 import Project from "../models/project.js";
@@ -19,7 +20,9 @@ export const registerRecruiter = async (req, res) => {
       return errorResponse(res, "Please provide all required fields: name, email, phone, password, designation", 400);
     }
 
-    const existingRecruiter = await Recruiter.findOne({ email });
+    const cleanEmail = email.toLowerCase().trim();
+
+    const existingRecruiter = await Recruiter.findOne({ email: cleanEmail });
     if (existingRecruiter) {
       return errorResponse(res, "An account with this email already exists", 400);
     }
@@ -32,7 +35,8 @@ export const registerRecruiter = async (req, res) => {
         return errorResponse(res, "Please specify a company name or select an existing company", 400);
       }
 
-      let company = await Company.findOne({ name: { $regex: new RegExp(`^${companyName}$`, "i") } });
+      const escapedCompanyName = companyName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      let company = await Company.findOne({ name: { $regex: new RegExp(`^${escapedCompanyName}$`, "i") } });
       if (!company) {
         company = await Company.create({
           name: companyName,
@@ -48,7 +52,7 @@ export const registerRecruiter = async (req, res) => {
 
     const recruiter = await Recruiter.create({
       name,
-      email,
+      email: cleanEmail,
       phone,
       password,
       designation,
@@ -89,7 +93,9 @@ export const loginRecruiter = async (req, res) => {
       return errorResponse(res, "Please provide email and password", 400);
     }
 
-    const recruiter = await Recruiter.findOne({ email }).select("+password").populate("company");
+    const cleanEmail = email.toLowerCase().trim();
+
+    const recruiter = await Recruiter.findOne({ email: cleanEmail }).select("+password").populate("company");
     if (!recruiter) {
       return errorResponse(res, "Invalid email or password", 401);
     }
@@ -146,19 +152,20 @@ export const updateRecruiterProfile = async (req, res) => {
     if (designation) updates.designation = designation;
     if (linkedin !== undefined) updates.linkedin = linkedin;
 
+    if (companyDetails && req.recruiter.company) {
+      const companyId = req.recruiter.company._id || req.recruiter.company;
+      await Company.findByIdAndUpdate(
+        companyId,
+        { $set: companyDetails },
+        { returnDocument: "after", runValidators: true }
+      );
+    }
+
     const updatedRecruiter = await Recruiter.findByIdAndUpdate(
       req.user.id,
       { $set: updates },
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true }
     ).populate("company");
-
-    if (companyDetails && req.recruiter.company) {
-      await Company.findByIdAndUpdate(
-        req.recruiter.company._id,
-        { $set: companyDetails },
-        { new: true }
-      );
-    }
 
     return successResponse(
       res,
@@ -315,7 +322,12 @@ export const getRecruiterJobs = async (req, res) => {
 // Get Single Job By ID
 export const getJobById = async (req, res) => {
   try {
-    const project = await Project.findOne({ _id: req.params.id, recruiter: req.user.id })
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return errorResponse(res, "Invalid job ID format", 400);
+    }
+
+    const project = await Project.findOne({ _id: id, recruiter: req.user.id })
       .populate("company", "name location industry website")
       .populate("recruiter", "name email designation");
 
@@ -344,16 +356,28 @@ export const getJobById = async (req, res) => {
 // Update Job Post
 export const updateJob = async (req, res) => {
   try {
-    const project = await Project.findOne({ _id: req.params.id, recruiter: req.user.id });
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return errorResponse(res, "Invalid job ID format", 400);
+    }
+
+    const project = await Project.findOne({ _id: id, recruiter: req.user.id });
 
     if (!project) {
       return errorResponse(res, "Job post not found or access unauthorized", 404);
     }
 
+    const updateData = { ...req.body };
+    if (updateData.requiredSkills) {
+      updateData.requiredSkills = Array.isArray(updateData.requiredSkills)
+        ? updateData.requiredSkills
+        : updateData.requiredSkills.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+
     const updatedProject = await Project.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
-      { new: true, runValidators: true }
+      id,
+      { $set: updateData },
+      { returnDocument: "after", runValidators: true }
     )
       .populate("company", "name location")
       .populate("recruiter", "name email");
@@ -372,7 +396,12 @@ export const updateJob = async (req, res) => {
 // Delete / Close Job Post
 export const deleteJob = async (req, res) => {
   try {
-    const project = await Project.findOneAndDelete({ _id: req.params.id, recruiter: req.user.id });
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return errorResponse(res, "Invalid job ID format", 400);
+    }
+
+    const project = await Project.findOneAndDelete({ _id: id, recruiter: req.user.id });
 
     if (!project) {
       return errorResponse(res, "Job post not found or access unauthorized", 404);
@@ -400,7 +429,12 @@ export const getRecruiterApplications = async (req, res) => {
 
     const query = { recruiter: req.user.id };
     if (status) query.status = status;
-    if (projectId) query.project = projectId;
+    if (projectId) {
+      if (!mongoose.Types.ObjectId.isValid(projectId)) {
+        return errorResponse(res, "Invalid project ID format", 400);
+      }
+      query.project = projectId;
+    }
 
     const applications = await Application.find(query)
       .sort({ createdAt: -1 })
@@ -422,6 +456,11 @@ export const getRecruiterApplications = async (req, res) => {
 // Update Application Status (Under Review, Shortlisted, Interview, Selected, Rejected)
 export const updateApplicationStatus = async (req, res) => {
   try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return errorResponse(res, "Invalid application ID format", 400);
+    }
+
     const { status } = req.body;
     const allowedStatuses = ["Applied", "Under Review", "Shortlisted", "Interview", "Selected", "Rejected"];
 
@@ -434,7 +473,7 @@ export const updateApplicationStatus = async (req, res) => {
     }
 
     const application = await Application.findOne({
-      _id: req.params.id,
+      _id: id,
       recruiter: req.user.id,
     });
 

@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import Admin from "../models/admin.js";
+import { getJwtSecret } from "../utils/generateToken.js";
 
 const adminAuth = async (req, res, next) => {
   try {
@@ -22,7 +23,14 @@ const adminAuth = async (req, res, next) => {
     }
 
     // Verify Token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
+
+    if (decoded.role && decoded.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admin privileges required.",
+      });
+    }
 
     // Find Admin
     const admin = await Admin.findById(decoded.id).select("-password");
