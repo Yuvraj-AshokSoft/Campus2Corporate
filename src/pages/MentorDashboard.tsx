@@ -891,10 +891,10 @@ export const MentorDashboard: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-purple-400 font-bold text-xs">
                       <Sparkles className="w-4.5 h-4.5" />
-                      <span>{currentUser ? `${currentUser.fullName.split(' ')[0]}'s Workspace` : "Dr. Sarah's Workspace"}</span>
+                      <span>{currentUser?.fullName ? `${currentUser.fullName.split(' ')[0]}'s Workspace` : "Dr. Sarah's Workspace"}</span>
                     </div>
                     <h1 className={`text-lg md:text-xl font-extrabold tracking-tight`}>
-                      {currentUser ? `Welcome Back, ${currentUser.fullName.split(' ')[0]}! Guide students, monitor their growth, and help shape the next generation of industry-ready professionals.` : "Welcome Back, Dr. Sarah! Guide students, monitor their growth, and help shape the next generation of industry-ready professionals."}
+                      {currentUser?.fullName ? `Welcome Back, ${currentUser.fullName.split(' ')[0]}! Guide students, monitor their growth, and help shape the next generation of industry-ready professionals.` : "Welcome Back, Dr. Sarah! Guide students, monitor their growth, and help shape the next generation of industry-ready professionals."}
                     </h1>
                     <p className="text-xs text-slate-400 font-semibold">
                       {"Access live evaluations, project code check-ins, and student metrics from the Stripe candidate queue."}

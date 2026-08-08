@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
-import { getApiErrorMessage, studentApi, unwrapData } from "../../services/studentApi";
 
 // ─── Icon System (matches Admin Dashboard / Student Dashboard) ───────────────
 type IconName =
@@ -234,7 +233,7 @@ type SettingsTab = "notifications" | "preferences" | "privacy";
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════════════════
 export const StudentNotifications = () => {
-  const { currentUser } = useAuth();
+  useAuth();
   const fullName =  "Yuvraj Singh";
   const email = "yuvraj@example.com";
 

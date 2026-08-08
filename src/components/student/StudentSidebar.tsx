@@ -12,7 +12,7 @@ export type IconName =
   | "award" | "upload" | "eye" | "message" | "chevron-down" | "lightbulb"
   | "clipboard" | "logout" | "filter" | "grid" | "list" | "star" | "arrow-right"
   | "x-circle" | "hourglass" | "map-pin" | "trash" | "check-circle" | "info"
-  | "smartphone" | "eye-off" | "key" | "share2";
+  | "smartphone" | "eye-off" | "key" | "share2" | "link" | "download" | "share" | "user" | "copy" | "lock-open" | "layout" | "plus";
 
 export type StudentSidebarIconName = IconName;
 
@@ -84,6 +84,14 @@ const Icon = ({ name, className = "h-4 w-4" }: { name: IconName; className?: str
     "eye-off": <><path d="M3 3l18 18" /><path d="M10.6 5.1A9.9 9.9 0 0 1 12 5c6.5 0 10 7 10 7a17.9 17.9 0 0 1-3.2 4.1" /><path d="M6.6 6.6C4 8.3 2 12 2 12s3.5 7 10 7c1.4 0 2.7-.3 3.9-.8" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" /></>,
     key: <><circle cx="8" cy="15" r="4" /><path d="m10.8 12.2 7.7-7.7" /><path d="m16.5 5.5 2 2" /><path d="m14.5 7.5 2 2" /></>,
     share2: <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 10.6 6.8-3.8" /><path d="m8.6 13.4 6.8 3.8" /></>,
+    link: <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></>,
+    share: <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 10.6 6.8-3.8" /><path d="m8.6 13.4 6.8 3.8" /></>,
+    user: <><circle cx="12" cy="7" r="4" /><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" /></>,
+    copy: <><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></>,
+    "lock-open": <><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 7.4-2" /></>,
+    download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></>,
+    layout: <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M9 21V9" /></>,
+    plus: <><path d="M12 5v14" /><path d="M5 12h14" /></>,
   };
 
   return (
@@ -94,7 +102,8 @@ const Icon = ({ name, className = "h-4 w-4" }: { name: IconName; className?: str
 };
 
 interface StudentSidebarProps {
-  items?: Array<{ label: string; icon: IconName; route: string; badge?: string | number; }>;
+  items?: Array<{ label: string; icon: IconName; route: string; active?: boolean; badge?: string | number; }>;
+  sidebarItems?: Array<{ label: string; icon: IconName; route: string; active?: boolean; badge?: string | number; }>;
   highlight?: string;
   userSummary?: { fullName?: string; role?: string; status?: string };
   stats?: { label: string; value: string; subtitle?: string; accent?: string };

@@ -6,7 +6,7 @@ import {
   getApiErrorMessage,
   studentApi,
   unwrapData,
-  type StudentProfile,
+  type StudentProfile as StudentProfileData,
 } from "../../services/studentApi";
 
 // ─── Icon System (matches Student Dashboard / Admin Dashboard) ───────────────
@@ -154,11 +154,10 @@ const InputRow = ({ field, editing, onChange }: {
       value={field.value}
       disabled={!editing || field.disabled}
       onChange={(e) => onChange(field.key, e.target.value)}
-      className={`w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition ${
-        editing && !field.disabled
+      className={`w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition ${editing && !field.disabled
           ? "border-slate-200 bg-white text-slate-800 focus:border-blue-300 focus:ring-2 focus:ring-blue-50"
           : "border-slate-100 bg-slate-50 text-slate-500"
-      }`}
+        }`}
     />
   </div>
 );
@@ -172,7 +171,7 @@ export const StudentProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [profile, setProfile] = useState<StudentProfile | null>(currentUser);
+  const [profile, setProfile] = useState<StudentProfileData | null>(currentUser);
 
   const [personal, setPersonal] = useState<EditableField[]>([
     { key: "fullName", label: "Full Name", icon: "user-check", value: fullName },
@@ -206,7 +205,7 @@ export const StudentProfile = () => {
 
       try {
         const response = await studentApi.getProfile();
-        const student = unwrapData<{ student: StudentProfile }>(response).student;
+        const student = unwrapData<{ student: StudentProfileData }>(response).student;
         if (!mounted) return;
 
         setProfile(student);
@@ -276,7 +275,7 @@ export const StudentProfile = () => {
       };
 
       const response = await studentApi.updateProfile(payload);
-      const student = unwrapData<{ student: StudentProfile }>(response).student;
+      const student = unwrapData<{ student: StudentProfileData }>(response).student;
       setProfile(student);
       updateCurrentUser({
         ...(currentUser || student),
@@ -313,160 +312,158 @@ export const StudentProfile = () => {
       showAiButton={false}
     >
       <>
-            {error && (
-              <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-                {error}
-              </div>
-            )}
-            {loading && (
-              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
-                Loading profile...
-              </div>
-            )}
+        {error && (
+          <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+            {error}
+          </div>
+        )}
+        {loading && (
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
+            Loading profile...
+          </div>
+        )}
 
-            {/* Profile hero */}
-            <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="h-28 bg-gradient-to-br from-blue-600 via-blue-700 to-slate-900" />
-              <div className="relative px-6 pb-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                  <div className="flex items-end gap-4">
-                    <div className="relative -mt-10 flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-slate-900 text-2xl font-black text-white shadow-lg">
-                      {initials}
-                      <button className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-md transition hover:bg-blue-500">
-                        <Icon name="camera" className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                    <div className="pb-1">
-                      <div className="flex items-center gap-2">
-                        <h1 className="text-xl font-black text-slate-900">{fullName}</h1>
-                        <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
-                          {profile?.id ? profile.id.slice(-6).toUpperCase() : "STUDENT"}
-                        </span>
-                      </div>
-                      <p className="mt-0.5 text-xs text-slate-500">
-                        {[profile?.branch, profile?.semester ? `Semester ${profile.semester}` : ""].filter(Boolean).join(" · ") || "Academic details not added"}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => (editing ? saveProfile() : setEditing(true))}
-                    disabled={saving}
-                    className={`inline-flex items-center gap-1.5 self-start rounded-xl px-4 py-2 text-xs font-bold shadow-sm transition ${
-                      editing ? "bg-emerald-600 text-white hover:bg-emerald-500" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                    }`}>
-                    <Icon name={editing ? "check" : "edit"} className="h-3.5 w-3.5" />
-                    {saving ? "Saving..." : editing ? "Save changes" : "Edit profile"}
+        {/* Profile hero */}
+        <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="h-28 bg-gradient-to-br from-blue-600 via-blue-700 to-slate-900" />
+          <div className="relative px-6 pb-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex items-end gap-4">
+                <div className="relative -mt-10 flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-slate-900 text-2xl font-black text-white shadow-lg">
+                  {initials}
+                  <button className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-md transition hover:bg-blue-500">
+                    <Icon name="camera" className="h-3.5 w-3.5" />
                   </button>
                 </div>
-
-                <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {[
-                    { label: "Skills", value: String(skills.length), icon: "target" as IconName, color: "#10b981" },
-                    { label: "Education", value: String(profile?.education?.length || 0), icon: "briefcase" as IconName, color: "#2563eb" },
-                    { label: "Certificates", value: String(profile?.resumeUrl || profile?.resume ? 1 : 0), icon: "award" as IconName, color: "#f59e0b" },
-                    { label: "Resume", value: resumeName ? "Yes" : "No", icon: "zap" as IconName, color: "#f43f5e" },
-                  ].map((s) => (
-                    <div key={s.label} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
-                      <div className="flex items-center gap-1.5">
-                        <Icon name={s.icon} className="h-3.5 w-3.5" />
-                        <span style={{ color: s.color }} className="text-sm font-black">{s.value}</span>
-                      </div>
-                      <p className="mt-0.5 text-[10px] font-semibold text-slate-400">{s.label}</p>
-                    </div>
-                  ))}
+                <div className="pb-1">
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-xl font-black text-slate-900">{fullName}</h1>
+                    <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                      {profile?.id ? profile.id.slice(-6).toUpperCase() : "STUDENT"}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    {[profile?.branch, profile?.semester ? `Semester ${profile.semester}` : ""].filter(Boolean).join(" · ") || "Academic details not added"}
+                  </p>
                 </div>
               </div>
+              <button
+                onClick={() => (editing ? saveProfile() : setEditing(true))}
+                disabled={saving}
+                className={`inline-flex items-center gap-1.5 self-start rounded-xl px-4 py-2 text-xs font-bold shadow-sm transition ${editing ? "bg-emerald-600 text-white hover:bg-emerald-500" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}>
+                <Icon name={editing ? "check" : "edit"} className="h-3.5 w-3.5" />
+                {saving ? "Saving..." : editing ? "Save changes" : "Edit profile"}
+              </button>
             </div>
 
-            {/* Personal info + About */}
-            <div className="grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <SectionHeader eyebrow="Account" title="Personal information" icon="user-check" iconColor="#2563eb" />
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {personal.map((f) => (
-                    <InputRow key={f.key} field={f} editing={editing} onChange={(k, v) => updateField(personal, setPersonal, k, v)} />
-                  ))}
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                { label: "Skills", value: String(skills.length), icon: "target" as IconName, color: "#10b981" },
+                { label: "Education", value: String(profile?.education?.length || 0), icon: "briefcase" as IconName, color: "#2563eb" },
+                { label: "Certificates", value: String(profile?.resumeUrl || profile?.resume ? 1 : 0), icon: "award" as IconName, color: "#f59e0b" },
+                { label: "Resume", value: resumeName ? "Yes" : "No", icon: "zap" as IconName, color: "#f43f5e" },
+              ].map((s) => (
+                <div key={s.label} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
+                  <div className="flex items-center gap-1.5">
+                    <Icon name={s.icon} className="h-3.5 w-3.5" />
+                    <span style={{ color: s.color }} className="text-sm font-black">{s.value}</span>
+                  </div>
+                  <p className="mt-0.5 text-[10px] font-semibold text-slate-400">{s.label}</p>
                 </div>
-              </section>
+              ))}
+            </div>
+          </div>
+        </div>
 
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <SectionHeader eyebrow="Summary" title="About me" icon="message" iconColor="#8b5cf6" />
-                <textarea
-                  value={bio}
-                  disabled={!editing}
-                  onChange={(e) => setBio(e.target.value)}
-                  rows={6}
-                  className={`mt-4 w-full resize-none rounded-xl border px-3.5 py-3 text-xs leading-5 outline-none transition ${
-                    editing ? "border-slate-200 bg-white text-slate-700 focus:border-blue-300 focus:ring-2 focus:ring-blue-50" : "border-slate-100 bg-slate-50 text-slate-500"
-                  }`}
+        {/* Personal info + About */}
+        <div className="grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <SectionHeader eyebrow="Account" title="Personal information" icon="user-check" iconColor="#2563eb" />
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {personal.map((f) => (
+                <InputRow key={f.key} field={f} editing={editing} onChange={(k, v) => updateField(personal, setPersonal, k, v)} />
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <SectionHeader eyebrow="Summary" title="About me" icon="message" iconColor="#8b5cf6" />
+            <textarea
+              value={bio}
+              disabled={!editing}
+              onChange={(e) => setBio(e.target.value)}
+              rows={6}
+              className={`mt-4 w-full resize-none rounded-xl border px-3.5 py-3 text-xs leading-5 outline-none transition ${editing ? "border-slate-200 bg-white text-slate-700 focus:border-blue-300 focus:ring-2 focus:ring-blue-50" : "border-slate-100 bg-slate-50 text-slate-500"
+                }`}
+            />
+          </section>
+        </div>
+
+        {/* Skills + Links + Resume */}
+        <div className="grid gap-5 xl:grid-cols-3">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <SectionHeader eyebrow="Expertise" title="Skills" icon="sparkles" iconColor="#10b981" />
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {skills.map((s) => (
+                <span key={s} className="flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 ring-1 ring-blue-100">
+                  {s}
+                  {editing && (
+                    <button onClick={() => removeSkill(s)} className="text-blue-400 transition hover:text-rose-500">
+                      <Icon name="close" className="h-2.5 w-2.5" />
+                    </button>
+                  )}
+                </span>
+              ))}
+            </div>
+            {editing && (
+              <div className="mt-3 flex gap-2">
+                <input
+                  value={newSkill}
+                  onChange={(e) => setNewSkill(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addSkill()}
+                  placeholder="Add a skill…"
+                  className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-50"
                 />
-              </section>
+                <button onClick={addSkill} className="flex-shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-white transition hover:bg-slate-800">
+                  <Icon name="plus" className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <SectionHeader eyebrow="Presence" title="Social & links" icon="link" iconColor="#f59e0b" />
+            <div className="mt-4 space-y-3">
+              {links.map((f) => (
+                <InputRow key={f.key} field={f} editing={editing} onChange={(k, v) => updateField(links, setLinks, k, v)} />
+              ))}
             </div>
+          </section>
 
-            {/* Skills + Links + Resume */}
-            <div className="grid gap-5 xl:grid-cols-3">
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <SectionHeader eyebrow="Expertise" title="Skills" icon="sparkles" iconColor="#10b981" />
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {skills.map((s) => (
-                    <span key={s} className="flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 ring-1 ring-blue-100">
-                      {s}
-                      {editing && (
-                        <button onClick={() => removeSkill(s)} className="text-blue-400 transition hover:text-rose-500">
-                          <Icon name="close" className="h-2.5 w-2.5" />
-                        </button>
-                      )}
-                    </span>
-                  ))}
-                </div>
-                {editing && (
-                  <div className="mt-3 flex gap-2">
-                    <input
-                      value={newSkill}
-                      onChange={(e) => setNewSkill(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && addSkill()}
-                      placeholder="Add a skill…"
-                      className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-50"
-                    />
-                    <button onClick={addSkill} className="flex-shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-white transition hover:bg-slate-800">
-                      <Icon name="plus" className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-              </section>
-
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <SectionHeader eyebrow="Presence" title="Social & links" icon="link" iconColor="#f59e0b" />
-                <div className="mt-4 space-y-3">
-                  {links.map((f) => (
-                    <InputRow key={f.key} field={f} editing={editing} onChange={(k, v) => updateField(links, setLinks, k, v)} />
-                  ))}
-                </div>
-              </section>
-
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <SectionHeader eyebrow="Documents" title="Resume" icon="resume" iconColor="#f43f5e" />
-                <div className="mt-4 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-5 text-center transition hover:border-blue-300 hover:bg-blue-50">
-                  <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200">
-                    <Icon name="file" className="h-4 w-4 text-emerald-500" />
-                  </div>
-                  <p className="truncate text-xs font-bold text-slate-700">{resumeName || "No resume uploaded"}</p>
-                  <p className="mt-1 text-[11px] text-slate-400">{resumeName ? "Saved to profile" : "Add a resume link or file name"}</p>
-                  <div className="mt-3 flex justify-center gap-2">
-                    <button className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-600 transition hover:bg-slate-50">
-                      <Icon name="download" className="h-3 w-3" />
-                      Download
-                    </button>
-                    <label className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-slate-800">
-                      <Icon name="upload" className="h-3 w-3" />
-                      Replace
-                      <input type="file" accept=".pdf,.doc,.docx" className="hidden"
-                        onChange={(e) => e.target.files?.[0] && setResumeName(e.target.files[0].name)} />
-                    </label>
-                  </div>
-                </div>
-              </section>
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <SectionHeader eyebrow="Documents" title="Resume" icon="resume" iconColor="#f43f5e" />
+            <div className="mt-4 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-5 text-center transition hover:border-blue-300 hover:bg-blue-50">
+              <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200">
+                <Icon name="file" className="h-4 w-4 text-emerald-500" />
+              </div>
+              <p className="truncate text-xs font-bold text-slate-700">{resumeName || "No resume uploaded"}</p>
+              <p className="mt-1 text-[11px] text-slate-400">{resumeName ? "Saved to profile" : "Add a resume link or file name"}</p>
+              <div className="mt-3 flex justify-center gap-2">
+                <button className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-600 transition hover:bg-slate-50">
+                  <Icon name="download" className="h-3 w-3" />
+                  Download
+                </button>
+                <label className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-slate-800">
+                  <Icon name="upload" className="h-3 w-3" />
+                  Replace
+                  <input type="file" accept=".pdf,.doc,.docx" className="hidden"
+                    onChange={(e) => e.target.files?.[0] && setResumeName(e.target.files[0].name)} />
+                </label>
+              </div>
             </div>
+          </section>
+        </div>
       </>
     </StudentLayout>
   );

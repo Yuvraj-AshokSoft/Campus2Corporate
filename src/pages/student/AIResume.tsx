@@ -28,7 +28,8 @@ type IconName =
   | "layout"
   | "user"
   | "lightbulb"
-  | "zap";
+  | "zap"
+  | "interview";
 
 const Icon = ({
   name,
