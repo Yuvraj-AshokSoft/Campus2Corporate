@@ -134,6 +134,12 @@ const Icon = ({
         <path d="M14 11h1" />
       </>
     ),
+    notifications: (
+      <>
+        <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7" />
+        <path d="M10 20a2 2 0 0 0 4 0" />
+      </>
+    ),
     trash: (
       <>
         <path d="M4 7h16" />
@@ -263,7 +269,7 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 
 const sidebarItems: Array<{
   label: string;
-  icon: IconName;
+  icon: StudentSidebarIconName;
   route: string;
   badge?: number;
 }> = [
