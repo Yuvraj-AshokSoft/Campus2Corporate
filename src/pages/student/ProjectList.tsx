@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
+import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
 
 type IconName =
   | "dashboard" | "user-check" | "briefcase" | "clipboard" | "building"
   | "bell" | "award" | "settings" | "resume" | "map" | "plus" | "search"
   | "sparkles" | "check" | "alert" | "target" | "chart" | "clock" | "edit"
-  | "trash" | "arrow-right" | "close" | "layers";
+  | "trash" | "arrow-right" | "close" | "layers" | "megaphone";
 
 const Icon = ({ name, className = "h-4 w-4" }: { name: IconName; className?: string }) => {
   const paths: Record<IconName, React.ReactNode> = {
@@ -33,6 +34,7 @@ const Icon = ({ name, className = "h-4 w-4" }: { name: IconName; className?: str
     "arrow-right": <><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></>,
     close: <><path d="M18 6 6 18M6 6l12 12"/></>,
     layers: <><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></>,
+    megaphone: <><path d="m3 11 16-5v12L3 13v-2Z"/><path d="M19 9v6"/><path d="M7 14.5 8.5 20H12l-1.5-5"/></>,
   };
 
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">{paths[name]}</svg>;
@@ -70,7 +72,7 @@ const jobs: Job[] = [
 
 const sidebarItems: Array<{
   label: string;
-  icon: IconName;
+  icon: StudentSidebarIconName;
   route: string;
   badge?: number;
 }> = [
@@ -168,7 +170,6 @@ const StudentProjects = () => {
       sidebarHighlight="My Projects"
       userSummary={{ fullName, role: "Student", status: "Placement track active" }}
       stats={{ label: "My projects", value: String(projects.length), subtitle: "Portfolio projects", accent: "AI analysis" }}
-      showAiButton={false}
     >
       <main className="min-w-0 space-y-6">
 
