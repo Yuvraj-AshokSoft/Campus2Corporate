@@ -812,12 +812,42 @@ export const getStudentDashboard = async (req, res) => {
 
 export const getAvailableProjects = async (req, res) => {
   try {
-    const projects = await Project.find({ status: "Open" })
+    const {
+      page = 1,
+      limit = 50,
+      search = "",
+      category = "All",
+      difficulty = "All",
+      sort = "Newest",
+    } = req.query;
+
+    const query = { status: "Open" };
+    const projectSearch = String(search || "").trim();
+
+    if (projectSearch) {
+      query.$or = [
+        { title: { $regex: projectSearch, $options: "i" } },
+        { description: { $regex: projectSearch, $options: "i" } },
+        { requiredSkills: { $regex: projectSearch, $options: "i" } },
+      ];
+    }
+
+    const skip = Math.max(0, (Number(page) || 1) - 1) * (Number(limit) || 50);
+    const pageSize = Math.max(1, Math.min(Number(limit) || 50, 100));
+
+    const sortBy =
+      sort === "Deadline (soonest)"
+        ? { applicationDeadline: 1 }
+        : sort === "Most applicants"
+          ? { createdAt: -1 }
+          : { createdAt: -1 };
+
+    const allProjects = await Project.find(query)
       .populate("company")
-      .sort({ createdAt: -1 });
+      .sort(sortBy);
 
     const counts = await Application.aggregate([
-      { $match: { project: { $in: projects.map((project) => project._id) } } },
+      { $match: { project: { $in: allProjects.map((project) => project._id) } } },
       { $group: { _id: "$project", count: { $sum: 1 } } },
     ]);
 
@@ -830,11 +860,36 @@ export const getAvailableProjects = async (req, res) => {
       .map((application) => application.project?.toString())
       .filter(Boolean);
 
+    let projects = allProjects.map((project) =>
+      projectView(project, countByProject.get(project._id.toString()) || 0)
+    );
+
+    if (category && category !== "All") {
+      projects = projects.filter((project) => project.category === category);
+    }
+
+    if (difficulty && difficulty !== "All") {
+      projects = projects.filter((project) => project.difficulty === difficulty);
+    }
+
+    if (sort === "Most applicants") {
+      projects = projects.sort((a, b) => b.applicants - a.applicants);
+    } else if (sort === "Fewest slots left") {
+      projects = projects.sort((a, b) => a.slots - b.slots);
+    }
+
+    const total = projects.length;
+    const pagedProjects = projects.slice(skip, skip + pageSize);
+
     return successResponse(res, "Projects fetched successfully", {
-      projects: projects.map((project) =>
-        projectView(project, countByProject.get(project._id.toString()) || 0)
-      ),
+      projects: pagedProjects,
       appliedProjectIds,
+      pagination: {
+        page: Number(page) || 1,
+        limit: pageSize,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      },
     });
   } catch (error) {
     return errorResponse(res, error.message || "Failed to fetch projects", 500);
@@ -904,6 +959,52 @@ export const getStudentApplications = async (req, res) => {
     });
   } catch (error) {
     return errorResponse(res, error.message || "Failed to fetch applications", 500);
+  }
+};
+
+export const getStudentApplicationDetails = async (req, res) => {
+  try {
+    const application = await Application.findOne({
+      _id: req.params.applicationId,
+      student: req.student._id,
+    }).populate("project company");
+
+    if (!application) {
+      return errorResponse(res, "Application not found", 404);
+    }
+
+    return successResponse(res, "Application details fetched successfully", {
+      application: applicationView(application),
+    });
+  } catch (error) {
+    return errorResponse(res, error.message || "Failed to fetch application details", 500);
+  }
+};
+
+export const withdrawStudentApplication = async (req, res) => {
+  try {
+    const application = await Application.findOneAndDelete({
+      _id: req.params.applicationId,
+      student: req.student._id,
+    }).populate("project company");
+
+    if (!application) {
+      return errorResponse(res, "Application not found", 404);
+    }
+
+    req.student.notifications.push({
+      type: "system",
+      title: "Application withdrawn",
+      desc: `Your application for ${application.project?.title || "a project"} was withdrawn.`,
+      read: false,
+    });
+    await req.student.save();
+
+    return successResponse(res, "Application withdrawn successfully", {
+      application: applicationView(application),
+    });
+  } catch (error) {
+    return errorResponse(res, error.message || "Failed to withdraw application", 500);
   }
 };
 
@@ -994,6 +1095,85 @@ export const getStudentCertificates = (req, res) => {
     earned,
     inProgress,
   });
+};
+
+export const createStudentCertificate = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return null;
+
+    const title = String(req.body.title || "").trim();
+    if (!title) {
+      return errorResponse(res, "Certificate title is required", 400);
+    }
+
+    student.certificates.push({
+      title,
+      issuer: req.body.issuer,
+      issuedOn: req.body.issuedOn ? new Date(req.body.issuedOn) : new Date(),
+      credentialId: req.body.credentialId,
+      downloadUrl: req.body.downloadUrl,
+      shareUrl: req.body.shareUrl,
+      color: req.body.color,
+      icon: req.body.icon,
+    });
+
+    await student.save();
+    return getStudentCertificates({ ...req, student }, res);
+  } catch (error) {
+    return errorResponse(res, error.message || "Failed to upload certificate", 500);
+  }
+};
+
+export const updateStudentCertificate = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return null;
+
+    const certificate = student.certificates.id(req.params.certificateId);
+    if (!certificate) {
+      return errorResponse(res, "Certificate not found", 404);
+    }
+
+    for (const field of [
+      "title",
+      "issuer",
+      "credentialId",
+      "downloadUrl",
+      "shareUrl",
+      "color",
+      "icon",
+    ]) {
+      if (req.body[field] !== undefined) certificate[field] = req.body[field];
+    }
+
+    if (req.body.issuedOn !== undefined) {
+      certificate.issuedOn = req.body.issuedOn ? new Date(req.body.issuedOn) : undefined;
+    }
+
+    await student.save();
+    return getStudentCertificates({ ...req, student }, res);
+  } catch (error) {
+    return errorResponse(res, error.message || "Failed to update certificate", 500);
+  }
+};
+
+export const deleteStudentCertificate = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return null;
+
+    const certificate = student.certificates.id(req.params.certificateId);
+    if (!certificate) {
+      return errorResponse(res, "Certificate not found", 404);
+    }
+
+    student.certificates.pull(certificate._id);
+    await student.save();
+    return getStudentCertificates({ ...req, student }, res);
+  } catch (error) {
+    return errorResponse(res, error.message || "Failed to delete certificate", 500);
+  }
 };
 
 export const getStudentSettings = (req, res) =>

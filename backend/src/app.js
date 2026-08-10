@@ -5,6 +5,7 @@ import errorHandler from "./middleware/errorHandler.js";
 import notFound from "./middleware/notFoundMiddleware.js";
 
 import adminRoutes from "./routes/adminRoutes.js";
+import aiRoutes from "./routes/aiRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
 import studentAuthRoutes from "./routes/studentAuthRoutes.js";
 
@@ -27,6 +28,7 @@ app.use("/api/admin", adminRoutes);
 // Student Routes
 app.use("/api/auth", studentAuthRoutes);
 app.use("/api/student", studentRoutes);
+app.use("/api/ai", aiRoutes);
 
 // 404 Handler
 app.use(notFound);

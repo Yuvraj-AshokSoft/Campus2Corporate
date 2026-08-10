@@ -3,11 +3,14 @@ import studentAuthMiddleware from "../middleware/studentAuthMiddleware.js";
 
 import {
   applyToProject,
+  createStudentCertificate,
   deleteStudentNotification,
+  deleteStudentCertificate,
   getAvailableProjects,
   getHiringDrives,
   getResumeBuilder,
   getStudentApplications,
+  getStudentApplicationDetails,
   getStudentCertificates,
   getStudentDashboard,
   getStudentNotifications,
@@ -15,8 +18,10 @@ import {
   getStudentSettings,
   markNotificationRead,
   saveResumeBuilder,
+  updateStudentCertificate,
   updateStudentSettings,
   updateStudentProfile,
+  withdrawStudentApplication,
 
   getStudentSkills,
   addStudentSkill,
@@ -70,6 +75,8 @@ router.delete("/skills/:skillId", studentAuthMiddleware, deleteStudentSkill);
 router.get("/projects", studentAuthMiddleware, getAvailableProjects);
 router.post("/projects/:projectId/apply", studentAuthMiddleware, applyToProject);
 router.get("/applications", studentAuthMiddleware, getStudentApplications);
+router.get("/applications/:applicationId", studentAuthMiddleware, getStudentApplicationDetails);
+router.delete("/applications/:applicationId", studentAuthMiddleware, withdrawStudentApplication);
 
 // ==========================
 // Notifications
@@ -90,6 +97,10 @@ router.delete(
 // Certificates, Settings, Resume & Hiring
 // ==========================
 router.get("/certificates", studentAuthMiddleware, getStudentCertificates);
+router.post("/certificates", studentAuthMiddleware, createStudentCertificate);
+router.put("/certificates/:certificateId", studentAuthMiddleware, updateStudentCertificate);
+router.patch("/certificates/:certificateId", studentAuthMiddleware, updateStudentCertificate);
+router.delete("/certificates/:certificateId", studentAuthMiddleware, deleteStudentCertificate);
 router.get("/settings", studentAuthMiddleware, getStudentSettings);
 router.put("/settings", studentAuthMiddleware, updateStudentSettings);
 router.patch("/settings", studentAuthMiddleware, updateStudentSettings);
