@@ -2,12 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 
-// ─── Icon System ──────────────────────────────────────────────────────────────
-
 type IconName =
   | "search"
   | "bell"
-  | "sparkles"
   | "chevron-down"
   | "user"
   | "settings"
@@ -35,19 +32,7 @@ const Icon = ({
       </>
     ),
 
-    sparkles: (
-      <>
-        <path d="M12 3 10.5 8.5 5 10l5.5 1.5L12 17l1.5-5.5L19 10l-5.5-1.5L12 3Z" />
-        <path d="M5 16v4" />
-        <path d="M3 18h4" />
-        <path d="M19 3v3" />
-        <path d="M17.5 4.5h3" />
-      </>
-    ),
-
-    "chevron-down": (
-      <path d="m6 9 6 6 6-6" />
-    ),
+    "chevron-down": <path d="m6 9 6 6 6-6" />,
 
     user: (
       <>
@@ -88,30 +73,16 @@ const Icon = ({
   );
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 const getInitials = (name: string) =>
   name
     .trim()
     .split(/\s+/)
-    .map((n) => n[0])
+    .map((part) => part[0])
     .join("")
     .toUpperCase()
     .slice(0, 2) || "ST";
 
-// ─── Props ────────────────────────────────────────────────────────────────────
-
-interface StudentNavbarProps {
-  showAiButton?: boolean;
-  onAiButtonClick?: () => void;
-}
-
-// ─── Student Navbar ───────────────────────────────────────────────────────────
-
-const StudentNavbar = ({
-  showAiButton = true,
-  onAiButtonClick,
-}: StudentNavbarProps) => {
+const StudentNavbar = () => {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -131,15 +102,7 @@ const StudentNavbar = ({
 
   const email = currentUser?.email || "";
 
-  const shouldShowAi =
-    showAiButton &&
-    location.pathname === "/student-dashboard";
-
   const unreadCount = 0;
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Close profile dropdown when clicking outside
-  // ─────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -158,197 +121,69 @@ const StudentNavbar = ({
     };
   }, []);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Close dropdown on route change
-  // ─────────────────────────────────────────────────────────────────────────
-
   useEffect(() => {
     setProfileOpen(false);
   }, [location.pathname]);
 
+  const handleLogout = async () => {
+    try {
+      await logout?.();
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
   return (
-    <header
-      className="
-        sticky
-        top-0
-        z-40
-        h-[48px]
-        w-full
-        border-b
-        border-[#CBC3DA]
-        bg-[#FCF9F8]
-      "
-    >
-      <div
-        className="
-          relative
-          flex
-          h-full
-          w-full
-          items-center
-          justify-end
-          px-[18px]
-        "
-      >
-        {/* ═════════════════════════════════════════════════════════════
-            SEARCH BAR
-        ═════════════════════════════════════════════════════════════ */}
+    <header className="sticky top-0 z-40 w-full border-b border-[#E5DDE9] bg-[#FCF9F8]">
+      <div className="flex min-h-[68px] w-full items-center gap-4 px-4 sm:px-6 lg:px-7">
 
-        <div
-          className="
-            absolute
-            left-1/2
-            top-1/2
-            flex
-            h-[29px]
-            w-[min(445px,calc(100%-150px))]
-            -translate-x-1/2
-            -translate-y-1/2
-            items-center
-            rounded-full
-            border
-            border-[#CBC3DA]
-            bg-[#FCF9F8]
-            px-[11px]
-            shadow-[0_1px_2px_rgba(73,68,87,0.03)]
-            transition-all
-            duration-150
-            hover:border-[#AFA5C2]
-            focus-within:border-[#5400D6]
-            focus-within:shadow-[0_0_0_3px_rgba(84,0,214,0.07)]
-          "
-        >
-          {/* Search */}
+        <div className="hidden min-w-[170px] flex-shrink-0 md:block">
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#918899]">
+            Student Workspace
+          </p>
 
+          <p className="mt-1 truncate text-[13px] font-bold tracking-[-0.2px] text-[#292631]">
+            Welcome back, {firstName}
+          </p>
+        </div>
+
+        <div className="mx-auto flex h-[40px] min-w-0 w-full max-w-[560px] items-center rounded-xl border border-[#E1D9E5] bg-white px-3 shadow-[0_2px_8px_rgba(73,68,87,0.035)] transition-all duration-200 hover:border-[#CFC4D7] focus-within:border-[#5400D6] focus-within:shadow-[0_0_0_3px_rgba(84,0,214,0.07)]">
           <Icon
             name="search"
-            className="
-              h-[13px]
-              w-[13px]
-              flex-shrink-0
-              text-[#494457]
-            "
+            className="h-[16px] w-[16px] flex-shrink-0 text-[#827989]"
           />
 
           <input
             type="search"
             aria-label="Search"
-            placeholder="Search for roadmaps, projects, or jobs..."
-            className="
-              ml-[7px]
-              h-full
-              min-w-0
-              flex-1
-              border-none
-              bg-transparent
-              p-0
-              text-[9px]
-              font-normal
-              text-[#494457]
-              outline-none
-              placeholder:text-[#8B8792]
-            "
+            placeholder="Search roadmaps, projects, jobs..."
+            className="ml-2 min-w-0 flex-1 border-none bg-transparent p-0 text-[11px] text-[#494457] outline-none placeholder:text-[#A19AA7]"
           />
 
-          {/* AI */}
-
-          {shouldShowAi && (
-            <button
-              type="button"
-              onClick={onAiButtonClick}
-              aria-label="Ask AI"
-              title="Ask AI"
-              className="
-                ml-[4px]
-                flex
-                h-[21px]
-                w-[21px]
-                flex-shrink-0
-                items-center
-                justify-center
-                rounded-full
-                text-[#5400D6]
-                transition-all
-                duration-150
-                hover:bg-[#DFD0FE]
-                hover:scale-105
-                active:scale-95
-              "
-            >
-              <Icon
-                name="sparkles"
-                className="h-[13px] w-[13px]"
-              />
-            </button>
-          )}
+          <span className="hidden rounded-md border border-[#E8E1EC] bg-[#FAF7FB] px-1.5 py-1 text-[8px] font-semibold text-[#9A919F] lg:block">
+            /
+          </span>
         </div>
 
-        {/* ═════════════════════════════════════════════════════════════
-            RIGHT CONTROLS
-        ═════════════════════════════════════════════════════════════ */}
-
-        <div className="flex items-center gap-[7px]">
-          {/* ─────────────────────────────────────────────────────────
-              NOTIFICATIONS
-          ───────────────────────────────────────────────────────── */}
+        <div className="ml-auto flex flex-shrink-0 items-center gap-1.5">
 
           <button
             type="button"
-            onClick={() =>
-              navigate("/student/notifications")
-            }
+            onClick={() => navigate("/student/notifications")}
             aria-label="Notifications"
             title="Notifications"
-            className="
-              relative
-              flex
-              h-[30px]
-              w-[30px]
-              items-center
-              justify-center
-              rounded-full
-              text-[#494457]
-              transition-all
-              duration-150
-              hover:bg-[#F3EDF9]
-              hover:text-[#5400D6]
-              active:scale-95
-              focus:outline-none
-              focus:ring-2
-              focus:ring-[#5400D6]/20
-            "
+            className="relative flex h-[40px] w-[40px] items-center justify-center rounded-xl text-[#5D5664] transition-all duration-200 hover:bg-white hover:text-[#5400D6] active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#5400D6]/20"
           >
             <Icon
               name="bell"
-              className="h-[15px] w-[15px]"
+              className="h-[18px] w-[18px]"
             />
 
             {unreadCount > 0 && (
-              <>
-                <span
-                  className="
-                    absolute
-                    right-[5px]
-                    top-[4px]
-                    h-[6px]
-                    w-[6px]
-                    rounded-full
-                    bg-[#5400D6]
-                    ring-2
-                    ring-[#FCF9F8]
-                  "
-                />
-
-                <span className="sr-only">
-                  {unreadCount} unread notifications
-                </span>
-              </>
+              <span className="absolute right-[8px] top-[7px] h-[7px] w-[7px] rounded-full bg-[#5400D6] ring-2 ring-[#FCF9F8]" />
             )}
           </button>
-
-          {/* ─────────────────────────────────────────────────────────
-              PROFILE
-          ───────────────────────────────────────────────────────── */}
 
           <div
             ref={profileRef}
@@ -356,300 +191,122 @@ const StudentNavbar = ({
           >
             <button
               type="button"
-              onClick={() =>
-                setProfileOpen((value) => !value)
-              }
+              onClick={() => setProfileOpen((value) => !value)}
               aria-expanded={profileOpen}
               aria-haspopup="menu"
               aria-label={`Open ${fullName} profile menu`}
-              className={`
-                flex
-                h-[32px]
-                items-center
-                gap-[5px]
-                rounded-full
-                px-[3px]
-                pr-[5px]
-                transition-all
-                duration-150
-                focus:outline-none
-                focus:ring-2
-                focus:ring-[#5400D6]/20
-                ${
-                  profileOpen
-                    ? "bg-[#F3EDF9]"
-                    : "hover:bg-[#F3EDF9]"
-                }
-              `}
+              className={[
+                "flex h-[44px] items-center gap-2 rounded-xl px-1.5 pr-2",
+                "transition-all duration-200",
+                "focus:outline-none focus:ring-2 focus:ring-[#5400D6]/20",
+                profileOpen
+                  ? "bg-white shadow-sm ring-1 ring-[#E4DCE8]"
+                  : "hover:bg-white",
+              ].join(" ")}
             >
-              {/* Avatar */}
-
-              <span
-                className="
-                  flex
-                  h-[26px]
-                  w-[26px]
-                  items-center
-                  justify-center
-                  rounded-full
-                  border
-                  border-[#DFD0FE]
-                  bg-[#DFD0FE]
-                  text-[8px]
-                  font-bold
-                  text-[#5400D6]
-                  shadow-[0_1px_2px_rgba(84,0,214,0.08)]
-                "
-              >
+              <span className="flex h-[34px] w-[34px] items-center justify-center rounded-xl bg-[#E8D9FA] text-[10px] font-black text-[#5400D6] ring-1 ring-[#DCC9F0]">
                 {initials}
               </span>
 
-              {/* Chevron */}
+              <span className="hidden min-w-0 text-left lg:block">
+                <span className="block max-w-[110px] truncate text-[10px] font-bold text-[#292631]">
+                  {fullName}
+                </span>
+
+                <span className="block text-[8px] text-[#8B8491]">
+                  Student
+                </span>
+              </span>
 
               <Icon
                 name="chevron-down"
-                className={`
-                  h-[10px]
-                  w-[10px]
-                  text-[#494457]
-                  transition-transform
-                  duration-200
-                  ${
-                    profileOpen
-                      ? "rotate-180"
-                      : ""
-                  }
-                `}
+                className={[
+                  "h-[12px] w-[12px] text-[#7C7383] transition-transform duration-200",
+                  profileOpen ? "rotate-180" : "",
+                ].join(" ")}
               />
             </button>
-
-            {/* ═══════════════════════════════════════════════════════
-                PROFILE DROPDOWN
-            ═══════════════════════════════════════════════════════ */}
 
             {profileOpen && (
               <div
                 role="menu"
-                className="
-                  absolute
-                  right-0
-                  top-[39px]
-                  z-50
-                  w-[215px]
-                  overflow-hidden
-                  rounded-[12px]
-                  border
-                  border-[#CBC3DA]
-                  bg-[#FCF9F8]
-                  shadow-[0_12px_30px_rgba(73,68,87,0.13)]
-                  ring-1
-                  ring-black/[0.02]
-                "
+                className="absolute right-0 top-[52px] z-50 w-[250px] overflow-hidden rounded-2xl border border-[#E2D9E7] bg-white shadow-[0_16px_40px_rgba(52,39,63,0.14)]"
               >
-                {/* User header */}
-
-                <div
-                  className="
-                    flex
-                    items-center
-                    gap-[9px]
-                    border-b
-                    border-[#CBC3DA]
-                    px-[12px]
-                    py-[11px]
-                  "
-                >
-                  <span
-                    className="
-                      flex
-                      h-[30px]
-                      w-[30px]
-                      flex-shrink-0
-                      items-center
-                      justify-center
-                      rounded-full
-                      bg-[#DFD0FE]
-                      text-[9px]
-                      font-bold
-                      text-[#5400D6]
-                    "
-                  >
+                <div className="flex items-center gap-3 border-b border-[#EEE8F0] bg-[#FCF9F8] px-4 py-4">
+                  <span className="flex h-[40px] w-[40px] flex-shrink-0 items-center justify-center rounded-xl bg-[#E8D9FA] text-[11px] font-black text-[#5400D6]">
                     {initials}
                   </span>
 
                   <div className="min-w-0">
-                    <p
-                      className="
-                        truncate
-                        text-[10px]
-                        font-semibold
-                        text-[#292631]
-                      "
-                    >
+                    <p className="truncate text-[11px] font-bold text-[#292631]">
                       {fullName}
                     </p>
 
                     {email && (
-                      <p
-                        className="
-                          mt-[2px]
-                          truncate
-                          text-[8px]
-                          text-[#8B8792]
-                        "
-                      >
+                      <p className="mt-0.5 truncate text-[9px] text-[#8B8491]">
                         {email}
                       </p>
                     )}
                   </div>
                 </div>
 
-                {/* Profile item */}
-
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    navigate("/student/profile");
-                    setProfileOpen(false);
-                  }}
-                  className="
-                    group
-                    flex
-                    w-full
-                    items-center
-                    gap-[9px]
-                    px-[12px]
-                    py-[9px]
-                    text-left
-                    text-[10px]
-                    text-[#494457]
-                    transition-colors
-                    hover:bg-[#F3EDF9]
-                    hover:text-[#5400D6]
-                  "
-                >
-                  <span
-                    className="
-                      flex
-                      h-[25px]
-                      w-[25px]
-                      items-center
-                      justify-center
-                      rounded-[7px]
-                      bg-[#F3EDF9]
-                      text-[#494457]
-                      transition-colors
-                      group-hover:text-[#5400D6]
-                    "
+                <div className="p-2">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      navigate("/student/profile");
+                      setProfileOpen(false);
+                    }}
+                    className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[10px] font-medium text-[#494457] transition hover:bg-[#F5EFF9] hover:text-[#5400D6]"
                   >
-                    <Icon
-                      name="user"
-                      className="h-[13px] w-[13px]"
-                    />
-                  </span>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F5EFF9] text-[#756C7D] group-hover:bg-[#EBDDFA] group-hover:text-[#5400D6]">
+                      <Icon
+                        name="user"
+                        className="h-[15px] w-[15px]"
+                      />
+                    </span>
 
-                  <span>My Profile</span>
-                </button>
+                    <span>My Profile</span>
+                  </button>
 
-                {/* Settings */}
-
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    navigate("/student/settings");
-                    setProfileOpen(false);
-                  }}
-                  className="
-                    group
-                    flex
-                    w-full
-                    items-center
-                    gap-[9px]
-                    px-[12px]
-                    py-[9px]
-                    text-left
-                    text-[10px]
-                    text-[#494457]
-                    transition-colors
-                    hover:bg-[#F3EDF9]
-                    hover:text-[#5400D6]
-                  "
-                >
-                  <span
-                    className="
-                      flex
-                      h-[25px]
-                      w-[25px]
-                      items-center
-                      justify-center
-                      rounded-[7px]
-                      bg-[#F3EDF9]
-                      text-[#494457]
-                      transition-colors
-                      group-hover:text-[#5400D6]
-                    "
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      navigate("/student/settings");
+                      setProfileOpen(false);
+                    }}
+                    className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[10px] font-medium text-[#494457] transition hover:bg-[#F5EFF9] hover:text-[#5400D6]"
                   >
-                    <Icon
-                      name="settings"
-                      className="h-[13px] w-[13px]"
-                    />
-                  </span>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F5EFF9] text-[#756C7D] group-hover:bg-[#EBDDFA] group-hover:text-[#5400D6]">
+                      <Icon
+                        name="settings"
+                        className="h-[15px] w-[15px]"
+                      />
+                    </span>
 
-                  <span>Settings</span>
-                </button>
+                    <span>Settings</span>
+                  </button>
 
-                {/* Logout */}
+                  <div className="my-2 border-t border-[#EEE8F0]" />
 
-                <div className="mx-[10px] border-t border-[#CBC3DA]" />
-
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    logout?.();
-                    setProfileOpen(false);
-                    navigate("/");
-                  }}
-                  className="
-                    group
-                    flex
-                    w-full
-                    items-center
-                    gap-[9px]
-                    px-[12px]
-                    py-[9px]
-                    text-left
-                    text-[10px]
-                    text-[#494457]
-                    transition-colors
-                    hover:bg-[#F3EDF9]
-                    hover:text-[#5400D6]
-                  "
-                >
-                  <span
-                    className="
-                      flex
-                      h-[25px]
-                      w-[25px]
-                      items-center
-                      justify-center
-                      rounded-[7px]
-                      bg-[#F3EDF9]
-                      text-[#494457]
-                      transition-colors
-                      group-hover:text-[#5400D6]
-                    "
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleLogout}
+                    className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[10px] font-medium text-[#494457] transition hover:bg-[#F5EFF9] hover:text-[#5400D6]"
                   >
-                    <Icon
-                      name="logout"
-                      className="h-[13px] w-[13px]"
-                    />
-                  </span>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F5EFF9] text-[#756C7D] group-hover:bg-[#EBDDFA] group-hover:text-[#5400D6]">
+                      <Icon
+                        name="logout"
+                        className="h-[15px] w-[15px]"
+                      />
+                    </span>
 
-                  <span>Logout</span>
-                </button>
+                    <span>Logout</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
