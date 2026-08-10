@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
+import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
 import {
   getApiErrorMessage,
   studentApi,
@@ -44,9 +45,11 @@ type IconName =
 const Icon = ({
   name,
   className = "h-4 w-4",
+  style,
 }: {
   name: IconName;
   className?: string;
+  style?: React.CSSProperties;
 }) => {
   const paths: Record<IconName, React.ReactNode> = {
     activity: (
@@ -278,6 +281,7 @@ const Icon = ({
   return (
     <svg
       className={className}
+      style={style}
       fill="none"
       stroke="currentColor"
       strokeLinecap="round"
@@ -297,7 +301,7 @@ const Icon = ({
 
 const sidebarItems: Array<{
   label: string;
-  icon: IconName;
+  icon: StudentSidebarIconName;
   route: string;
   badge?: number;
 }> = [
@@ -898,7 +902,6 @@ export const StudentNotifications = () => {
             ? "Needs attention"
             : "All caught up",
       }}
-      showAiButton={false}
     >
       <div className="space-y-5">
 
