@@ -1,39 +1,75 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ClerkProvider } from '@clerk/clerk-react';
+import { ClerkProvider } from "@clerk/clerk-react";
 
-import { LandingPage } from '../pages/LandingPage';
-import { StudentDashboard } from '../pages/student/StudentDashboard';
-import { AdminDashboard } from '../pages/AdminDashboard';
-import { CollegeDashboard } from '../pages/college/CollegeDashboard';
-import { RecruiterDashboard } from '../pages/RecruiterDashboard';
-import { MentorDashboard } from '../pages/MentorDashboard';
+// ─────────────────────────────────────────────────────────────────────────────
+// Public
+// ─────────────────────────────────────────────────────────────────────────────
 
-import { AuthProvider } from '../context/AuthContext';
-import { ProtectedRoute } from './ProtectedRoute';
+import { LandingPage } from "../pages/LandingPage";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dashboards
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { StudentDashboard } from "../pages/student/StudentDashboard";
+import { AdminDashboard } from "../pages/AdminDashboard";
+import { CollegeDashboard } from "../pages/college/CollegeDashboard";
+import { RecruiterDashboard } from "../pages/RecruiterDashboard";
+import { MentorDashboard } from "../pages/MentorDashboard";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Authentication
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { AuthProvider } from "../context/AuthContext";
+import { ProtectedRoute } from "./ProtectedRoute";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin Pages
+// ─────────────────────────────────────────────────────────────────────────────
+
 import Analytics from "../pages/admin/analytics";
 import UserManagement from "../pages/admin/userManagement";
 import CompanyManagement from "../pages/admin/companyManagement";
 import Settings from "../pages/admin/settings";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Student Pages
+// ─────────────────────────────────────────────────────────────────────────────
+
 import Profile from "../pages/student/Profile";
 import ProjectList from "../pages/student/ProjectList";
-import AppliedProjects from "../pages/student/AppliedProjects";
+import StudentApplication from "../pages/student/Applications";
 import Notifications from "../pages/student/Notifications";
 import StudentSettings from "../pages/student/Settings";
 import Certificates from "../pages/student/Certificates";
 import StudentAIResume from "../pages/student/AIResume";
-import StudentAIHiring from "../pages/student/AIHiring";
+import StudentPlacementPrep from "../pages/student/PlacementPrep";
+import StudentRoadmap from "../pages/student/StudentRoadmap";
+import StudentBroadcast from "../pages/student/StudentBroadcast"
+import StudentHiring from "../pages/student/HiringProcess";
+// ─────────────────────────────────────────────────────────────────────────────
+// College Pages
+// ─────────────────────────────────────────────────────────────────────────────
 
 import CollegeProfile from "../pages/college/Profile";
 import CollegeSettings from "../pages/college/Settings";
 import CollegeStudentManagement from "../pages/college/StudentManagement";
 import CollegeRecruiterManagement from "../pages/college/RecruiterManagement";
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Clerk
+// ─────────────────────────────────────────────────────────────────────────────
+
+const PUBLISHABLE_KEY =
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 export const AppRoutes: React.FC = () => {
   if (!PUBLISHABLE_KEY) {
-    throw new Error("Missing Publishable Key. Please set VITE_CLERK_PUBLISHABLE_KEY in .env");
+    throw new Error(
+      "Missing Publishable Key. Please set VITE_CLERK_PUBLISHABLE_KEY in .env"
+    );
   }
 
   return (
@@ -41,36 +77,90 @@ export const AppRoutes: React.FC = () => {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Public Landing route */}
-            <Route path="/" element={<LandingPage />} />
 
-            {/* Admin routes */}
-            <Route 
-              path="/admin-dashboard" 
+            {/* ═══════════════════════════════════════════════════════════════
+                PUBLIC ROUTES
+            ═══════════════════════════════════════════════════════════════ */}
+
+            <Route
+              path="/"
+              element={<LandingPage />}
+            />
+
+            {/* ═══════════════════════════════════════════════════════════════
+                ADMIN ROUTES
+            ═══════════════════════════════════════════════════════════════ */}
+{/* 
+            <Route
+              path="/admin-dashboard"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
 
-            {/* Student routes */}
-            <Route 
-              path="/student-dashboard" 
+            <Route
+              path="/admin-dashboard/analytics"
               element={
-                <ProtectedRoute allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <Analytics />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin-dashboard/users"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <UserManagement />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin-dashboard/companies"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <CompanyManagement />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/admin-dashboard/settings"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            /> */}
+
+            {/* ═══════════════════════════════════════════════════════════════
+                STUDENT ROUTES
+            ═══════════════════════════════════════════════════════════════ */}
+
+            {/* Student Dashboard */}
+            <Route
+              path="/student-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
                   <StudentDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/student/dashboard" 
+
+            {/* Alternate Dashboard URL */}
+            <Route
+              path="/student/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={["student"]}>
                   <StudentDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
+
+            {/* Student Profile */}
             <Route
               path="/student/profile"
               element={
@@ -80,6 +170,7 @@ export const AppRoutes: React.FC = () => {
               }
             />
 
+            {/* Project List */}
             <Route
               path="/student/projects"
               element={
@@ -89,15 +180,27 @@ export const AppRoutes: React.FC = () => {
               }
             />
 
+            {/* Applied Projects */}
             <Route
-              path="/student/applied-projects"
+              path="/student/applications"
               element={
                 <ProtectedRoute allowedRoles={["student"]}>
-                  <AppliedProjects />
+                  <StudentApplication />
                 </ProtectedRoute>
               }
             />
 
+            {/* AI Hiring */}
+            <Route
+              path="/student/placementprep"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <StudentPlacementPrep  />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Notifications */}
             <Route
               path="/student/notifications"
               element={
@@ -107,14 +210,7 @@ export const AppRoutes: React.FC = () => {
               }
             />
 
-            <Route
-              path="/student/settings"
-              element={
-                <ProtectedRoute allowedRoles={["student"]}>
-                  <StudentSettings />
-                </ProtectedRoute>
-              }
-            />
+            {/* Certificates */}
             <Route
               path="/student/certificates"
               element={
@@ -123,33 +219,69 @@ export const AppRoutes: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+
+            {/* AI Resume */}
             <Route
               path="/student/ai-resume"
               element={
                 <ProtectedRoute allowedRoles={["student"]}>
-                  <StudentAIResume  />
+                  <StudentAIResume />
                 </ProtectedRoute>
               }
             />
 
+            {/* Student Roadmap */}
             <Route
-              path="/student/ai-interview"
+              path="/student/roadmap"
               element={
                 <ProtectedRoute allowedRoles={["student"]}>
-                  <StudentAIHiring />
+                  <StudentRoadmap />
                 </ProtectedRoute>
               }
             />
 
-            {/* College routes */}
-            <Route 
-              path="/college-dashboard" 
+            {/* Student Settings */}
+            <Route
+              path="/student/settings"
               element={
-                <ProtectedRoute allowedRoles={['college']}>
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <StudentSettings />
+                </ProtectedRoute>
+              }
+            />
+            {/* Student Broadcast */}
+            <Route
+              path="/student/broadcast"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <StudentBroadcast />
+                </ProtectedRoute>
+              }
+            />
+            {/* Student Hiring */}
+            <Route
+              path="/student/hiring-process"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <StudentHiring />
+                </ProtectedRoute>
+              }
+            />
+            {/* ═══════════════════════════════════════════════════════════════
+                COLLEGE ROUTES
+            ═══════════════════════════════════════════════════════════════ */}
+
+            {/* College Dashboard */}
+            <Route
+              path="/college-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={["college"]}>
                   <CollegeDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
+
+            {/* College Profile */}
             <Route
               path="/college/profile"
               element={
@@ -158,6 +290,8 @@ export const AppRoutes: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+
+            {/* College Student Management */}
             <Route
               path="/college/students-management"
               element={
@@ -166,6 +300,8 @@ export const AppRoutes: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+
+            {/* College Recruiter Management */}
             <Route
               path="/college/recruiter-management"
               element={
@@ -174,6 +310,8 @@ export const AppRoutes: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+
+            {/* College Settings */}
             <Route
               path="/college/settings"
               element={
@@ -182,50 +320,51 @@ export const AppRoutes: React.FC = () => {
                 </ProtectedRoute>
               }
             />
-            {/* Recruiter routes */}
-            <Route 
-              path="/recruiter-dashboard" 
+
+            {/* ═══════════════════════════════════════════════════════════════
+                RECRUITER ROUTES
+            ═══════════════════════════════════════════════════════════════ */}
+
+            <Route
+              path="/recruiter-dashboard"
               element={
-                <ProtectedRoute allowedRoles={['recruiter']}>
+                <ProtectedRoute allowedRoles={["recruiter"]}>
                   <RecruiterDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/recruiter/dashboard" 
+
+            <Route
+              path="/recruiter/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['recruiter']}>
+                <ProtectedRoute allowedRoles={["recruiter"]}>
                   <RecruiterDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
 
-            <Route path="/admin-dashboard/analytics" element={<Analytics />} />
+            {/* ═══════════════════════════════════════════════════════════════
+                MENTOR ROUTES
+            ═══════════════════════════════════════════════════════════════ */}
 
-<Route path="/admin-dashboard/users" element={<UserManagement />} />
-
-<Route path="/admin-dashboard/companies" element={<CompanyManagement />} />
-
-<Route path="/admin-dashboard/settings" element={<Settings />} />
-
-
-            {/* Mentor routes */}
-            <Route 
-              path="/mentor-dashboard" 
+            <Route
+              path="/mentor-dashboard"
               element={
-                <ProtectedRoute allowedRoles={['mentor']}>
+                <ProtectedRoute allowedRoles={["mentor"]}>
                   <MentorDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/mentor/dashboard" 
+
+            <Route
+              path="/mentor/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['mentor']}>
+                <ProtectedRoute allowedRoles={["mentor"]}>
                   <MentorDashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
+
           </Routes>
         </BrowserRouter>
       </AuthProvider>

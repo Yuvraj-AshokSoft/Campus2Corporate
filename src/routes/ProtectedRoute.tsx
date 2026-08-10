@@ -1,4 +1,4 @@
-/*import React from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -33,7 +33,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
   }
 
   return <>{children}</>;
-};*/
+};/*
 
 //For testing Purpose
 import React from "react";
@@ -44,4 +44,4 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   return <>{children}</>;
-};
+};*/

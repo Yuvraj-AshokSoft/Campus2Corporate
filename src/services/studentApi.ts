@@ -117,6 +117,9 @@ const profile = {
 
   update: (data: any) =>
     api.put("/student/profile", data),
+
+  uploadImage: (data: any) =>
+    api.put("/student/profile", data),
 };
 
 // =======================
@@ -149,13 +152,19 @@ const skills = {
 // =======================
 
 const projects = {
-  get: () => api.get("/student/projects"),
+  get: (params?: Record<string, any>) => api.get("/student/projects", { params }),
 
   apply: (projectId: string, data: any = {}) =>
     api.post(`/student/projects/${projectId}/apply`, data),
 
   applications: () =>
     api.get("/student/applications"),
+
+  applicationDetails: (applicationId: string) =>
+    api.get(`/student/applications/${applicationId}`),
+
+  withdrawApplication: (applicationId: string) =>
+    api.delete(`/student/applications/${applicationId}`),
 };
 
 // =======================
@@ -182,6 +191,15 @@ const notifications = {
 const certificates = {
   get: () =>
     api.get("/student/certificates"),
+
+  upload: (data: any) =>
+    api.post("/student/certificates", data),
+
+  update: (id: string, data: any) =>
+    api.put(`/student/certificates/${id}`, data),
+
+  delete: (id: string) =>
+    api.delete(`/student/certificates/${id}`),
 };
 
 // =======================
@@ -224,6 +242,59 @@ const hiring = {
 };
 
 // =======================
+// AI
+// =======================
+
+const ai = {
+  generateStudyPlan: (studentContext: string) =>
+    api.post("/ai/study-plan", {
+      studentContext,
+    }),
+
+  placementAnalysis: (studentContext: string) =>
+    api.post("/ai/placement-analysis", {
+      studentContext,
+    }),
+
+  atsScore: (resumeText: string) =>
+    api.post("/ai/ats-score", {
+      resumeText,
+    }),
+
+  skillGap: (studentContext: string, role: string) =>
+    api.post("/ai/skill-gap", {
+      studentContext,
+      role,
+    }),
+
+  careerCoach: (question: string, studentContext: string) =>
+    api.post("/ai/career-coach", {
+      question,
+      studentContext,
+    }),
+
+  resumeSummary: (data: any) =>
+    api.post("/ai/resume/summary", data),
+
+  resumeExperience: (data: any) =>
+    api.post("/ai/resume/experience", data),
+  resumeNote: (data: any) =>
+    api.post("/ai/resume/note", data),
+
+  hiringInterview: (data: any) =>
+    api.post("/ai/hiring/interview", data),
+
+  hiringQuestions: (data: any) =>
+    api.post("/ai/hiring/questions", data),
+
+  hiringEvaluate: (data: any) =>
+    api.post("/ai/hiring/evaluate", data),
+
+  hiringFeedback: (data: any) =>
+    api.post("/ai/hiring/feedback", data),
+};
+
+// =======================
 // Export Combined API
 // =======================
 
@@ -232,6 +303,7 @@ export const studentApi = {
 
   getProfile: profile.get,
   updateProfile: profile.update,
+  uploadProfileImage: profile.uploadImage,
 
   getDashboard: dashboard.get,
 
@@ -243,6 +315,8 @@ export const studentApi = {
   getProjects: projects.get,
   applyToProject: projects.apply,
   getApplications: projects.applications,
+  getApplicationDetails: projects.applicationDetails,
+  withdrawApplication: projects.withdrawApplication,
 
   getNotifications: notifications.get,
   markNotificationRead: notifications.markRead,
@@ -250,6 +324,9 @@ export const studentApi = {
   deleteNotification: notifications.delete,
 
   getCertificates: certificates.get,
+  uploadCertificate: certificates.upload,
+  updateCertificate: certificates.update,
+  deleteCertificate: certificates.delete,
 
   getSettings: settings.get,
   updateSettings: settings.update,
@@ -259,7 +336,20 @@ export const studentApi = {
 
   getHiringDrives: hiring.get,
   startHiringDrive: hiring.start,
+  generateStudyPlan: ai.generateStudyPlan,
+  placementAnalysis: ai.placementAnalysis,
+  atsScore: ai.atsScore,
+  skillGap: ai.skillGap,
+  careerCoach: ai.careerCoach,
+  generateResumeSummary: ai.resumeSummary,
+  enhanceResumeExperience: ai.resumeExperience,
+  classifyResumeNote: ai.resumeNote,
+  generateHiringInterview: ai.hiringInterview,
+  generateHiringQuestions: ai.hiringQuestions,
+  evaluateHiringAnswer: ai.hiringEvaluate,
+  generateHiringFeedback: ai.hiringFeedback,
 };
+
 
 // =======================
 // Error Helper
