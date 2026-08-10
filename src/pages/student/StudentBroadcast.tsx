@@ -1,10 +1,18 @@
 import React, { useMemo, useState } from "react";
 import StudentLayout from "../../components/student/StudentLayout";
+import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
 
-type IconName = "search" | "bell" | "broadcast" | "briefcase" | "calendar" | "location" | "money" | "users" | "share" | "bookmark" | "check" | "building" | "graduation" | "megaphone" | "clock";
+type IconName = "search" | "bell" | "broadcast" | "briefcase" | "calendar" | "location" | "money" | "users" | "share" | "bookmark" | "check" | "building" | "graduation" | "megaphone" | "clock" | "dashboard" | "user-check" | "clipboard" | "award" | "settings" | "resume" | "map";
 
 const Icon = ({ name, className = "h-4 w-4" }: { name: IconName; className?: string }) => {
   const paths: Record<IconName, React.ReactNode> = {
+    dashboard: <><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></>,
+    "user-check": <><circle cx="9" cy="8" r="4"/><path d="M3 21v-2a5 5 0 0 1 5-5h2"/><path d="m15 16 2 2 4-5"/></>,
+    clipboard: <><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 10h6M9 14h6M9 18h4"/></>,
+    award: <><circle cx="12" cy="8" r="5"/><path d="m9 12.5-1 8 4-2 4 2-1-8"/></>,
+    settings: <><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.5 7.5 0 0 0-2-1.2L14.2 3H9.8L9.5 5.6a7.5 7.5 0 0 0-2 1.2l-2.4-1-2 3.5 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.5 2.4-1a7.5 7.5 0 0 0 2 1.2l.3 2.6h4.4l.3-2.6a7.5 7.5 0 0 0 2-1.2l2.4 1 2-3.5-2-1.5c.1-.4.1-.8.1-1.2Z"/></>,
+    resume: <><path d="M6 3h9l5 5v13H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5M8 13h8M8 17h6"/></>,
+    map: <><path d="m4 6 6-3 4 3 6-3v15l-6 3-4-3-6 3V6Z"/><path d="M10 3v15M14 6v15"/></>,
     search: <><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></>,
     bell: <><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7" /><path d="M10 20a2 2 0 0 0 4 0" /></>,
     broadcast: <><circle cx="12" cy="12" r="2" /><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7" /><path d="M5.5 5.5a9 9 0 0 0 0 13M18.5 5.5a9 9 0 0 1 0 13" /></>,
@@ -46,7 +54,7 @@ type Broadcast = {
 
 const sidebarItems: Array<{
   label: string;
-  icon: IconName;
+  icon: StudentSidebarIconName;
   route: string;
   badge?: number;
 }> = [
@@ -68,7 +76,7 @@ const sidebarItems: Array<{
   {
     label: "Applications",
     icon: "clipboard",
-    route: "/student/applied-projects",
+    route: "/student/applications",
     badge: 2,
   },
   {
