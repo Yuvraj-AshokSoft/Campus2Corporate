@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import StudentLayout from "../../components/student/StudentLayout";
+import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
 
 type IconName =
   | "dashboard"
@@ -196,7 +197,7 @@ type RoadmapSection = {
 
 const sidebarItems: Array<{
   label: string;
-  icon: IconName;
+  icon: StudentSidebarIconName;
   route: string;
   badge?: number;
 }> = [
