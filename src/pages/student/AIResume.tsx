@@ -260,16 +260,70 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 
 
 // ─── Sidebar (identical items/order to the rest of the student portal) ───────
-const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?: number }> = [
-  { label: "Dashboard", icon: "dashboard", route: "/student-dashboard" },
-  { label: "My Profile", icon: "user-check", route: "/student/profile" },
-  { label: "Project List", icon: "briefcase", route: "/student/projects" },
-  { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects", badge: 2 },
-  { label: "Hiring Process", icon: "building", route: "/student/hiring" },
-  { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
-  { label: "Certificates", icon: "award", route: "/student/certificates" },
-  { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume", route: "/student/ai-resume" },
+
+const sidebarItems: Array<{
+  label: string;
+  icon: IconName;
+  route: string;
+  badge?: number;
+}> = [
+  {
+    label: "Dashboard",
+    icon: "dashboard",
+    route: "/student-dashboard",
+  },
+  {
+    label: "My Profile",
+    icon: "user-check",
+    route: "/student/profile",
+  },
+  {
+    label: "My Projects",
+    icon: "briefcase",
+    route: "/student/projects",
+  },
+  {
+    label: "Applications",
+    icon: "clipboard",
+    route: "/student/applications",
+    badge: 2,
+  },
+  {
+    label: "Placement Prep",
+    icon: "building",
+    route: "/student/placementprep",
+  },
+  {
+    label: "Notifications",
+    icon: "bell",
+    route: "/student/notifications",
+    badge: 3,
+  },
+  {
+    label: "Certificates",
+    icon: "award",
+    route: "/student/certificates",
+  },
+  {
+    label: "Settings",
+    icon: "settings",
+    route: "/student/settings",
+  },
+  {
+    label: "AI Resume",
+    icon: "resume",
+    route: "/student/ai-resume",
+  },
+  {
+    label: "Career Roadmap",
+    icon: "map",
+    route: "/student/roadmap",
+  },
+  {
+    label: "Career Updates",
+    icon: "megaphone",
+    route: "/student/broadcast",
+  },
 ];
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface EducationEntry {
@@ -354,13 +408,13 @@ const FieldLabel = ({ children }: { children: React.ReactNode }) => (
 );
 
 const inputCls =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 placeholder-slate-400 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-50";
+  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 placeholder-slate-400 outline-none transition focus:border-[#B99AFF] focus:ring-2 focus:ring-[#F4EFFF]";
 
 const ghostBtnCls =
-  "flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 py-2 text-xs font-bold text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700";
+  "flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 py-2 text-xs font-bold text-slate-500 transition hover:border-[#B99AFF] hover:bg-[#F4EFFF] hover:text-[#5400D6]";
 
 const primaryBtnCls =
-  "flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:shadow-blue-600/30 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none";
+  "flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#5400D6] to-[#5400D6] px-4 py-2 text-xs font-bold text-white shadow-lg shadow-[#5400D6]/20 transition-all hover:shadow-[#5400D6]/30 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none";
 
 const emptyResumeData = (currentUser?: { fullName?: string; name?: string; email?: string; phone?: string }): ResumeData => ({
   fullName: currentUser?.fullName || currentUser?.name || "",
@@ -731,11 +785,11 @@ Note: ${note}`,
 
         {/* Hero */}
         <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#e0e7ff_1px,transparent_1px)] opacity-60 [background-size:18px_18px]" />
-          <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-blue-100/60 blur-3xl" />
-          <div className="pointer-events-none absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-indigo-100/50 blur-3xl" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#E9DDFF_1px,transparent_1px)] opacity-60 [background-size:18px_18px]" />
+          <div className="pointer-events-none absolute right-0 top-0 h-56 w-56 rounded-full bg-[#E9DDFF]/60 blur-3xl" />
+          <div className="pointer-events-none absolute -left-10 bottom-0 h-40 w-40 rounded-full bg-[#E9DDFF]/50 blur-3xl" />
           <div className="relative">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 px-3 py-1 text-[11px] font-bold text-blue-700 shadow-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E9DDFF] bg-gradient-to-r from-[#F4EFFF] to-[#F4EFFF] px-3 py-1 text-[11px] font-bold text-[#5400D6] shadow-sm">
               <Icon name="sparkles" className="h-3 w-3" />
               AI-powered resume workspace
             </span>
@@ -762,17 +816,17 @@ Note: ${note}`,
           </div>
         )}
         {savingResume && (
-          <div className="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700 shadow-sm">
+          <div className="flex items-center gap-2 rounded-xl border border-[#E9DDFF] bg-[#F4EFFF] px-4 py-3 text-xs text-[#5400D6] shadow-sm">
             <Icon name="refresh" className="h-3.5 w-3.5 flex-shrink-0 animate-spin" />
             Saving resume...
           </div>
         )}
 
         {/* AI Import & Assistant — full width */}
-        <section className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/60 via-white to-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-[#E9DDFF] bg-gradient-to-br from-[#F4EFFF]/60 via-white to-white p-6 shadow-sm">
           <CardHeader
             icon="sparkles"
-            iconColor="#2563eb"
+            iconColor="#5400D6"
             eyebrow="AI Assistant"
             title="Imported from your student profile"
           />
@@ -791,7 +845,7 @@ Note: ${note}`,
             )}
           </div>
 
-          <div className="mt-5 border-t border-blue-100/70 pt-4">
+          <div className="mt-5 border-t border-[#E9DDFF]/70 pt-4">
             <p className="text-xs font-bold text-slate-700">Anything else to add?</p>
             <p className="mt-0.5 text-[11px] text-slate-500">
               Describe an internship, project, hackathon, or certification in your own words — AI will file
@@ -829,7 +883,7 @@ Note: ${note}`,
           <div className="min-w-0 space-y-5">
             {/* Personal info */}
             <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-              <CardHeader icon="user" iconColor="#2563eb" eyebrow="Contact Details" title="Personal Info" />
+              <CardHeader icon="user" iconColor="#5400D6" eyebrow="Contact Details" title="Personal Info" />
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <FieldLabel>Full name</FieldLabel>
@@ -890,7 +944,7 @@ Note: ${note}`,
             <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
               <CardHeader
                 icon="sparkles"
-                iconColor="#8b5cf6"
+                iconColor="#7C3AED"
                 eyebrow="Professional Summary"
                 title="Summary"
                 trailing={
@@ -927,12 +981,12 @@ Note: ${note}`,
                 {data.skills.map((s) => (
                   <span
                     key={s}
-                    className="flex items-center gap-1.5 rounded-full bg-blue-50 py-1 pl-2.5 pr-1.5 text-[11px] font-semibold text-blue-700 ring-1 ring-blue-100"
+                    className="flex items-center gap-1.5 rounded-full bg-[#F4EFFF] py-1 pl-2.5 pr-1.5 text-[11px] font-semibold text-[#5400D6] ring-1 ring-[#E9DDFF]"
                   >
                     {s}
                     <button
                       onClick={() => removeSkill(s)}
-                      className="flex h-3.5 w-3.5 items-center justify-center rounded-full text-blue-400 hover:bg-blue-100 hover:text-blue-700"
+                      className="flex h-3.5 w-3.5 items-center justify-center rounded-full text-[#8B5CF6] hover:bg-[#E9DDFF] hover:text-[#5400D6]"
                       aria-label={`Remove ${s}`}
                     >
                       ×
@@ -1010,7 +1064,7 @@ Note: ${note}`,
 
             {/* Certifications */}
             <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-md">
-              <CardHeader icon="award" iconColor="#2563eb" eyebrow="Credentials" title="Certifications" />
+              <CardHeader icon="award" iconColor="#5400D6" eyebrow="Credentials" title="Certifications" />
               <div className="mt-4 space-y-3">
                 {data.certifications.map((c) => (
                   <div key={c.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4">
@@ -1072,9 +1126,9 @@ Note: ${note}`,
               <ResumePreview data={data} template={template} initials={initials} />
             </div>
 
-            <div className="flex gap-2.5 rounded-xl border border-blue-100 bg-blue-50 p-4">
-              <Icon name="lightbulb" className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
-              <p className="text-xs text-blue-700">
+            <div className="flex gap-2.5 rounded-xl border border-[#E9DDFF] bg-[#F4EFFF] p-4">
+              <Icon name="lightbulb" className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#6F2AE8]" />
+              <p className="text-xs text-[#5400D6]">
                 Keep it to one page. The <span className="font-semibold">Minimal</span> template is the
                 safest choice for ATS screening; use <span className="font-semibold">Modern</span> when
                 you know a human will read it first.
@@ -1188,7 +1242,7 @@ const ResumePreview = ({ data, template, initials }: { data: ResumeData; templat
   // "modern" template
   return (
     <div id="resume-print-root" className="mx-auto max-w-[720px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md ring-1 ring-slate-900/5">
-      <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+      <div className="h-1.5 w-full bg-gradient-to-r from-[#6F2AE8] via-[#F4EFFF]0 to-purple-500" />
       <div className="bg-gradient-to-br from-slate-950 to-slate-900 p-7 text-white">
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-lg font-black ring-1 ring-white/20">
@@ -1196,14 +1250,14 @@ const ResumePreview = ({ data, template, initials }: { data: ResumeData; templat
           </div>
           <div>
             <h1 className="text-xl font-black tracking-tight">{data.fullName || "Your Name"}</h1>
-            <p className="text-sm text-blue-300">{data.title}</p>
+            <p className="text-sm text-[#B99AFF]">{data.title}</p>
           </div>
         </div>
         {contactLine && (
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-300">
             {contactLine.split("   •   ").map((c, i) => (
               <span key={i} className="flex items-center gap-1">
-                <span className="h-1 w-1 rounded-full bg-blue-400" />
+                <span className="h-1 w-1 rounded-full bg-[#8B5CF6]" />
                 {c}
               </span>
             ))}
@@ -1222,7 +1276,7 @@ const ResumePreview = ({ data, template, initials }: { data: ResumeData; templat
           <ModernSection title="Skills">
             <div className="flex flex-wrap gap-1.5">
               {data.skills.map((s) => (
-                <span key={s} className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 ring-1 ring-blue-100">
+                <span key={s} className="rounded-full bg-[#F4EFFF] px-2.5 py-1 text-[11px] font-semibold text-[#5400D6] ring-1 ring-[#E9DDFF]">
                   {s}
                 </span>
               ))}
@@ -1268,7 +1322,7 @@ const ResumePreview = ({ data, template, initials }: { data: ResumeData; templat
                     <ul className="mt-1.5 space-y-1">
                       {e.bullets.split("\n").filter(Boolean).map((b, i) => (
                         <li key={i} className="flex items-start gap-2 text-[12px] leading-snug text-slate-700">
-                          <span className="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-blue-400" />
+                          <span className="mt-1.5 h-1 w-1 flex-shrink-0 rounded-full bg-[#8B5CF6]" />
                           {b}
                         </li>
                       ))}
@@ -1302,7 +1356,7 @@ const ResumePreview = ({ data, template, initials }: { data: ResumeData; templat
 };
 
 const ModernSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div className="border-l-2 border-blue-500 pl-4">
+  <div className="border-l-2 border-[#6F2AE8] pl-4">
     <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">{title}</p>
     {children}
   </div>

@@ -155,7 +155,7 @@ const INITIAL_TIMELINE_STEPS: TimelineStep[] = [
 const ACTIVE_ASSESSMENT = {
   title: 'Aptitude Assessment',
   duration: '45 Minutes',
-  questions: '30',
+  questions: '1',
   passingScore: '70%',
   difficulty: 'Medium',
   aiMonitoring: 'Enabled',
@@ -189,7 +189,7 @@ const INITIAL_ROUND_OVERVIEW: RoundOverviewData[] = [
     name: 'Aptitude',
     tag: 'Online Test',
     duration: '45 mins',
-    metric: '30 Questions',
+    metric: '1 Question',
     passingPercent: 70,
     status: 'ready',
   },
@@ -239,220 +239,14 @@ const VIOLATION_LABELS: Record<ViolationKey, string> = {
   f11Press: 'F11 Key',
 };
 
-// 30 dummy aptitude questions covering quant, logical, verbal & general topics
+// Temporary test question
 const QUESTIONS: Question[] = [
-  // Quantitative Aptitude
-  {
+  // Temporary test question
+{
     id: 1,
     category: 'Quantitative Aptitude',
     text: 'A train travels 60 km in 45 minutes. What is its average speed in km/h?',
     options: ['70 km/h', '75 km/h', '80 km/h', '90 km/h'],
-    correctIndex: 2,
-  },
-  {
-    id: 2,
-    category: 'Quantitative Aptitude',
-    text: 'The average of five consecutive integers is 21. What is the largest of these integers?',
-    options: ['21', '22', '23', '24'],
-    correctIndex: 2,
-  },
-  {
-    id: 3,
-    category: 'Quantitative Aptitude',
-    text: 'A shopkeeper marks an item 25% above its cost price and then offers a 10% discount. What is his profit percentage?',
-    options: ['10%', '12.5%', '15%', '20%'],
-    correctIndex: 1,
-  },
-  {
-    id: 4,
-    category: 'Quantitative Aptitude',
-    text: 'What is the compound interest on ₹10,000 at 10% per annum for 2 years, compounded annually?',
-    options: ['₹2,000', '₹2,100', '₹2,200', '₹2,500'],
-    correctIndex: 1,
-  },
-  {
-    id: 5,
-    category: 'Quantitative Aptitude',
-    text: 'If 8 workers can complete a task in 15 days, how many days will 12 workers take to complete the same task?',
-    options: ['8 days', '10 days', '12 days', '15 days'],
-    correctIndex: 1,
-  },
-  {
-    id: 6,
-    category: 'Quantitative Aptitude',
-    text: 'Simplify: (12 + 8) ÷ 4 × 2',
-    options: ['5', '8', '10', '40'],
-    correctIndex: 2,
-  },
-  {
-    id: 7,
-    category: 'Quantitative Aptitude',
-    text: 'A sum of money doubles itself in 8 years at simple interest. What is the annual rate of interest?',
-    options: ['10%', '12.5%', '15%', '20%'],
-    correctIndex: 1,
-  },
-  {
-    id: 8,
-    category: 'Quantitative Aptitude',
-    text: 'Find the next number in the series: 2, 6, 12, 20, 30, ?',
-    options: ['36', '40', '42', '44'],
-    correctIndex: 2,
-  },
-  // Logical Reasoning
-  {
-    id: 9,
-    category: 'Logical Reasoning',
-    text: 'All roses are flowers. Some flowers fade quickly. Which conclusion can be drawn?',
-    options: ['All roses fade quickly', 'Some roses may fade quickly', 'No roses fade quickly', 'All flowers are roses'],
-    correctIndex: 1,
-  },
-  {
-    id: 10,
-    category: 'Logical Reasoning',
-    text: "Pointing to a photograph, a man says, \"She is the daughter of my grandfather's only son.\" How is the woman related to the man?",
-    options: ['Sister', 'Mother', 'Cousin', 'Aunt'],
-    correctIndex: 0,
-  },
-  {
-    id: 11,
-    category: 'Logical Reasoning',
-    text: 'Find the odd one out.',
-    options: ['Apple', 'Banana', 'Carrot', 'Mango'],
-    correctIndex: 2,
-  },
-  {
-    id: 12,
-    category: 'Logical Reasoning',
-    text: 'If CAT is coded as 3-1-20 (A=1, B=2, C=3 ...), how is DOG coded using the same logic?',
-    options: ['4-15-7', '4-16-5', '4-25-7', '4-7-15'],
-    correctIndex: 0,
-  },
-  {
-    id: 13,
-    category: 'Logical Reasoning',
-    text: 'In a certain code, each letter is shifted forward by one position, so SUN becomes TVO. Using the same rule, how is MOON written?',
-    options: ['NPPO', 'NPPP', 'MPPO', 'NPOP'],
-    correctIndex: 0,
-  },
-  {
-    id: 14,
-    category: 'Logical Reasoning',
-    text: 'A is taller than B. C is shorter than B. D is taller than A. Who is the tallest among the four?',
-    options: ['A', 'B', 'C', 'D'],
-    correctIndex: 3,
-  },
-  {
-    id: 15,
-    category: 'Logical Reasoning',
-    text: 'Complete the analogy: Doctor is to Hospital as Teacher is to ?',
-    options: ['Book', 'School', 'Student', 'Chalk'],
-    correctIndex: 1,
-  },
-  {
-    id: 16,
-    category: 'Logical Reasoning',
-    text: 'Statement: All cars are vehicles. Some vehicles are trucks. Which conclusion follows?',
-    options: ['All trucks are cars', 'Some cars are trucks', 'No definite conclusion can be drawn', 'All vehicles are cars'],
-    correctIndex: 2,
-  },
-  // Verbal Ability
-  {
-    id: 17,
-    category: 'Verbal Ability',
-    text: "Choose the word closest in meaning to 'Meticulous'.",
-    options: ['Careless', 'Precise', 'Hasty', 'Vague'],
-    correctIndex: 1,
-  },
-  {
-    id: 18,
-    category: 'Verbal Ability',
-    text: "Choose the word most opposite in meaning to 'Benevolent'.",
-    options: ['Kind', 'Generous', 'Malicious', 'Charitable'],
-    correctIndex: 2,
-  },
-  {
-    id: 19,
-    category: 'Verbal Ability',
-    text: 'Fill in the blank: Despite the heavy rain, the match ___ as scheduled.',
-    options: ['was cancelled', 'proceeded', 'postponed', 'delayed'],
-    correctIndex: 1,
-  },
-  {
-    id: 20,
-    category: 'Verbal Ability',
-    text: 'Identify the correctly spelled word.',
-    options: ['Recieve', 'Receive', 'Receeve', 'Receve'],
-    correctIndex: 1,
-  },
-  {
-    id: 21,
-    category: 'Verbal Ability',
-    text: "Choose the word closest in meaning to 'Ephemeral'.",
-    options: ['Permanent', 'Fleeting', 'Ancient', 'Sturdy'],
-    correctIndex: 1,
-  },
-  {
-    id: 22,
-    category: 'Verbal Ability',
-    text: 'Select the grammatically correct sentence.',
-    options: ["He don't like coffee.", "He doesn't likes coffee.", "He doesn't like coffee.", 'He not like coffee.'],
-    correctIndex: 2,
-  },
-  {
-    id: 23,
-    category: 'Verbal Ability',
-    text: "Choose the one-word substitute for 'a person who talks excessively'.",
-    options: ['Introvert', 'Loquacious', 'Reticent', 'Taciturn'],
-    correctIndex: 1,
-  },
-  {
-    id: 24,
-    category: 'Verbal Ability',
-    text: "Identify the figure of speech used in the sentence: 'Time is a thief.'",
-    options: ['Simile', 'Metaphor', 'Alliteration', 'Personification'],
-    correctIndex: 1,
-  },
-  // General Awareness
-  {
-    id: 25,
-    category: 'General Awareness',
-    text: 'Which data structure follows the First In First Out (FIFO) principle?',
-    options: ['Stack', 'Queue', 'Tree', 'Graph'],
-    correctIndex: 1,
-  },
-  {
-    id: 26,
-    category: 'General Awareness',
-    text: 'What does the acronym CPU stand for?',
-    options: ['Central Processing Unit', 'Computer Processing Unit', 'Central Program Unit', 'Central Processor Utility'],
-    correctIndex: 0,
-  },
-  {
-    id: 27,
-    category: 'General Awareness',
-    text: 'Which of the following is not a programming language?',
-    options: ['Python', 'HTML', 'Java', 'C++'],
-    correctIndex: 1,
-  },
-  {
-    id: 28,
-    category: 'General Awareness',
-    text: 'In computer networking, what does HTTP stand for?',
-    options: ['HyperText Transfer Protocol', 'High Transfer Text Protocol', 'HyperText Transmission Path', 'Host Transfer Text Protocol'],
-    correctIndex: 0,
-  },
-  {
-    id: 29,
-    category: 'General Awareness',
-    text: 'Which sorting algorithm generally has the best average-case time complexity?',
-    options: ['Bubble Sort', 'Selection Sort', 'Quick Sort', 'Insertion Sort'],
-    correctIndex: 2,
-  },
-  {
-    id: 30,
-    category: 'General Awareness',
-    text: 'Which company developed the Android operating system?',
-    options: ['Apple', 'Microsoft', 'Google', 'Amazon'],
     correctIndex: 2,
   },
 ];
@@ -489,7 +283,7 @@ function readSavedAssessment(): SavedAssessmentState | null {
 function TimelineStepDot({ status }: { status: RoundStatus }) {
   if (status === 'completed') {
     return (
-      <div className="relative z-10 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 shadow-sm shadow-blue-600/30">
+      <div className="relative z-10 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#5400D6] shadow-sm shadow-[#5400D6]/30">
         <Check className="h-4 w-4 text-white" strokeWidth={3} />
       </div>
     );
@@ -497,9 +291,9 @@ function TimelineStepDot({ status }: { status: RoundStatus }) {
 
   if (status === 'current') {
     return (
-      <div className="relative z-10 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 shadow-sm shadow-blue-600/30">
+      <div className="relative z-10 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#5400D6] shadow-sm shadow-[#5400D6]/30">
         <motion.span
-          className="absolute inline-flex h-full w-full rounded-full bg-blue-400"
+          className="absolute inline-flex h-full w-full rounded-full bg-[#8A55F2]"
           animate={{ scale: [1, 1.6], opacity: [0.5, 0] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
         />
@@ -518,7 +312,7 @@ function TimelineStepDot({ status }: { status: RoundStatus }) {
 function StatTile({ icon: Icon, label, value }: { icon: IconType; label: string; value: string }) {
   return (
     <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4 transition-colors hover:bg-slate-50">
-      <Icon className="h-4 w-4 text-blue-600" />
+      <Icon className="h-4 w-4 text-[#5400D6]" />
       <p className="mt-2 text-xs font-medium text-slate-500">{label}</p>
       <p className="mt-0.5 text-sm font-semibold text-slate-900">{value}</p>
     </div>
@@ -529,7 +323,7 @@ function MonitoringRuleRow({ icon: Icon, label }: { icon: IconType; label: strin
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
       <span className="flex items-center gap-2.5 text-sm text-slate-700">
-        <Icon className="h-4 w-4 flex-shrink-0 text-blue-600" />
+        <Icon className="h-4 w-4 flex-shrink-0 text-[#5400D6]" />
         {label}
       </span>
       <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-emerald-50">
@@ -547,7 +341,7 @@ function InstructionRow({ index, text }: { index: number; text: string }) {
       transition={{ duration: 0.3, delay: 0.05 * index }}
       className="flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-4"
     >
-      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[#5400D6] text-xs font-semibold text-white">
         {index + 1}
       </span>
       <p className="text-sm text-slate-700">{text}</p>
@@ -556,8 +350,8 @@ function InstructionRow({ index, text }: { index: number; text: string }) {
 }
 
 const overviewStatusStyles: Record<OverviewStatus, string> = {
-  ready: 'bg-blue-50 text-blue-700 border-blue-100',
-  'in-progress': 'bg-blue-50 text-blue-700 border-blue-100',
+  ready: 'bg-[#F4EFFF] text-[#4500AD] border-[#E9DDFF]',
+  'in-progress': 'bg-[#F4EFFF] text-[#4500AD] border-[#E9DDFF]',
   completed: 'bg-emerald-50 text-emerald-700 border-emerald-100',
   pending: 'bg-slate-100 text-slate-500 border-slate-200',
 };
@@ -626,7 +420,7 @@ function PermissionRow({
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/70 px-4 py-3">
       <span className="flex items-center gap-2.5 text-sm text-slate-700">
-        <Icon className="h-4 w-4 flex-shrink-0 text-blue-600" />
+        <Icon className="h-4 w-4 flex-shrink-0 text-[#5400D6]" />
         {label}
       </span>
       {status === 'granted' && (
@@ -642,7 +436,7 @@ function PermissionRow({
           <button
             type="button"
             onClick={onRequest}
-            className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-700"
+            className="rounded-lg bg-[#5400D6] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#4500AD]"
           >
             {actionLabel}
           </button>
@@ -653,7 +447,7 @@ function PermissionRow({
           type="button"
           onClick={onRequest}
           disabled={status === 'requesting'}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[#5400D6] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#4500AD] disabled:opacity-60"
         >
           {status === 'requesting' && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           {actionLabel}
@@ -664,7 +458,7 @@ function PermissionRow({
 }
 
 const paletteColorMap: Record<PaletteStatus, string> = {
-  current: 'bg-blue-600 text-white ring-2 ring-blue-200',
+  current: 'bg-[#5400D6] text-white ring-2 ring-[#D7C2FC]',
   'answered-review': 'bg-purple-500 text-white',
   review: 'bg-amber-400 text-white',
   answered: 'bg-emerald-500 text-white',
@@ -717,13 +511,13 @@ function OptionRow({
       onClick={onClick}
       className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-sm transition-colors ${
         selected
-          ? 'border-blue-600 bg-blue-50 text-blue-900'
+          ? 'border-[#5400D6] bg-[#F4EFFF] text-blue-900'
           : 'border-slate-100 bg-slate-50/70 text-slate-700 hover:bg-slate-50'
       }`}
     >
       <span
         className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-          selected ? 'bg-blue-600 text-white' : 'border border-slate-200 bg-white text-slate-500'
+          selected ? 'bg-[#5400D6] text-white' : 'border border-slate-200 bg-white text-slate-500'
         }`}
       >
         {letter}
@@ -1226,7 +1020,7 @@ export default function HiringProcess() {
               </p>
               <div className="mt-1.5 h-1.5 w-40 overflow-hidden rounded-full bg-slate-100">
                 <div
-                  className="h-full rounded-full bg-blue-600 transition-all"
+                  className="h-full rounded-full bg-[#5400D6] transition-all"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
@@ -1239,8 +1033,8 @@ export default function HiringProcess() {
               >
                 <Clock className="h-3.5 w-3.5" /> {formatTime(timeLeft)} Remaining
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F4EFFF] px-3 py-1.5 text-xs font-semibold text-[#4500AD]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#6B24E8]" />
                 AI Monitoring Active
               </span>
               <button
@@ -1259,7 +1053,7 @@ export default function HiringProcess() {
             <section className="space-y-6 lg:col-span-3">
               <div className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-sm sm:p-8">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                  <span className="rounded-full bg-[#F4EFFF] px-3 py-1 text-xs font-semibold text-[#4500AD]">
                     {currentQuestion.category}
                   </span>
                   <button
@@ -1304,7 +1098,7 @@ export default function HiringProcess() {
                   <button
                     type="button"
                     onClick={handleSaveAndNext}
-                    className="rounded-xl border border-blue-200 bg-blue-50 px-5 py-2.5 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+                    className="rounded-xl border border-[#D7C2FC] bg-[#F4EFFF] px-5 py-2.5 text-sm font-semibold text-[#4500AD] transition-colors hover:bg-[#E9DDFF]"
                   >
                     Save &amp; Next
                   </button>
@@ -1312,7 +1106,7 @@ export default function HiringProcess() {
                     type="button"
                     onClick={goToNext}
                     disabled={currentQuestionIndex === QUESTIONS.length - 1}
-                    className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-40"
+                    className="rounded-xl bg-[#5400D6] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#4500AD] disabled:opacity-40"
                   >
                     Next
                   </button>
@@ -1323,7 +1117,7 @@ export default function HiringProcess() {
             <aside className="space-y-6 lg:col-span-1">
               <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
                 <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                  <Eye className="h-3.5 w-3.5 text-blue-600" /> Live Monitoring
+                  <Eye className="h-3.5 w-3.5 text-[#5400D6]" /> Live Monitoring
                 </div>
                 <div className="mt-3 aspect-video overflow-hidden rounded-xl bg-slate-900">
                   <video ref={videoRef} autoPlay muted playsInline className="h-full w-full object-cover" />
@@ -1353,7 +1147,7 @@ export default function HiringProcess() {
                     <span className="h-3 w-3 rounded border border-slate-200 bg-slate-100" /> Unanswered
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded bg-blue-600" /> Current
+                    <span className="h-3 w-3 rounded bg-[#5400D6]" /> Current
                   </div>
                 </div>
               </div>
@@ -1397,7 +1191,7 @@ export default function HiringProcess() {
                 <button
                   type="button"
                   onClick={handleReturnFromWarning}
-                  className="mt-6 w-full rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                  className="mt-6 w-full rounded-xl bg-[#5400D6] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#4500AD]"
                 >
                   Return to Assessment
                 </button>
@@ -1441,7 +1235,7 @@ export default function HiringProcess() {
                   <button
                     type="button"
                     onClick={confirmSubmit}
-                    className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                    className="rounded-xl bg-[#5400D6] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#4500AD]"
                   >
                     Submit
                   </button>
@@ -1539,7 +1333,7 @@ export default function HiringProcess() {
               if (!passed) resetExamState();
               setStage('idle');
             }}
-            className="mt-8 w-full rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-sm shadow-blue-600/25 transition-colors hover:bg-blue-700"
+            className="mt-8 w-full rounded-xl bg-[#5400D6] px-6 py-3.5 text-sm font-semibold text-white shadow-sm shadow-[#5400D6]/25 transition-colors hover:bg-[#4500AD]"
           >
             {passed ? 'Continue to Technical Round 1' : 'Retry Assessment'}
           </button>
@@ -1561,7 +1355,7 @@ export default function HiringProcess() {
         <button
           type="button"
           onClick={handleBack}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-blue-600"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-[#5400D6]"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Hiring
@@ -1579,11 +1373,11 @@ export default function HiringProcess() {
           <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start">
             <div className="flex gap-4">
               {/* Company logo placeholder */}
-              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-lg font-bold text-blue-600">
+              <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-[#F4EFFF] text-lg font-bold text-[#5400D6]">
                 {DRIVE.company.charAt(0)}
               </div>
               <div>
-                <p className="text-sm font-medium text-blue-600">{DRIVE.company}</p>
+                <p className="text-sm font-medium text-[#5400D6]">{DRIVE.company}</p>
                 <h1 className="mt-0.5 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
                   {DRIVE.role}
                 </h1>
@@ -1608,7 +1402,7 @@ export default function HiringProcess() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 self-start rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm">
+            <div className="flex items-center gap-2 self-start rounded-full border border-[#E9DDFF] bg-[#F4EFFF] px-4 py-2 text-sm font-medium text-[#4500AD] shadow-sm">
               {roundLabel}
             </div>
           </div>
@@ -1633,12 +1427,12 @@ export default function HiringProcess() {
                 >
                   <div className="flex w-full items-center">
                     {index !== 0 && (
-                      <div className={`h-0.5 flex-1 ${step.status !== 'upcoming' ? 'bg-blue-600' : 'bg-slate-200'}`} />
+                      <div className={`h-0.5 flex-1 ${step.status !== 'upcoming' ? 'bg-[#5400D6]' : 'bg-slate-200'}`} />
                     )}
                     <TimelineStepDot status={step.status} />
                     {!isLast && (
                       <div
-                        className={`h-0.5 flex-1 ${step.status === 'completed' ? 'bg-blue-600' : 'bg-slate-200'}`}
+                        className={`h-0.5 flex-1 ${step.status === 'completed' ? 'bg-[#5400D6]' : 'bg-slate-200'}`}
                       />
                     )}
                   </div>
@@ -1673,7 +1467,7 @@ export default function HiringProcess() {
                 </h2>
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    aptitudePassed ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
+                    aptitudePassed ? 'bg-emerald-50 text-emerald-700' : 'bg-[#F4EFFF] text-[#4500AD]'
                   }`}
                 >
                   {aptitudePassed ? 'Completed' : 'Current Round'}
@@ -1696,7 +1490,7 @@ export default function HiringProcess() {
                 onClick={handlePrimaryCta}
                 whileHover={{ y: -1 }}
                 whileTap={{ scale: 0.98 }}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-sm shadow-blue-600/25 transition-colors hover:bg-blue-700 sm:w-auto sm:px-8"
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#5400D6] px-6 py-3.5 text-sm font-semibold text-white shadow-sm shadow-[#5400D6]/25 transition-colors hover:bg-[#4500AD] sm:w-auto sm:px-8"
               >
                 {aptitudePassed ? 'Continue to Technical Round 1' : 'Start Assessment'}
                 <ArrowRight className="h-4 w-4" />
@@ -1713,7 +1507,7 @@ export default function HiringProcess() {
               className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-sm sm:p-8"
             >
               <div className="flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-blue-600" />
+                <ShieldCheck className="h-5 w-5 text-[#5400D6]" />
                 <h2 className="text-lg font-semibold tracking-tight text-slate-900">AI Monitoring</h2>
               </div>
               <p className="mt-1 text-sm text-slate-500">
@@ -1736,7 +1530,7 @@ export default function HiringProcess() {
               className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-sm sm:p-8"
             >
               <div className="flex items-center gap-2">
-                <ClipboardList className="h-5 w-5 text-blue-600" />
+                <ClipboardList className="h-5 w-5 text-[#5400D6]" />
                 <h2 className="text-lg font-semibold tracking-tight text-slate-900">Assessment Instructions</h2>
               </div>
               <div className="mt-5 space-y-3">
@@ -1790,9 +1584,9 @@ export default function HiringProcess() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: 'easeOut', delay: 0.15 }}
-              className="flex gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-5"
+              className="flex gap-3 rounded-2xl border border-[#E9DDFF] bg-[#F4EFFF] p-5"
             >
-              <Info className="h-5 w-5 flex-shrink-0 text-blue-600" />
+              <Info className="h-5 w-5 flex-shrink-0 text-[#5400D6]" />
               <p className="text-sm text-blue-800">
                 Complete every round in sequence. Technical Round 1 will unlock only after passing Aptitude.
               </p>
@@ -1824,7 +1618,7 @@ export default function HiringProcess() {
               onClick={handlePrimaryCta}
               whileHover={{ y: -1 }}
               whileTap={{ scale: 0.98 }}
-              className="flex-1 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-blue-600/25 transition-colors hover:bg-blue-700 sm:flex-none sm:px-8"
+              className="flex-1 rounded-xl bg-[#5400D6] px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-[#5400D6]/25 transition-colors hover:bg-[#4500AD] sm:flex-none sm:px-8"
             >
               {aptitudePassed ? 'Continue to Technical Round 1' : 'Start Assessment'}
             </motion.button>
@@ -1851,7 +1645,7 @@ export default function HiringProcess() {
               className="w-full max-w-md rounded-2xl border border-slate-200/70 bg-white p-6 shadow-xl sm:p-8"
             >
               <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-blue-600" />
+                <Clock className="h-5 w-5 text-[#5400D6]" />
                 <h2 className="text-lg font-semibold text-slate-900">Resume Assessment</h2>
               </div>
               <p className="mt-1.5 text-sm text-slate-500">
@@ -1888,7 +1682,7 @@ export default function HiringProcess() {
                 <button
                   type="button"
                   onClick={resumeAssessment}
-                  className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                  className="rounded-xl bg-[#5400D6] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#4500AD]"
                 >
                   Resume Assessment
                 </button>
@@ -1912,7 +1706,7 @@ export default function HiringProcess() {
               className="w-full max-w-md rounded-2xl border border-slate-200/70 bg-white p-6 shadow-xl sm:p-8"
             >
               <div className="flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-blue-600" />
+                <ShieldCheck className="h-5 w-5 text-[#5400D6]" />
                 <h2 className="text-lg font-semibold text-slate-900">Assessment Permissions</h2>
               </div>
               <p className="mt-1.5 text-sm text-slate-500">
@@ -1955,7 +1749,7 @@ export default function HiringProcess() {
                   type="button"
                   onClick={() => setStage('preview')}
                   disabled={!(cameraStatus === 'granted' && micStatus === 'granted' && isFullscreen)}
-                  className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-xl bg-[#5400D6] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#4500AD] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Continue
                 </button>
@@ -1981,8 +1775,8 @@ export default function HiringProcess() {
               <div className="aspect-video overflow-hidden rounded-xl bg-slate-900">
                 <video ref={videoRef} autoPlay muted playsInline className="h-full w-full object-cover" />
               </div>
-              <div className="mt-4 flex w-fit items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+              <div className="mt-4 flex w-fit items-center gap-1.5 rounded-full bg-[#F4EFFF] px-3 py-1.5 text-xs font-semibold text-[#4500AD]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#6B24E8]" />
                 AI Monitoring Active
               </div>
               <dl className="mt-5 space-y-2.5 text-sm">
@@ -2021,7 +1815,7 @@ export default function HiringProcess() {
                 <button
                   type="button"
                   onClick={proceedToExam}
-                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#5400D6] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#4500AD]"
                 >
                   Begin Assessment <ArrowRight className="h-4 w-4" />
                 </button>
@@ -2053,7 +1847,7 @@ export default function HiringProcess() {
               <button
                 type="button"
                 onClick={() => attemptFullscreen(pendingTarget)}
-                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#5400D6] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#4500AD]"
               >
                 <RotateCcw className="h-4 w-4" /> Retry
               </button>
