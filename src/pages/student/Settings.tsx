@@ -125,7 +125,7 @@ const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#5400D6" }:
 
 const sidebarItems: Array<{
   label: string;
-  icon: IconName;
+  icon: StudentSidebarIconName;
   route: string;
   badge?: number;
 }> = [
@@ -403,7 +403,6 @@ export const StudentSettings = () => {
         subtitle: "Two-factor authentication",
         accent: privacy.find((item) => item.key === "twoFactor")?.value ? "On" : "Off",
       }}
-      showAiButton={false}
     >
       <div className="space-y-5">
         {error && (
