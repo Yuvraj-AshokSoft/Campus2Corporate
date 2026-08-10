@@ -1,4 +1,4 @@
-import React, { type ReactNode } from "react";
+import { type ReactNode } from "react";
 import {
   useLocation,
   useNavigate,
@@ -220,9 +220,9 @@ export interface StudentSidebarProps {
   onMobileClose?: () => void;
 }
 
-const sidebarItems: Array<{
+const defaultStudentSidebarItems: Array<{
   label: string;
-  icon: IconName;
+  icon: StudentSidebarIconName;
   route: string;
   badge?: number;
 }> = [
@@ -244,7 +244,7 @@ const sidebarItems: Array<{
   {
     label: "Applications",
     icon: "clipboard",
-    route: "/student/applied-projects",
+    route: "/student/applications",
     badge: 2,
   },
   {
