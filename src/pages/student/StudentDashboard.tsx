@@ -1,16 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
 import StudentLayout from "../../components/student/StudentLayout";
+import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
 import {
   getApiErrorMessage,
   studentApi,
@@ -413,6 +405,13 @@ const Icon = ({
         <path d="M7 16.2a4 4 0 0 0 4 3.8" />
       </>
     ),
+    map: (
+      <>
+        <path d="m4 6 6-3 4 3 6-3v15l-6 3-4-3-6 3V6Z" />
+        <path d="M10 3v15" />
+        <path d="M14 6v15" />
+      </>
+    ),
     broadcast: (
       <>
         <circle cx="12" cy="12" r="2" />
@@ -469,7 +468,7 @@ const useStudentProfile = () => {
 
 const sidebarItems: Array<{
   label: string;
-  icon: IconName;
+  icon: StudentSidebarIconName;
   route: string;
   badge?: number;
 }> = [
@@ -1814,7 +1813,7 @@ const AICareerCoachPanel = ({ onClose }: { onClose: () => void }) => {
 // ═══════════════════════════════════════════════════════════════════════════
 export const StudentDashboard = () => {
   const navigate = useNavigate();
-  const { fullName, firstName, initials, email, phone, currentUser } = useStudentProfile();
+  const { fullName, firstName, currentUser } = useStudentProfile();
   const [aiOpen, setAiOpen] = useState(false);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(true);
@@ -1857,7 +1856,6 @@ export const StudentDashboard = () => {
   const roleLine = [branchLabel, semesterLabel].filter(Boolean).join(" · ");
   const learningScore = dashboard?.stats.learningScore ?? 0;
   const modules = dashboard?.modules ?? [];
-  const performanceData = dashboard?.performanceData ?? [];
   const upcomingActivities = dashboard?.upcomingActivities ?? [];
 
   const stats = [
@@ -2461,15 +2459,7 @@ export const StudentDashboard = () => {
         </div>
       )}
 
-      {!aiOpen && (
-        <button
-          type="button"
-          onClick={() => setAiOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-purple-700 text-white shadow-xl shadow-purple-500/30 transition hover:scale-105 hover:bg-purple-800"
-        >
-          <Icon name="sparkles" className="h-5 w-5" />
-        </button>
-      )}
+      
     </StudentLayout>
   );
 }
