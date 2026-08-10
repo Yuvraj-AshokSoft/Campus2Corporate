@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
+import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
 import { getApiErrorMessage, studentApi, unwrapData } from "../../services/studentApi";
 
 // ─── Icon System (matches Admin Dashboard / Student Dashboard) ───────────────
@@ -82,7 +83,7 @@ const Icon = ({ name, className = "h-4 w-4", style }: { name: IconName; classNam
 
 const sidebarItems: Array<{
   label: string;
-  icon: IconName;
+  icon: StudentSidebarIconName;
   route: string;
   badge?: number;
 }> = [
@@ -330,7 +331,6 @@ export const StudentApplication = () => {
         subtitle: "Total submitted",
         accent: "Live",
       }}
-      showAiButton={false}
     >
       <div className="space-y-5">
 
