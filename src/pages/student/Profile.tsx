@@ -21,7 +21,7 @@ type IconName =
   | "clipboard" | "logout" | "camera" | "edit" | "trash" | "link" | "github"
   | "linkedin" | "globe" | "key" | "sun" | "moon" | "download" | "plus" | "megaphone";
 
-const Icon = ({ name, className = "h-4 w-4" }: { name: IconName; className?: string }) => {
+const Icon = ({ name, className = "h-4 w-4", style }: { name: IconName; className?: string; style?: React.CSSProperties }) => {
   const paths: Record<IconName, React.ReactNode> = {
     activity: <path d="M4 12h3l2-6 4 12 2-6h5" />,
     alert: <><path d="M12 4 3.5 18.5h17L12 4Z" /><path d="M12 9v4" /><path d="M12 16h.01" /></>,
@@ -89,7 +89,7 @@ const Icon = ({ name, className = "h-4 w-4" }: { name: IconName; className?: str
     megaphone: <><path d="m3 11 16-5v12L3 13v-2Z" /><path d="M19 9v6" /><path d="M7 14.5 8.5 20H12l-1.5-5" /></>,
   };
   return (
-    <svg className={className} fill="none" stroke="currentColor" strokeLinecap="round"
+    <svg className={className} style={style} fill="none" stroke="currentColor" strokeLinecap="round"
       strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
       {paths[name]}
     </svg>
@@ -127,7 +127,7 @@ const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#8b5cf6" }:
 
 const sidebarItems: Array<{
   label: string;
-  icon: IconName;
+  icon: StudentSidebarIconName;
   route: string;
   badge?: number;
 }> = [
@@ -375,7 +375,6 @@ export const StudentProfile = () => {
         subtitle: profile?.portfolio ? "Portfolio added" : "Add portfolio",
         accent: profile?.portfolio ? "Complete" : "Add portfolio",
       }}
-      showAiButton={false}
     >
       <div className="space-y-5">
 
