@@ -84,7 +84,7 @@ const Icon = ({ name, className = "h-4 w-4", style }: { name: IconName; classNam
 
 const sidebarItems: Array<{
   label: string;
-  icon: IconName;
+  icon: StudentSidebarIconName;
   route: string;
   badge?: number;
 }> = [
@@ -258,7 +258,6 @@ export const StudentCertificates = () => {
         subtitle: "Verified",
         accent: "Verified",
       }}
-      showAiButton={false}
     >
       <div className="space-y-5">
         {error && (
