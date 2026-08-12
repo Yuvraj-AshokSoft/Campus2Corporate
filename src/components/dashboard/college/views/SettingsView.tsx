@@ -16,11 +16,7 @@ import {
   Laptop,
   Cpu,
   Wrench,
-  Server,
-  Shield,
-  Key,
-  Check,
-  AlertCircle
+  Server
 } from "lucide-react";
 
 export interface DepartmentItem {

@@ -9,12 +9,7 @@ import {
   Upload,
   X,
   CheckCircle2,
-  Users,
-  Clock,
-  Plus,
-  ArrowUpRight,
-  Filter,
-  Sparkles
+  Users
 } from "lucide-react";
 
 export interface BroadcastLogItem {

@@ -10,12 +10,8 @@ import {
   Calendar as CalendarIcon,
   X,
   CheckCircle2,
-  Users,
-  Clock,
   Download,
   Send,
-  ExternalLink,
-  Briefcase,
   TrendingUp,
   AlertCircle
 } from "lucide-react";

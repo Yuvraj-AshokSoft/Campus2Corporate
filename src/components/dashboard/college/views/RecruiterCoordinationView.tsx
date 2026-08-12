@@ -15,10 +15,7 @@ import {
   X,
   CheckCircle2,
   FileText,
-  Clock,
   Send,
-  Plus,
-  Users,
   Search
 } from "lucide-react";
 

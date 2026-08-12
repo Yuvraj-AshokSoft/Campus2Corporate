@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   Cloud,
   Layers,
-  Building2,
   Zap,
   ArrowRight,
   BarChart3,

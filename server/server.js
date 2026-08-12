@@ -6,6 +6,8 @@ import { fileURLToPath } from 'url';
 import dns from 'dns';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
+import adminAuthRoutes from './routes/adminAuthRoutes.js';
+import { seedAdmin } from './utils/seedAdmin.js';
 
 // Prioritize IPv4 DNS lookups to avoid ECONNREFUSED on MongoDB Atlas SRV links
 dns.setDefaultResultOrder('ipv4first');
@@ -17,8 +19,10 @@ const __dirname = path.dirname(__filename);
 // Load env variables from root folder
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
-// Connect to MongoDB Atlas
-connectDB();
+// Connect to MongoDB Atlas and auto-seed initial admin
+connectDB().then(() => {
+  seedAdmin();
+});
 
 const app = express();
 
@@ -29,10 +33,12 @@ app.use(express.urlencoded({ extended: true }));
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/v1/admin', adminAuthRoutes);
+app.use('/api/admin', adminAuthRoutes);
 
 // Root route for sanity check
 app.get('/', (req, res) => {
-  res.json({ message: 'Campus2Corporate Auth Backend API is running successfully' });
+  res.json({ message: 'Campus2Corporate Auth & Admin Backend API is running successfully' });
 });
 
 // Centralized error handling middleware
