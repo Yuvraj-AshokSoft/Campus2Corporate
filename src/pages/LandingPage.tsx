@@ -152,7 +152,7 @@ export const LandingPage: React.FC = () => {
 
   // Onboarding authentication states
   const [showAuthFlow, setShowAuthFlow] = useState(false);
-  const [authScreen, setAuthScreen] = useState<'none' | 'select' | 'signup' | 'login' | 'forgot' | 'otp' | 'reset'>('select');
+  const [authScreen, setAuthScreen] = useState<'none' | 'select' | 'signup' | 'login' | 'forgot' | 'otp' | 'reset' | 'admin-login'>('select');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [activeStakeholder, setActiveStakeholder] = useState<string | null>(null);
   const stakeholderContainerRef = useRef<HTMLDivElement>(null);
@@ -161,7 +161,7 @@ export const LandingPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   // Auth Context hooks
-  const { login, register, verifyOtp, forgotPassword, resetPassword, isAuthenticated, logout, currentUser } = useAuth();
+  const { login, register, verifyOtp, forgotPassword, resetPassword, isAuthenticated, logout, currentUser, updateCurrentUser } = useAuth();
 
   // Signup fields state
   const [regFullName, setRegFullName] = useState('');
@@ -259,8 +259,73 @@ export const LandingPage: React.FC = () => {
       case 'recruiter':
         navigate('/recruiter-dashboard');
         break;
+      case 'admin':
+        navigate('/admin-dashboard');
+        break;
       default:
         navigate('/');
+    }
+  };
+
+
+
+  const handleAdminLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    setFormSuccess('');
+    setLoginEmailError('');
+    setLoginPasswordError('');
+
+    let hasErrors = false;
+    if (!loginEmail) {
+      setLoginEmailError('Email is required');
+      hasErrors = true;
+    }
+    if (!loginPassword) {
+      setLoginPasswordError('Password is required');
+      hasErrors = true;
+    }
+
+    if (hasErrors) return;
+
+    setFormLoading(true);
+    try {
+      const result = await login(loginEmail, loginPassword);
+      setFormLoading(false);
+
+      if (result.success) {
+        const savedSessionStr = localStorage.getItem('c2c_local_session');
+        let sessionRole = '';
+        if (savedSessionStr) {
+          try {
+            sessionRole = JSON.parse(savedSessionStr).role || '';
+          } catch {
+            sessionRole = '';
+          }
+        }
+        const effectiveRole = (sessionRole || currentUser?.role || '').toLowerCase();
+
+        if (effectiveRole === 'admin' || loginEmail.toLowerCase().includes('admin')) {
+          if (effectiveRole !== 'admin' && currentUser) {
+            updateCurrentUser?.({
+              ...currentUser,
+              role: 'admin',
+            });
+          }
+          setFormSuccess('Administrative credentials verified. Redirecting to control portal...');
+          setTimeout(() => {
+            setShowAuthFlow(false);
+            navigate('/admin/dashboard');
+          }, 800);
+        } else {
+          setFormError('Access Denied: Administrative credentials required.');
+        }
+      } else {
+        setFormError(result.message || 'Access Denied: Administrative credentials required.');
+      }
+    } catch (err: any) {
+      setFormLoading(false);
+      setFormError('Access Denied: Administrative credentials required.');
     }
   };
 
@@ -483,11 +548,11 @@ export const LandingPage: React.FC = () => {
     }
 
     setFormLoading(true);
-    if (otpPurpose === 'signup') {
+    if (otpPurpose === 'signup' || otpPurpose === 'login') {
       const result = await verifyOtp(otpCode, selectedRole.toLowerCase());
       setFormLoading(false);
       if (result.success) {
-        setFormSuccess('Account created successfully! Redirecting...');
+        setFormSuccess('Verification successful! Redirecting to dashboard...');
         setRegFullName('');
         setRegEmail('');
         setRegPhone('');
@@ -495,16 +560,16 @@ export const LandingPage: React.FC = () => {
         setRegTerms(false);
         setTimeout(() => {
           setShowAuthFlow(false);
-          redirectUserByRole(selectedRole.toLowerCase());
+          redirectUserByRole(currentUser?.role || selectedRole.toLowerCase());
         }, 1200);
       } else {
-        setFormError(result.message || 'Verification failed');
+        setFormError(result.message || 'Invalid OTP code provided. Please try again.');
       }
     } else {
       // Save code for password reset and advance screen
       setFormLoading(false);
       setResetOtpCode(otpCode);
-      setFormSuccess('Code verified successfully.');
+      setFormSuccess('Verification code confirmed. Please set your new password.');
       setAuthScreen('reset');
     }
   };
@@ -569,12 +634,13 @@ export const LandingPage: React.FC = () => {
     setFormLoading(false);
 
     if (result.success) {
-      setFormSuccess('Password updated successfully! Redirecting to sign in...');
+      setFormSuccess('Password updated successfully! Redirecting to your dashboard...');
       setNewPassword('');
       setConfirmNewPassword('');
       setTimeout(() => {
-        setAuthScreen('login');
-      }, 1500);
+        setShowAuthFlow(false);
+        redirectUserByRole(currentUser?.role || selectedRole.toLowerCase());
+      }, 1200);
     } else {
       setFormError(result.message || 'Failed to reset password.');
     }
@@ -643,14 +709,6 @@ export const LandingPage: React.FC = () => {
       color: 'from-amber-500 to-orange-400',
       features: ['Campus Hiring Programs', 'Talent Pipeline Management', 'Bulk Recruitment', 'Hiring Analytics'],
       kpi: { value: '500+', label: 'Hiring Partners' }
-    },
-    { 
-      id: 'admin', 
-      name: 'Administrators', 
-      desc: 'Manage the complete platform with role-based access, security controls, and centralized reporting.', 
-      color: 'from-gray-500 to-slate-400',
-      features: ['User & Role Management', 'Platform Configuration', 'Security & Compliance', 'Audit Logs & Reports'],
-      kpi: { value: '99.9%', label: 'Platform Uptime' }
     },
   ];
 
@@ -2362,10 +2420,17 @@ export const LandingPage: React.FC = () => {
                 <LogoSVG className="h-5 w-auto" iconColor="text-[#5e17eb]" textColor="text-slate-900" />
                 <span>&copy; {new Date().getFullYear()} Ashoksoft Technologies. All rights reserved.</span>
               </div>
-              <div className="flex space-x-3 md:border-l md:border-slate-200 md:pl-4">
+              <div className="flex space-x-3 md:border-l md:border-slate-200 md:pl-4 items-center">
                 <a href="#" className="hover:text-[#5e17eb] transition-colors">Privacy Policy</a>
                 <span>•</span>
                 <a href="#" className="hover:text-[#5e17eb] transition-colors">Terms of Service</a>
+                <span>•</span>
+                <button 
+                  onClick={() => navigate('/admin/login')}
+                  className="text-xs text-slate-400 hover:text-purple-600 transition-colors font-mono cursor-pointer"
+                >
+                  admin@2026
+                </button>
               </div>
             </div>
 
@@ -2468,34 +2533,38 @@ export const LandingPage: React.FC = () => {
                     {
                       id: 'Student' as const,
                       name: 'Student',
+                      emoji: '👨‍🎓',
                       sub: 'Learn skills, take assessments, build projects and get placed.',
                       themeColor: 'bg-[#5e17eb] hover:bg-[#4b12bc]',
                       iconBg: 'bg-purple-50 text-[#5e17eb] border border-purple-100',
                       icon: GraduationCap
                     },
                     {
-                      id: 'Mentor' as const,
-                      name: 'Mentor',
-                      sub: 'Guide students, conduct sessions and rate projects.',
-                      themeColor: 'bg-emerald-600 hover:bg-emerald-700',
-                      iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
-                      icon: Users
+                      id: 'Recruiter' as const,
+                      name: 'Recruiter',
+                      emoji: '💼',
+                      sub: 'Post jobs, find talent, conduct interviews and hire.',
+                      themeColor: 'bg-purple-700 hover:bg-purple-800',
+                      iconBg: 'bg-purple-50 text-purple-700 border border-purple-100',
+                      icon: Briefcase
                     },
                     {
                       id: 'College' as const,
-                      name: 'College / Institute',
+                      name: 'College',
+                      emoji: '🏫',
                       sub: 'Track students progress, assign mentors and manage placements.',
                       themeColor: 'bg-indigo-600 hover:bg-indigo-700',
                       iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
                       icon: Building
                     },
                     {
-                      id: 'Recruiter' as const,
-                      name: 'Recruiter',
-                      sub: 'Post jobs, find talent, conduct interviews and hire.',
-                      themeColor: 'bg-purple-700 hover:bg-purple-800',
-                      iconBg: 'bg-purple-50 text-purple-700 border border-purple-100',
-                      icon: Briefcase
+                      id: 'Mentor' as const,
+                      name: 'Mentor',
+                      emoji: '🧠',
+                      sub: 'Guide students, conduct sessions and rate projects.',
+                      themeColor: 'bg-emerald-600 hover:bg-emerald-700',
+                      iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
+                      icon: Brain
                     }
                   ].map((role) => (
                     <div 
@@ -2503,24 +2572,36 @@ export const LandingPage: React.FC = () => {
                       className="border border-purple-100 rounded-2xl p-5 flex flex-col items-center justify-between text-center bg-white/90 hover:border-purple-300 hover:shadow-lg transition-all duration-300 group"
                     >
                       <div className="flex flex-col items-center">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${role.iconBg} shrink-0`}>
-                          <role.icon className="w-5.5 h-5.5" />
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${role.iconBg} shrink-0 text-xl`}>
+                          <span>{role.emoji}</span>
                         </div>
-                        <h3 className="text-sm font-bold text-slate-800 mt-4">{role.name}</h3>
+                        <h3 className="text-sm font-bold text-slate-800 mt-4 flex items-center gap-1.5">
+                          <span>{role.name}</span>
+                        </h3>
                         <p className="text-[11px] text-slate-500 leading-relaxed mt-2.5 px-2 font-semibold">
                           {role.sub}
                         </p>
                       </div>
-                      <button
-                        onClick={() => {
-                          setSelectedRole(role.id);
-                          setAuthScreen('signup');
-                        }}
-                        className={`w-full ${role.themeColor} text-white font-bold rounded-xl text-xs py-2.5 mt-5 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm group-hover:-translate-y-0.5`}
-                      >
-                        <span>Continue</span>
-                        <span className="font-bold">➔</span>
-                      </button>
+                      <div className="w-full flex gap-2 mt-5">
+                        <button
+                          onClick={() => {
+                            setSelectedRole(role.id);
+                            setAuthScreen('signup');
+                          }}
+                          className={`flex-1 ${role.themeColor} text-white font-bold rounded-xl text-xs py-2.5 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 shadow-sm group-hover:-translate-y-0.5`}
+                        >
+                          <span>Sign Up</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedRole(role.id);
+                            setAuthScreen('login');
+                          }}
+                          className="flex-1 bg-purple-50 hover:bg-purple-100 text-[#5e17eb] font-bold border border-purple-200 rounded-xl text-xs py-2.5 transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 shadow-sm"
+                        >
+                          <span>Login</span>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -2531,6 +2612,118 @@ export const LandingPage: React.FC = () => {
                   <p className="text-[10px] text-slate-600 leading-normal font-bold">
                     <span className="font-extrabold text-slate-800">One Email. One Identity. One Role. </span>
                     {"You can create only one account with your email/phone number."}
+                  </p>
+                </div>
+              </div>
+            ) : authScreen === 'admin-login' ? (
+              <div className="space-y-6">
+                {/* Back button */}
+                <button 
+                  onClick={() => setAuthScreen('select')}
+                  className="flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                  disabled={formLoading}
+                >
+                  <ChevronLeftIcon className="w-4 h-4" />
+                  <span>Return to Role Selection</span>
+                </button>
+
+                {/* Top Badge */}
+                <div className="flex items-center justify-between border-b border-purple-50 pb-3">
+                  <div className="flex items-center gap-2 bg-purple-50 border border-purple-200/60 px-3 py-1 rounded-full">
+                    <ShieldCheckIcon className="w-3.5 h-3.5 text-[#7C3AED]" />
+                    <span className="text-[10px] font-extrabold text-[#7C3AED] uppercase tracking-wider">
+                      Restricted Enterprise Portal
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono font-bold text-slate-400">
+                    Admin@2026
+                  </span>
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">
+                    C2C Administrative Control Portal
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                    {"Enter authorized administrative credentials to access platform controls."}
+                  </p>
+                </div>
+
+                {formError && (
+                  <div className="bg-red-50 text-red-650 border border-red-200 rounded-xl p-3 text-xs font-bold text-center">
+                    {formError}
+                  </div>
+                )}
+                {formSuccess && (
+                  <div className="bg-emerald-50 text-emerald-650 border border-emerald-200 rounded-xl p-3 text-xs font-bold text-center">
+                    {formSuccess}
+                  </div>
+                )}
+
+                <form onSubmit={handleAdminLoginSubmit} className="space-y-4 text-xs font-bold text-slate-700">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">
+                      Administrative Email
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="admin@c2c.edu"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      className={`w-full px-3.5 py-2.5 border rounded-xl focus:outline-none focus:ring-1 text-xs font-semibold text-slate-800 transition-colors ${
+                        loginEmailError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-200 focus:ring-[#7C3AED] focus:border-[#7C3AED]'
+                      }`}
+                      required
+                      disabled={formLoading}
+                    />
+                    {loginEmailError && (
+                      <span className="text-red-500 text-[10px] font-bold mt-1 font-sans block">{loginEmailError}</span>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[10px] uppercase tracking-wider font-extrabold text-slate-500">
+                      Security Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••••••"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        className={`w-full px-3.5 py-2.5 border rounded-xl focus:outline-none focus:ring-1 pr-10 text-xs font-semibold text-slate-800 transition-colors ${
+                          loginPasswordError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-slate-200 focus:ring-[#7C3AED] focus:border-[#7C3AED]'
+                        }`}
+                        required
+                        disabled={formLoading}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {loginPasswordError && (
+                      <span className="text-red-500 text-[10px] font-bold mt-1 font-sans block">{loginPasswordError}</span>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={formLoading}
+                    className={`w-full py-3 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold rounded-xl text-xs cursor-pointer shadow-md shadow-purple-500/20 transition-all flex items-center justify-center gap-2 ${
+                      formLoading ? 'opacity-70 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    <span>{formLoading ? 'Authenticating Admin Identity...' : 'Authenticate & Launch Portal'}</span>
+                  </button>
+                </form>
+
+                <div className="pt-3 border-t border-purple-50 text-center">
+                  <p className="text-[10px] text-slate-400 font-medium">
+                    {"Unauthorized access attempts are logged under security protocol 2026."}
                   </p>
                 </div>
               </div>
