@@ -13,7 +13,6 @@ import { LandingPage } from "../pages/LandingPage";
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { StudentDashboard } from "../pages/student/StudentDashboard";
-import { AdminDashboard } from "../pages/AdminDashboard";
 import { CollegeDashboard } from "../pages/college/CollegeDashboard";
 import { RecruiterDashboard } from "../pages/RecruiterDashboard";
 import { MentorDashboard } from "../pages/MentorDashboard";
@@ -29,10 +28,6 @@ import { ProtectedRoute } from "./ProtectedRoute";
 // Admin Pages
 // ─────────────────────────────────────────────────────────────────────────────
 
-import Analytics from "../pages/admin/analytics";
-import UserManagement from "../pages/admin/userManagement";
-import CompanyManagement from "../pages/admin/companyManagement";
-import Settings from "../pages/admin/settings";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Student Pages
