@@ -839,7 +839,7 @@ export const LandingPage: React.FC = () => {
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tighter text-slate-900 leading-[1.1] max-w-2xl">
-                From Learning to Hiring—
+                From Learning to Hiring —
               </h1>
 
               <div className="h-12 overflow-hidden relative mt-2 w-full flex items-center justify-center lg:justify-start">
