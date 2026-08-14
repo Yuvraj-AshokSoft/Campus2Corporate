@@ -1,6 +1,9 @@
+import "dotenv/config";
 import http from "http";
+import jwt from "jsonwebtoken";
 
-const BASE_URL = "http://localhost:5000";
+const PORT = process.env.TEST_PORT || 5001;
+const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 let recruiterToken = "";
 let recruiterId = "";
@@ -467,7 +470,18 @@ async function runTests() {
       crossRoleRes.raw
     );
 
-    // Test 3.4: Non-existent route 404
+    // Test 3.4: Role-less JWT Token Access -> 403
+    const rolelessToken = jwt.sign({ id: recruiterId }, process.env.JWT_SECRET || "fallback_jwt_secret_key_123456");
+    const rolelessRes = await request("GET", "/api/recruiter/profile", null, {
+      Authorization: `Bearer ${rolelessToken}`,
+    });
+    recordTest(
+      "Forbidden Access for Token Without Role Claim (Expect 403)",
+      rolelessRes.status === 403 && rolelessRes.data.success === false,
+      rolelessRes.raw
+    );
+
+    // Test 3.5: Non-existent route 404
     const notFoundRes = await request("GET", "/api/nonexistent/route");
     recordTest(
       "Route Not Found Handler (Expect 404)",

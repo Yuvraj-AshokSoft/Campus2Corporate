@@ -5,7 +5,7 @@ const studentAuthMiddleware = [
   authMiddleware,
   async (req, res, next) => {
     try {
-      if (req.user?.role && req.user.role !== "student") {
+      if (req.user?.role !== "student") {
         return res.status(403).json({
           success: false,
           message: "Access denied",

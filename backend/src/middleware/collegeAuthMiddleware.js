@@ -5,7 +5,7 @@ const collegeAuthMiddleware = [
   authMiddleware,
   async (req, res, next) => {
     try {
-      if (req.user?.role && req.user.role !== "college") {
+      if (req.user?.role !== "college") {
         return res.status(403).json({
           success: false,
           message: "Access denied. College privileges required.",

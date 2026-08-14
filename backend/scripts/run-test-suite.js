@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import path from "path";
@@ -31,11 +32,15 @@ async function run() {
 
   await mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/c2c");
 
-  const server = app.listen(5000, () => {
-    console.log("[Test Runner] Backend Express App running on port 5000");
+  const PORT = process.env.TEST_PORT || 5001;
+  const server = app.listen(PORT, "127.0.0.1", () => {
+    console.log(`[Test Runner] Backend Express App running on port ${PORT}`);
 
     const testApiScript = path.join(__dirname, "test-api.js");
-    const child = spawn("node", [testApiScript], { stdio: "inherit" });
+    const child = spawn("node", [testApiScript], {
+      stdio: "inherit",
+      env: { ...process.env, TEST_PORT: PORT.toString() },
+    });
 
     child.on("exit", async (code) => {
       console.log(`\n[Test Runner] Test process exited with code ${code}`);

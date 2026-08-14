@@ -5,7 +5,7 @@ const recruiterAuthMiddleware = [
   authMiddleware,
   async (req, res, next) => {
     try {
-      if (req.user?.role && req.user.role !== "recruiter") {
+      if (req.user?.role !== "recruiter") {
         return res.status(403).json({
           success: false,
           message: "Access denied. Recruiter privileges required.",

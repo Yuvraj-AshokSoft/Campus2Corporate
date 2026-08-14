@@ -29,8 +29,17 @@ export const registerRecruiter = async (req, res) => {
 
     let targetCompanyId = companyId;
 
-    // If companyId is not provided, check or create Company by companyName
-    if (!targetCompanyId) {
+    // If companyId is provided, validate it exists
+    if (targetCompanyId) {
+      if (!mongoose.Types.ObjectId.isValid(targetCompanyId)) {
+        return errorResponse(res, "Invalid company ID format", 400);
+      }
+      const existingCompany = await Company.findById(targetCompanyId);
+      if (!existingCompany) {
+        return errorResponse(res, "Specified company not found", 404);
+      }
+    } else {
+      // If companyId is not provided, check or create Company by companyName
       if (!companyName) {
         return errorResponse(res, "Please specify a company name or select an existing company", 400);
       }

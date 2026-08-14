@@ -269,7 +269,9 @@ export const addStudentToCollege = async (req, res) => {
       return errorResponse(res, "Please provide student name and email", 400);
     }
 
-    const existingStudent = await Student.findOne({ email: email.toLowerCase() });
+    const cleanEmail = email.toLowerCase().trim();
+
+    const existingStudent = await Student.findOne({ email: cleanEmail });
     if (existingStudent) {
       // If student exists, associate with this college
       existingStudent.college = req.college._id;
@@ -297,7 +299,7 @@ export const addStudentToCollege = async (req, res) => {
 
     const student = await Student.create({
       name,
-      email: email.toLowerCase(),
+      email: cleanEmail,
       phone: phone || "",
       password: password || "Student@123456",
       college: req.college._id,
