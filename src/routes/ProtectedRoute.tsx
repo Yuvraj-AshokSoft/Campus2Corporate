@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: ('student' | 'mentor' | 'college' | 'recruiter')[];
+  allowedRoles?: ('student' | 'mentor' | 'college' | 'recruiter' | 'admin' | string)[];
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
@@ -28,20 +28,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
   }
 
   // Role validation checks: Bounce users back if they lack the allowed role permissions
-  if (allowedRoles && !allowedRoles.includes(currentUser.role)) {
+  if (allowedRoles && !allowedRoles.some(r => r.toLowerCase() === currentUser.role.toLowerCase())) {
     return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
-};/*
-
-//For testing Purpose
-import React from "react";
-
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
-
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  return <>{children}</>;
-};*/
+};

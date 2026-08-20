@@ -1,30 +1,51 @@
+import "dotenv/config";
 import { GoogleGenAI } from "@google/genai";
-
-console.log("Key exists:", !!process.env.GEMINI_API_KEY);
-console.log("Key prefix:", process.env.GEMINI_API_KEY?.substring(0, 10));
-console.log("Model:", process.env.GEMINI_MODEL);
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const careerCoachAi = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  httpOptions: {
+    timeout: 14000,
+  },
+});
 
-async function generateResponse(prompt) {
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
+const CAREER_COACH_MODEL =
+  process.env.GEMINI_CAREER_COACH_MODEL || MODEL;
+
+async function generateResponse(prompt, client = ai, config = {}, model = MODEL) {
   try {
-    const response = await ai.models.generateContent({
-      model: MODEL,
+    const response = await client.models.generateContent({
+      model,
       contents: prompt,
       config: {
         temperature: 0.3,
         responseMimeType: "application/json",
+        ...config,
       },
     });
 
     return response.text;
   } catch (error) {
     console.error("Gemini Error:", error);
-    throw new Error("Failed to generate AI response.");
+    const isTimeout =
+      error.name === "TimeoutError" ||
+      error.name === "AbortError" ||
+      error.code === "ETIMEDOUT" ||
+      error.status === 504 ||
+      error.message?.includes("DEADLINE_EXCEEDED");
+    const timeoutError = new Error(
+      isTimeout
+        ? "AI provider timed out. Please try again."
+        : "Failed to generate AI response."
+    );
+    timeoutError.code = isTimeout
+      ? "AI_PROVIDER_TIMEOUT"
+      : "AI_PROVIDER_ERROR";
+    throw timeoutError;
   }
 }
 
@@ -119,11 +140,13 @@ Return ONLY valid JSON.
 }
 
 export async function careerCoach(question, studentContext) {
+  const compactContext = String(studentContext || "").slice(0, 4000);
   const prompt = `
 You are an AI Career Coach.
+Answer the user's question directly and concisely. Do not repeat the student profile.
 
 Student Context:
-${studentContext}
+${compactContext || "No additional student context provided."}
 
 Question:
 ${question}
@@ -135,7 +158,9 @@ Return ONLY valid JSON.
 }
 `;
 
-  return generateResponse(prompt);
+  return generateResponse(prompt, careerCoachAi, {
+    maxOutputTokens: 256,
+  }, CAREER_COACH_MODEL);
 }
 
 export async function generateResumeSummary(resume) {
@@ -282,6 +307,25 @@ Return ONLY valid JSON.
 
 Context:
 ${JSON.stringify(context, null, 2)}
+`;
+
+  return generateResponse(prompt);
+}
+
+export async function generateCareerRoadmap(studentContext) {
+  const prompt = `
+Create a practical career roadmap for this student.
+
+Return ONLY valid JSON.
+{
+  "goal":"",
+  "timeframe":"",
+  "phases":[{"title":"","duration":"","actions":[""],"milestone":""}],
+  "nextAction":""
+}
+
+Student context:
+${JSON.stringify(studentContext, null, 2)}
 `;
 
   return generateResponse(prompt);

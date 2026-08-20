@@ -20,16 +20,43 @@ export type StudentSidebarIconName =
   | "bell"
   | "award"
   | "resume"
-  | "megaphone";
+  | "megaphone"
+  | "search"
+  | "logout"
+  | "message"
+  | "phone";
 
 const Icon = ({
   name,
   className = "h-5 w-5",
 }: {
-  name: StudentSidebarIconName;
+  name: StudentSidebarIconName | string;
   className?: string;
 }) => {
-  const paths: Record<StudentSidebarIconName, ReactNode> = {
+  const paths: Record<string, ReactNode> = {
+    phone: (
+      <path d="M6.6 10.8a15.9 15.9 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.3 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V21c0 .6-.4 1-1 1C10.6 22 2 13.4 2 3c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.3 1L6.6 10.8Z" />
+    ),
+
+    message: (
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z" />
+    ),
+
+    logout: (
+      <>
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <path d="m16 17 5-5-5-5" />
+        <path d="M21 12H9" />
+      </>
+    ),
+
+    search: (
+      <>
+        <circle cx="11" cy="11" r="6.5" />
+        <path d="m16 16 4 4" />
+      </>
+    ),
+
     // Dashboard
     dashboard: (
       <>
@@ -173,7 +200,7 @@ const Icon = ({
       className={className}
       aria-hidden="true"
     >
-      {paths[name]}
+      {paths[name] || paths.dashboard}
     </svg>
   );
 };
@@ -193,7 +220,7 @@ const getInitials = (name: string) =>
 
 export interface StudentSidebarNavItem {
   label: string;
-  icon: StudentSidebarIconName;
+  icon: StudentSidebarIconName | string;
   route: string;
   badge?: number;
 }

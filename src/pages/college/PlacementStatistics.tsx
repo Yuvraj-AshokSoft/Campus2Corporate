@@ -97,7 +97,7 @@ const getInitials = (name: string) =>
   name.trim().split(/\s+/).map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "TP";
 
 // Sidebar kept identical to Dashboard Home so navigation stays consistent.
-const sidebarItems: Array<{
+export const sidebarItems: Array<{
   label: string;
   icon: IconName;
   route: string;

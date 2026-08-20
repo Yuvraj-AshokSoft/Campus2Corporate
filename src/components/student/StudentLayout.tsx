@@ -123,7 +123,7 @@ const FloatingAIButton = ({
 const StudentLayout = ({
   children,
   sidebarItems,
-  sidebarHighlight = "Dashboard",
+  sidebarHighlight: _sidebarHighlight = "Dashboard",
   userSummary,
   stats: _stats,
   showAiButton = true,

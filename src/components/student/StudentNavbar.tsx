@@ -82,7 +82,12 @@ const getInitials = (name: string) =>
     .toUpperCase()
     .slice(0, 2) || "ST";
 
-const StudentNavbar = () => {
+interface StudentNavbarProps {
+  showAiButton?: boolean;
+  onAiButtonClick?: () => void;
+}
+
+const StudentNavbar = (_props: StudentNavbarProps = {}) => {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();

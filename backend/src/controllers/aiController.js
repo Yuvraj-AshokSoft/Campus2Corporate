@@ -2,8 +2,21 @@ import * as aiService from "../services/aiServices.js";
 
 const parseAiJson = (result) => {
   if (typeof result !== "string") return result;
-  const cleaned = result.replace(/```json|```/g, "").trim();
-  return JSON.parse(cleaned);
+  const cleaned = result.replace(/```json|```/gi, "").trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const start = Math.min(...[cleaned.indexOf("{"), cleaned.indexOf("[")].filter((index) => index >= 0));
+    const end = Math.max(cleaned.lastIndexOf("}"), cleaned.lastIndexOf("]"));
+    if (start >= 0 && end > start) {
+      try {
+        return JSON.parse(cleaned.slice(start, end + 1));
+      } catch {
+        // Return a predictable payload when the provider returns malformed JSON.
+      }
+    }
+    return { raw: result };
+  }
 };
 
 const sendSuccess = (res, message, data) => {
@@ -17,7 +30,7 @@ const sendSuccess = (res, message, data) => {
 const sendError = (res, error) => {
   console.error(error);
 
-  return res.status(500).json({
+  return res.status(error.code === "AI_PROVIDER_TIMEOUT" ? 504 : 500).json({
     success: false,
     message: error.message || "Internal Server Error",
   });
@@ -159,6 +172,15 @@ export const resumeSummary = async (req, res) => {
   try {
     const result = await aiService.generateResumeSummary(req.body.resume || req.body);
     sendSuccess(res, "Resume summary generated successfully.", parseAiJson(result));
+  } catch (error) {
+    sendError(res, error);
+  }
+};
+
+export const generateRoadmap = async (req, res) => {
+  try {
+    const result = await aiService.generateCareerRoadmap(req.body.studentContext || req.body);
+    sendSuccess(res, "Career roadmap generated successfully.", parseAiJson(result));
   } catch (error) {
     sendError(res, error);
   }

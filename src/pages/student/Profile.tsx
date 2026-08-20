@@ -222,7 +222,9 @@ export const StudentProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [profile, setProfile] = useState<StudentProfileType | null>(currentUser);
+  const [profile, setProfile] = useState<StudentProfileType | null>(
+    currentUser ? (currentUser as unknown as StudentProfileType) : null
+  );
 
   const [personal, setPersonal] = useState<EditableField[]>([
     { key: "fullName", label: "Full Name", icon: "user-check", value: fullName },
@@ -328,14 +330,16 @@ export const StudentProfile = () => {
       const response = await studentApi.updateProfile(payload);
       const student = unwrapData<{ student: StudentProfileType }>(response).student;
       setProfile(student);
-      updateCurrentUser({
-        ...(currentUser || student),
+      updateCurrentUser?.({
+        ...(currentUser || {}),
         ...student,
         id: student.id,
         fullName: student.fullName || student.name || "",
         name: student.name || student.fullName || "",
         email: student.email,
+        phone: student.phone || "",
         role: "student",
+        semester: student.semester ? String(student.semester) : undefined,
       });
       setEditing(false);
     } catch (saveError) {

@@ -247,22 +247,22 @@ const hiring = {
 
 const ai = {
   generateStudyPlan: (studentContext: string) =>
-    api.post("/ai/study-plan", {
+    api.post("/ai/smart-study-planner", {
       studentContext,
     }),
 
   placementAnalysis: (studentContext: string) =>
-    api.post("/ai/placement-analysis", {
+    api.post("/ai/placement-readiness", {
       studentContext,
     }),
 
   atsScore: (resumeText: string) =>
-    api.post("/ai/ats-score", {
+    api.post("/ai/resume-score", {
       resumeText,
     }),
 
   skillGap: (studentContext: string, role: string) =>
-    api.post("/ai/skill-gap", {
+    api.post("/ai/job-gap-analysis", {
       studentContext,
       role,
     }),
@@ -274,24 +274,27 @@ const ai = {
     }),
 
   resumeSummary: (data: any) =>
-    api.post("/ai/resume/summary", data),
+    api.post("/ai/resume-summary", data),
 
   resumeExperience: (data: any) =>
-    api.post("/ai/resume/experience", data),
+    api.post("/ai/resume-experience", data),
   resumeNote: (data: any) =>
-    api.post("/ai/resume/note", data),
+    api.post("/ai/resume-note", data),
+
+  generateRoadmap: (studentContext: any) =>
+    api.post("/ai/generate-roadmap", { studentContext }),
 
   hiringInterview: (data: any) =>
-    api.post("/ai/hiring/interview", data),
+    api.post("/ai/hiring-interview", data),
 
   hiringQuestions: (data: any) =>
-    api.post("/ai/hiring/questions", data),
+    api.post("/ai/hiring-questions", data),
 
   hiringEvaluate: (data: any) =>
-    api.post("/ai/hiring/evaluate", data),
+    api.post("/ai/hiring-evaluate", data),
 
   hiringFeedback: (data: any) =>
-    api.post("/ai/hiring/feedback", data),
+    api.post("/ai/hiring-feedback", data),
 };
 
 // =======================
@@ -348,6 +351,7 @@ export const studentApi = {
   generateHiringQuestions: ai.hiringQuestions,
   evaluateHiringAnswer: ai.hiringEvaluate,
   generateHiringFeedback: ai.hiringFeedback,
+  generateRoadmap: ai.generateRoadmap,
 };
 
 

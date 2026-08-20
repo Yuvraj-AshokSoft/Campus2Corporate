@@ -1858,7 +1858,7 @@ export const StudentDashboard = () => {
   const modules = dashboard?.modules ?? [];
   const upcomingActivities = dashboard?.upcomingActivities ?? [];
 
-  const stats = [
+  const _stats = [
     {
       label: "Registered courses",
       value: String(dashboard?.stats.registeredCourses ?? 0),
@@ -1892,6 +1892,7 @@ export const StudentDashboard = () => {
       bg: "#F0FDFA",
     },
   ];
+  void _stats;
 
   const recommendedItems = [
     {
