@@ -7,77 +7,101 @@ const collegeSchema = new mongoose.Schema(
       type: String,
       required: [true, "College name is required"],
       trim: true,
+      minlength: [3, "College name must be at least 3 characters"],
     },
+
     email: {
       type: String,
-      required: [true, "College email is required"],
+      required: [true, "Email is required"],
       unique: true,
       lowercase: true,
       trim: true,
+      match: [
+        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/,
+        "Please enter a valid email address",
+      ],
     },
-    password: {
-      type: String,
-      required: [true, "Password is required"],
-      select: false,
-      minlength: [8, "Password must be at least 8 characters"],
-    },
+
     phone: {
       type: String,
       required: [true, "Phone number is required"],
       match: [/^[0-9]{10}$/, "Please enter a valid 10-digit phone number"],
     },
+
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: [8, "Password must be at least 8 characters"],
+      select: false,
+    },
+
+    university: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     code: {
       type: String,
       trim: true,
       uppercase: true,
+      default: "",
     },
+
     website: {
       type: String,
       trim: true,
       default: "",
     },
+
     address: {
       type: String,
       trim: true,
       default: "",
     },
+
     city: {
       type: String,
       trim: true,
       default: "",
     },
+
     state: {
       type: String,
       trim: true,
       default: "",
     },
+
     description: {
       type: String,
+      trim: true,
       default: "",
     },
+
     placementOfficerName: {
       type: String,
       trim: true,
       default: "",
     },
+
     placementOfficerEmail: {
       type: String,
       trim: true,
       default: "",
     },
+
     placementOfficerPhone: {
       type: String,
       trim: true,
       default: "",
     },
+
     status: {
       type: String,
-      enum: {
-        values: ["Active", "Inactive"],
-        message: "Status must be Active or Inactive",
-      },
+      enum: ["Active", "Inactive"],
       default: "Active",
     },
+
     students: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -90,6 +114,7 @@ const collegeSchema = new mongoose.Schema(
   }
 );
 
+// Hash Password Before Saving
 collegeSchema.pre("save", async function () {
   if (!this.isModified("password") || !this.password) {
     return;
@@ -99,12 +124,12 @@ collegeSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
+// Compare Password
 collegeSchema.methods.comparePassword = async function (enteredPassword) {
   if (!this.password) {
     return false;
   }
-
-  return bcrypt.compare(enteredPassword, this.password);
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
 export default mongoose.model("College", collegeSchema);

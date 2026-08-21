@@ -6,12 +6,28 @@ import {
   getCollegeProfile,
   updateCollegeProfile,
   getCollegeDashboard,
+  createStudent,
+  getAllStudents,
+  getStudentById,
+  updateStudent,
+  deleteStudent,
+  createApplication,
+  getAllApplications,
+  getApplicationById,
+  updateApplication,
+  deleteApplication,
+  createProject,
+  getAllProjects,
+  getProjectById,
+  updateProject,
+  deleteProject,
+  getEligibleStudents,
+  getCollegeDrives,
   addStudentToCollege,
   getCollegeStudents,
   getCollegeStudentById,
   updateCollegeStudent,
   deleteCollegeStudent,
-  getCollegeDrives,
 } from "../controllers/collegeController.js";
 
 const router = express.Router();
@@ -19,7 +35,9 @@ const router = express.Router();
 // ==========================
 // Public Auth Routes
 // ==========================
+router.post("/register", registerCollege);
 router.post("/auth/register", registerCollege);
+router.post("/login", loginCollege);
 router.post("/auth/login", loginCollege);
 
 // ==========================
@@ -30,23 +48,39 @@ router.put("/profile", collegeAuthMiddleware, updateCollegeProfile);
 router.patch("/profile", collegeAuthMiddleware, updateCollegeProfile);
 
 // ==========================
-// Dashboard Analytics
+// Dashboard & Drives
 // ==========================
 router.get("/dashboard", collegeAuthMiddleware, getCollegeDashboard);
+router.get("/drives", collegeAuthMiddleware, getCollegeDrives);
 
 // ==========================
 // Student Pool Management
 // ==========================
-router.post("/students", collegeAuthMiddleware, addStudentToCollege);
-router.get("/students", collegeAuthMiddleware, getCollegeStudents);
-router.get("/students/:id", collegeAuthMiddleware, getCollegeStudentById);
-router.put("/students/:id", collegeAuthMiddleware, updateCollegeStudent);
-router.patch("/students/:id", collegeAuthMiddleware, updateCollegeStudent);
-router.delete("/students/:id", collegeAuthMiddleware, deleteCollegeStudent);
+router.post("/students", collegeAuthMiddleware, createStudent);
+router.get("/students", collegeAuthMiddleware, getAllStudents);
+router.get("/students/eligible", collegeAuthMiddleware, getEligibleStudents);
+router.get("/students/:id", collegeAuthMiddleware, getStudentById);
+router.put("/students/:id", collegeAuthMiddleware, updateStudent);
+router.patch("/students/:id", collegeAuthMiddleware, updateStudent);
+router.delete("/students/:id", collegeAuthMiddleware, deleteStudent);
 
 // ==========================
-// Placement Drives Overview
+// Application Management
 // ==========================
-router.get("/drives", collegeAuthMiddleware, getCollegeDrives);
+router.post("/applications", collegeAuthMiddleware, createApplication);
+router.get("/applications", collegeAuthMiddleware, getAllApplications);
+router.get("/applications/:id", collegeAuthMiddleware, getApplicationById);
+router.put("/applications/:id", collegeAuthMiddleware, updateApplication);
+router.patch("/applications/:id", collegeAuthMiddleware, updateApplication);
+router.delete("/applications/:id", collegeAuthMiddleware, deleteApplication);
+
+// ==========================
+// Project Management
+// ==========================
+router.post("/projects", collegeAuthMiddleware, createProject);
+router.get("/projects", collegeAuthMiddleware, getAllProjects);
+router.get("/projects/:id", collegeAuthMiddleware, getProjectById);
+router.put("/projects/:id", collegeAuthMiddleware, updateProject);
+router.delete("/projects/:id", collegeAuthMiddleware, deleteProject);
 
 export default router;
