@@ -1,23 +1,38 @@
 import mongoose from "mongoose";
 import Student from "../models/student.js";
+import Application from "../models/application.js";
+import Project from "../models/project.js";
 import generateToken from "../utils/generateToken.js";
-import { successResponse, errorResponse } from "../utils/apiResponse.js";
+import {
+  successResponse,
+  errorResponse,
+} from "../utils/apiResponse.js";
 
-const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/;
+const emailRegex =
+  /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/;
 
-const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
+const normalizeEmail = (email) =>
+  String(email || "").trim().toLowerCase();
 
 const toNumber = (value) => {
-  if (value === undefined || value === null || value === "") {
+  if (
+    value === undefined ||
+    value === null ||
+    value === ""
+  ) {
     return undefined;
   }
 
   const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
+
+  return Number.isFinite(parsed)
+    ? parsed
+    : undefined;
 };
 
 const clampPercentage = (value) => {
   const parsed = toNumber(value);
+
   if (parsed === undefined) {
     return undefined;
   }
@@ -25,9 +40,12 @@ const clampPercentage = (value) => {
   return Math.min(100, Math.max(0, parsed));
 };
 
-const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
+const isValidObjectId = (value) =>
+  mongoose.Types.ObjectId.isValid(value);
 
-const isStudentRole = (role) => !role || String(role).toLowerCase() === "student";
+const isStudentRole = (role) =>
+  !role ||
+  String(role).toLowerCase() === "student";
 
 const publicStudent = (student) => ({
   id: student._id,
@@ -44,7 +62,8 @@ const publicStudent = (student) => ({
   interests: student.interests || [],
   education: student.education || [],
   resume: student.resume,
-  resumeUrl: student.resumeUrl || student.resume,
+  resumeUrl:
+    student.resumeUrl || student.resume,
   bio: student.bio,
   location: student.location,
   linkedIn: student.linkedIn,
@@ -55,7 +74,12 @@ const publicStudent = (student) => ({
   updatedAt: student.updatedAt,
 });
 
-const authPayload = (student, message, statusCode, res) => {
+const authPayload = (
+  student,
+  message,
+  statusCode,
+  res,
+) => {
   const token = generateToken(student);
   const profile = publicStudent(student);
 
@@ -72,18 +96,34 @@ const authPayload = (student, message, statusCode, res) => {
   });
 };
 
-const getAuthenticatedStudent = async (req, res) => {
-  const studentId = req.user?.id || req.student?._id;
+const getAuthenticatedStudent = async (
+  req,
+  res,
+) => {
+  const studentId =
+    req.user?.id || req.student?._id;
 
   if (!studentId) {
-    errorResponse(res, "Authentication required", 401);
+    errorResponse(
+      res,
+      "Authentication required",
+      401,
+    );
+
     return null;
   }
 
-  const student = await Student.findById(studentId).select("+password");
+  const student = await Student.findById(
+    studentId,
+  ).select("+password");
 
   if (!student) {
-    errorResponse(res, "Student account not found", 404);
+    errorResponse(
+      res,
+      "Student account not found",
+      404,
+    );
+
     return null;
   }
 
@@ -108,13 +148,20 @@ const syncSkillNames = (student) => {
   student.skills = [...skillNames].filter(Boolean);
 };
 
-const findSkill = (student, skillIdOrName) => {
-  const needle = String(skillIdOrName || "").trim().toLowerCase();
+const findSkill = (
+  student,
+  skillIdOrName,
+) => {
+  const needle = String(
+    skillIdOrName || "",
+  )
+    .trim()
+    .toLowerCase();
 
   return student.skillDetails.find(
     (skill) =>
       skill._id?.toString() === skillIdOrName ||
-      skill.name.toLowerCase() === needle
+      skill.name.toLowerCase() === needle,
   );
 };
 
@@ -122,11 +169,15 @@ const buildSkillList = (student) => {
   const mapped = new Map();
 
   for (const skill of student.skillDetails || []) {
-    mapped.set(skill.name.toLowerCase(), skill);
+    mapped.set(
+      skill.name.toLowerCase(),
+      skill,
+    );
   }
 
   for (const skillName of student.skills || []) {
     const key = String(skillName).toLowerCase();
+
     if (!mapped.has(key)) {
       mapped.set(key, {
         id: key,
@@ -143,35 +194,61 @@ const buildSkillList = (student) => {
 };
 
 const average = (values) => {
-  const numericValues = values.filter((value) => Number.isFinite(value));
+  const numericValues = values.filter(
+    (value) => Number.isFinite(value),
+  );
+
   if (!numericValues.length) {
     return 0;
   }
 
-  return numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length;
+  return (
+    numericValues.reduce(
+      (sum, value) => sum + value,
+      0,
+    ) / numericValues.length
+  );
 };
 
-const calculateScoreBreakdown = (student) => {
-  const skillValues = (student.skillDetails || []).map((skill) =>
-    clampPercentage(skill.proficiency)
+const calculateScoreBreakdown = (
+  student,
+) => {
+  const skillValues = (
+    student.skillDetails || []
+  ).map((skill) =>
+    clampPercentage(skill.proficiency),
   );
-  const fallbackSkillScore = Math.min((student.skills || []).length * 10, 100);
-  const skillsScore = skillValues.length ? average(skillValues) : fallbackSkillScore;
+
+  const fallbackSkillScore = Math.min(
+    (student.skills || []).length * 10,
+    100,
+  );
+
+  const skillsScore = skillValues.length
+    ? average(skillValues)
+    : fallbackSkillScore;
 
   const learningScore = average(
-    (student.learningProgress || []).map((module) =>
-      clampPercentage(module.progressPercentage)
-    )
+    (student.learningProgress || []).map(
+      (module) =>
+        clampPercentage(
+          module.progressPercentage,
+        ),
+    ),
   );
+
   const assignmentScore = average(
-    (student.assignmentSubmissions || []).map((submission) =>
-      clampPercentage(submission.score)
-    )
+    (student.assignmentSubmissions || []).map(
+      (submission) =>
+        clampPercentage(submission.score),
+    ),
   );
+
   const quizScore = average(
-    (student.quizSubmissions || []).map((submission) =>
-      clampPercentage(submission.score)
-    )
+    (student.quizSubmissions || []).map(
+      (submission) =>
+        clampPercentage(submission.score),
+    ),
   );
 
   const weights = {
@@ -183,7 +260,8 @@ const calculateScoreBreakdown = (student) => {
 
   const total =
     skillsScore * weights.skills +
-    learningScore * weights.learningProgress +
+    learningScore *
+      weights.learningProgress +
     assignmentScore * weights.assignments +
     quizScore * weights.quizzes;
 
@@ -191,33 +269,51 @@ const calculateScoreBreakdown = (student) => {
 
   return {
     skillScore,
-    eligibilityStatus: skillScore >= 70 ? "Eligible" : "Not Eligible",
+    eligibilityStatus:
+      skillScore >= 70
+        ? "Eligible"
+        : "Not Eligible",
+
     breakdown: {
       skills: {
         score: Math.round(skillsScore),
         weight: weights.skills,
-        count: skillValues.length || (student.skills || []).length,
+        count:
+          skillValues.length ||
+          (student.skills || []).length,
       },
+
       learningProgress: {
         score: Math.round(learningScore),
         weight: weights.learningProgress,
-        count: (student.learningProgress || []).length,
+        count:
+          (student.learningProgress || [])
+            .length,
       },
+
       assignments: {
         score: Math.round(assignmentScore),
         weight: weights.assignments,
-        count: (student.assignmentSubmissions || []).length,
+        count:
+          (student.assignmentSubmissions || [])
+            .length,
       },
+
       quizzes: {
         score: Math.round(quizScore),
         weight: weights.quizzes,
-        count: (student.quizSubmissions || []).length,
+        count:
+          (student.quizSubmissions || [])
+            .length,
       },
     },
   };
 };
 
-export const registerStudent = async (req, res) => {
+export const registerStudent = async (
+  req,
+  res,
+) => {
   try {
     const {
       name,
@@ -231,497 +327,1193 @@ export const registerStudent = async (req, res) => {
       semester,
     } = req.body;
 
-    const displayName = String(name || fullName || "").trim();
-    const normalizedEmail = normalizeEmail(email);
+    const displayName = String(
+      name || fullName || "",
+    ).trim();
+
+    const normalizedEmail =
+      normalizeEmail(email);
 
     if (!isStudentRole(role)) {
-      return errorResponse(res, "This endpoint supports student registration only", 400);
+      return errorResponse(
+        res,
+        "This endpoint supports student registration only",
+        400,
+      );
     }
 
-    if (!displayName || !normalizedEmail || !password) {
-      return errorResponse(res, "Name, email, and password are required", 400);
+    if (
+      !displayName ||
+      !normalizedEmail ||
+      !password
+    ) {
+      return errorResponse(
+        res,
+        "Name, email, and password are required",
+        400,
+      );
     }
 
     if (!emailRegex.test(normalizedEmail)) {
-      return errorResponse(res, "Please provide a valid email address", 400);
+      return errorResponse(
+        res,
+        "Please provide a valid email address",
+        400,
+      );
     }
 
     if (String(password).length < 8) {
-      return errorResponse(res, "Password must be at least 8 characters long", 400);
+      return errorResponse(
+        res,
+        "Password must be at least 8 characters long",
+        400,
+      );
     }
 
-    if (college && !isValidObjectId(college)) {
-      return errorResponse(res, "Invalid college id", 400);
+    if (
+      college &&
+      !isValidObjectId(college)
+    ) {
+      return errorResponse(
+        res,
+        "Invalid college id",
+        400,
+      );
     }
 
-    const existingStudent = await Student.findOne({ email: normalizedEmail });
+    const existingStudent =
+      await Student.findOne({
+        email: normalizedEmail,
+      });
+
     if (existingStudent) {
-      return errorResponse(res, "A student with this email already exists", 409);
+      return errorResponse(
+        res,
+        "A student with this email already exists",
+        409,
+      );
     }
 
-    const student = await Student.create({
-      name: displayName,
-      email: normalizedEmail,
-      phone,
-      password,
-      college: college || undefined,
-      branch,
-      semester: toNumber(semester),
-    });
+    const student =
+      await Student.create({
+        name: displayName,
+        email: normalizedEmail,
+        phone,
+        password,
+        college:
+          college || undefined,
+        branch,
+        semester: toNumber(semester),
+      });
 
-    return authPayload(student, "Student registered successfully", 201, res);
+    return authPayload(
+      student,
+      "Student registered successfully",
+      201,
+      res,
+    );
   } catch (error) {
     if (error.code === 11000) {
-      return errorResponse(res, "A student with this email already exists", 409);
+      return errorResponse(
+        res,
+        "A student with this email already exists",
+        409,
+      );
     }
 
-    return errorResponse(res, error.message || "Student registration failed", 500);
+    return errorResponse(
+      res,
+      error.message ||
+        "Student registration failed",
+      500,
+    );
   }
 };
 
-export const loginStudent = async (req, res) => {
+export const loginStudent = async (
+  req,
+  res,
+) => {
   try {
-    const { email, password, role } = req.body;
-    const normalizedEmail = normalizeEmail(email);
+    const {
+      email,
+      password,
+      role,
+    } = req.body;
+
+    const normalizedEmail =
+      normalizeEmail(email);
 
     if (!isStudentRole(role)) {
-      return errorResponse(res, "This endpoint supports student login only", 400);
+      return errorResponse(
+        res,
+        "This endpoint supports student login only",
+        400,
+      );
     }
 
     if (!normalizedEmail || !password) {
-      return errorResponse(res, "Email and password are required", 400);
+      return errorResponse(
+        res,
+        "Email and password are required",
+        400,
+      );
     }
 
-    const student = await Student.findOne({ email: normalizedEmail }).select("+password");
+    const student =
+      await Student.findOne({
+        email: normalizedEmail,
+      }).select("+password");
 
-    if (!student || !(await student.comparePassword(password))) {
-      return errorResponse(res, "Invalid email or password", 401);
+    if (
+      !student ||
+      !(await student.comparePassword(
+        password,
+      ))
+    ) {
+      return errorResponse(
+        res,
+        "Invalid email or password",
+        401,
+      );
     }
 
     if (student.status !== "Active") {
-      return errorResponse(res, "Student account is inactive", 403);
+      return errorResponse(
+        res,
+        "Student account is inactive",
+        403,
+      );
     }
 
-    return authPayload(student, "Student logged in successfully", 200, res);
+    return authPayload(
+      student,
+      "Student logged in successfully",
+      200,
+      res,
+    );
   } catch (error) {
-    return errorResponse(res, error.message || "Student login failed", 500);
+    return errorResponse(
+      res,
+      error.message ||
+        "Student login failed",
+      500,
+    );
   }
 };
 
-export const logoutStudent = (req, res) =>
-  successResponse(res, "Logged out successfully", { token: null });
+export const logoutStudent = (
+  req,
+  res,
+) =>
+  successResponse(
+    res,
+    "Logged out successfully",
+    { token: null },
+  );
 
-export const getStudentProfile = async (req, res) => {
+export const getStudentProfile = async (
+  req,
+  res,
+) => {
   try {
-    return successResponse(res, "Student profile fetched successfully", {
-      student: publicStudent(req.student),
-    });
+    return successResponse(
+      res,
+      "Student profile fetched successfully",
+      {
+        student: publicStudent(
+          req.student,
+        ),
+      },
+    );
   } catch (error) {
-    return errorResponse(res, error.message || "Failed to fetch student profile", 500);
+    return errorResponse(
+      res,
+      error.message ||
+        "Failed to fetch student profile",
+      500,
+    );
   }
 };
-
-export const updateStudentProfile = async (req, res) => {
+export const getStudentDashboard = async (req, res) => {
   try {
     const student = await getAuthenticatedStudent(req, res);
+
     if (!student) {
       return null;
     }
 
-    const allowedFields = [
-      "name",
-      "fullName",
-      "phone",
-      "college",
-      "branch",
-      "semester",
-      "resume",
-      "resumeUrl",
-      "bio",
-      "location",
-      "linkedIn",
-      "github",
-      "portfolio",
-    ];
+    const [
+      skills,
+      learningModules,
+      assignments,
+      quizzes,
+      skillScore,
+    ] = await Promise.all([
+      StudentSkill.find({
+        student: student._id,
+      }).lean(),
 
-    for (const field of allowedFields) {
-      if (req.body[field] !== undefined) {
-        if (field === "fullName") {
-          student.name = String(req.body[field]).trim();
-        } else if (field === "semester") {
-          student.semester = toNumber(req.body[field]);
-        } else if (field === "college") {
-          if (req.body[field] && !isValidObjectId(req.body[field])) {
-            return errorResponse(res, "Invalid college id", 400);
-          }
-          student.college = req.body[field] || undefined;
-        } else {
-          student[field] = req.body[field];
-        }
-      }
-    }
+      LearningModule.find({
+        isActive: true,
+      }).lean(),
 
-    if (Array.isArray(req.body.interests)) {
-      student.interests = req.body.interests.map((interest) => String(interest).trim()).filter(Boolean);
-    }
+      Assignment.find({
+        student: student._id,
+      }).lean(),
 
-    if (Array.isArray(req.body.education)) {
-      student.education = req.body.education;
-    }
+      Quiz.find({
+        student: student._id,
+      }).lean(),
 
-    if (Array.isArray(req.body.skills)) {
-      student.skills = req.body.skills.map((skill) => String(skill).trim()).filter(Boolean);
-    }
+      SkillScore.findOne({
+        student: student._id,
+      }).lean(),
+    ]);
 
-    if (student.resumeUrl && !student.resume) {
-      student.resume = student.resumeUrl;
-    }
+    return successResponse(
+      res,
+      "Student dashboard fetched successfully",
+      {
+        student: {
+          id: student._id,
+          name: student.name,
+          email: student.email,
+          phone: student.phone,
+          profile: student.profile,
+        },
 
-    if (student.resume && !student.resumeUrl) {
-      student.resumeUrl = student.resume;
-    }
+        skills: skills || [],
 
-    syncSkillNames(student);
-    await student.save();
+        learningModules:
+          learningModules || [],
 
-    return successResponse(res, "Student profile updated successfully", {
-      student: publicStudent(student),
-    });
+        assignments:
+          assignments || [],
+
+        quizzes:
+          quizzes || [],
+
+        skillScore:
+          skillScore || null,
+      },
+    );
   } catch (error) {
-    return errorResponse(res, error.message || "Failed to update student profile", 500);
-  }
-};
-
-export const getStudentSkills = async (req, res) => {
-  try {
-    return successResponse(res, "Student skills fetched successfully", {
-      skills: buildSkillList(req.student),
-    });
-  } catch (error) {
-    return errorResponse(res, error.message || "Failed to fetch student skills", 500);
-  }
-};
-
-export const addStudentSkill = async (req, res) => {
-  try {
-    const student = await getAuthenticatedStudent(req, res);
-    if (!student) {
-      return null;
-    }
-
-    const name = String(req.body.name || req.body.skill || "").trim();
-    const proficiency = clampPercentage(req.body.proficiency) ?? 0;
-
-    if (!name) {
-      return errorResponse(res, "Skill name is required", 400);
-    }
-
-    const stringSkillExists = (student.skills || []).some(
-      (skill) => String(skill).toLowerCase() === name.toLowerCase()
+    console.error(
+      "getStudentDashboard error:",
+      error,
     );
 
-    if (findSkill(student, name) || stringSkillExists) {
-      return errorResponse(res, "Skill already exists", 409);
+    return errorResponse(
+      res,
+      "Failed to fetch student dashboard",
+      500,
+    );
+  }
+};
+
+export const updateStudentProfile =
+  async (req, res) => {
+    try {
+      const student =
+        await getAuthenticatedStudent(
+          req,
+          res,
+        );
+
+      if (!student) {
+        return null;
+      }
+
+      const allowedFields = [
+        "name",
+        "fullName",
+        "phone",
+        "college",
+        "branch",
+        "semester",
+        "resume",
+        "resumeUrl",
+        "bio",
+        "location",
+        "linkedIn",
+        "github",
+        "portfolio",
+      ];
+
+      for (const field of allowedFields) {
+        if (
+          req.body[field] !== undefined
+        ) {
+          if (field === "fullName") {
+            student.name = String(
+              req.body[field],
+            ).trim();
+          } else if (
+            field === "semester"
+          ) {
+            student.semester =
+              toNumber(
+                req.body[field],
+              );
+          } else if (
+            field === "college"
+          ) {
+            if (
+              req.body[field] &&
+              !isValidObjectId(
+                req.body[field],
+              )
+            ) {
+              return errorResponse(
+                res,
+                "Invalid college id",
+                400,
+              );
+            }
+
+            student.college =
+              req.body[field] || undefined;
+          } else {
+            student[field] =
+              req.body[field];
+          }
+        }
+      }
+
+      if (
+        Array.isArray(
+          req.body.interests,
+        )
+      ) {
+        student.interests =
+          req.body.interests
+            .map((interest) =>
+              String(interest).trim(),
+            )
+            .filter(Boolean);
+      }
+
+      if (
+        Array.isArray(
+          req.body.education,
+        )
+      ) {
+        student.education =
+          req.body.education;
+      }
+
+      if (
+        Array.isArray(
+          req.body.skills,
+        )
+      ) {
+        student.skills =
+          req.body.skills
+            .map((skill) =>
+              String(skill).trim(),
+            )
+            .filter(Boolean);
+      }
+
+      if (
+        student.resumeUrl &&
+        !student.resume
+      ) {
+        student.resume =
+          student.resumeUrl;
+      }
+
+      if (
+        student.resume &&
+        !student.resumeUrl
+      ) {
+        student.resumeUrl =
+          student.resume;
+      }
+
+      syncSkillNames(student);
+
+      await student.save();
+
+      return successResponse(
+        res,
+        "Student profile updated successfully",
+        {
+          student:
+            publicStudent(student),
+        },
+      );
+    } catch (error) {
+      return errorResponse(
+        res,
+        error.message ||
+          "Failed to update student profile",
+        500,
+      );
+    }
+  };
+
+export const getStudentSkills = async (
+  req,
+  res,
+) => {
+  try {
+    return successResponse(
+      res,
+      "Student skills fetched successfully",
+      {
+        skills: buildSkillList(
+          req.student,
+        ),
+      },
+    );
+  } catch (error) {
+    return errorResponse(
+      res,
+      error.message ||
+        "Failed to fetch student skills",
+      500,
+    );
+  }
+};
+
+export const addStudentSkill = async (
+  req,
+  res,
+) => {
+  try {
+    const student =
+      await getAuthenticatedStudent(
+        req,
+        res,
+      );
+
+    if (!student) {
+      return null;
+    }
+
+    const name = String(
+      req.body.name ||
+        req.body.skill ||
+        "",
+    ).trim();
+
+    const proficiency =
+      clampPercentage(
+        req.body.proficiency,
+      ) ?? 0;
+
+    if (!name) {
+      return errorResponse(
+        res,
+        "Skill name is required",
+        400,
+      );
+    }
+
+    const stringSkillExists = (
+      student.skills || []
+    ).some(
+      (skill) =>
+        String(skill).toLowerCase() ===
+        name.toLowerCase(),
+    );
+
+    if (
+      findSkill(student, name) ||
+      stringSkillExists
+    ) {
+      return errorResponse(
+        res,
+        "Skill already exists",
+        409,
+      );
     }
 
     student.skillDetails.push({
       name,
       proficiency,
       category: req.body.category,
-      yearsOfExperience: toNumber(req.body.yearsOfExperience) || 0,
+      yearsOfExperience:
+        toNumber(
+          req.body.yearsOfExperience,
+        ) || 0,
     });
+
     syncSkillNames(student);
+
     await student.save();
 
-    return successResponse(res, "Skill added successfully", {
-      skill: student.skillDetails[student.skillDetails.length - 1],
-      skills: buildSkillList(student),
-    }, 201);
+    return successResponse(
+      res,
+      "Skill added successfully",
+      {
+        skill:
+          student.skillDetails[
+            student.skillDetails.length - 1
+          ],
+        skills:
+          buildSkillList(student),
+      },
+      201,
+    );
   } catch (error) {
-    return errorResponse(res, error.message || "Failed to add skill", 500);
+    return errorResponse(
+      res,
+      error.message ||
+        "Failed to add skill",
+      500,
+    );
   }
 };
 
-export const updateStudentSkill = async (req, res) => {
-  try {
-    const student = await getAuthenticatedStudent(req, res);
-    if (!student) {
-      return null;
+export const updateStudentSkill =
+  async (req, res) => {
+    try {
+      const student =
+        await getAuthenticatedStudent(
+          req,
+          res,
+        );
+
+      if (!student) {
+        return null;
+      }
+
+      const skill = findSkill(
+        student,
+        req.params.skillId ||
+          req.body.skillId ||
+          req.body.name,
+      );
+
+      let skillToUpdate = skill;
+
+      if (!skillToUpdate) {
+        const existingSkillName =
+          (
+            student.skills || []
+          ).find(
+            (name) =>
+              String(name).toLowerCase() ===
+              String(
+                req.params.skillId ||
+                  req.body.skillId ||
+                  req.body.name,
+              ).toLowerCase(),
+          );
+
+        if (!existingSkillName) {
+          return errorResponse(
+            res,
+            "Skill not found",
+            404,
+          );
+        }
+
+        student.skillDetails.push({
+          name: existingSkillName,
+          proficiency: 0,
+        });
+
+        skillToUpdate =
+          student.skillDetails[
+            student.skillDetails.length - 1
+          ];
+      }
+
+      if (
+        req.body.name !== undefined
+      ) {
+        const nextName = String(
+          req.body.name,
+        ).trim();
+
+        const duplicate =
+          student.skillDetails.find(
+            (item) =>
+              item._id.toString() !==
+                skillToUpdate._id.toString() &&
+              item.name.toLowerCase() ===
+                nextName.toLowerCase(),
+          );
+
+        if (duplicate) {
+          return errorResponse(
+            res,
+            "Another skill with this name already exists",
+            409,
+          );
+        }
+
+        skillToUpdate.name =
+          nextName;
+      }
+
+      if (
+        req.body.proficiency !==
+        undefined
+      ) {
+        skillToUpdate.proficiency =
+          clampPercentage(
+            req.body.proficiency,
+          );
+      }
+
+      if (
+        req.body.category !==
+        undefined
+      ) {
+        skillToUpdate.category =
+          req.body.category;
+      }
+
+      if (
+        req.body.yearsOfExperience !==
+        undefined
+      ) {
+        skillToUpdate.yearsOfExperience =
+          toNumber(
+            req.body.yearsOfExperience,
+          ) || 0;
+      }
+
+      syncSkillNames(student);
+
+      await student.save();
+
+      return successResponse(
+        res,
+        "Skill updated successfully",
+        {
+          skill: skillToUpdate,
+          skills:
+            buildSkillList(student),
+        },
+      );
+    } catch (error) {
+      return errorResponse(
+        res,
+        error.message ||
+          "Failed to update skill",
+        500,
+      );
     }
+  };
 
-    const skill = findSkill(student, req.params.skillId || req.body.skillId || req.body.name);
-    let skillToUpdate = skill;
+export const deleteStudentSkill =
+  async (req, res) => {
+    try {
+      const student =
+        await getAuthenticatedStudent(
+          req,
+          res,
+        );
 
-    if (!skillToUpdate) {
-      const existingSkillName = (student.skills || []).find(
+      if (!student) {
+        return null;
+      }
+
+      const skill = findSkill(
+        student,
+        req.params.skillId ||
+          req.body.skillId ||
+          req.body.name,
+      );
+
+      const skillName =
+        skill?.name ||
+        req.params.skillId ||
+        req.body.name;
+
+      const hadStringSkill = (
+        student.skills || []
+      ).some(
         (name) =>
           String(name).toLowerCase() ===
-          String(req.params.skillId || req.body.skillId || req.body.name).toLowerCase()
+          String(
+            skillName,
+          ).toLowerCase(),
       );
 
-      if (!existingSkillName) {
-        return errorResponse(res, "Skill not found", 404);
+      if (skill) {
+        student.skillDetails.pull(
+          skill._id,
+        );
       }
 
-      student.skillDetails.push({
-        name: existingSkillName,
-        proficiency: 0,
-      });
-      skillToUpdate = student.skillDetails[student.skillDetails.length - 1];
-    }
-
-    if (req.body.name !== undefined) {
-      const nextName = String(req.body.name).trim();
-      const duplicate = student.skillDetails.find(
-        (item) =>
-          item._id.toString() !== skillToUpdate._id.toString() &&
-          item.name.toLowerCase() === nextName.toLowerCase()
+      student.skills = (
+        student.skills || []
+      ).filter(
+        (name) =>
+          String(name).toLowerCase() !==
+          String(
+            skillName,
+          ).toLowerCase(),
       );
 
-      if (duplicate) {
-        return errorResponse(res, "Another skill with this name already exists", 409);
+      if (
+        !skill &&
+        !hadStringSkill
+      ) {
+        return errorResponse(
+          res,
+          "Skill not found",
+          404,
+        );
       }
 
-      skillToUpdate.name = nextName;
+      syncSkillNames(student);
+
+      await student.save();
+
+      return successResponse(
+        res,
+        "Skill deleted successfully",
+        {
+          skills:
+            buildSkillList(student),
+        },
+      );
+    } catch (error) {
+      return errorResponse(
+        res,
+        error.message ||
+          "Failed to delete skill",
+        500,
+      );
     }
+  };
 
-    if (req.body.proficiency !== undefined) {
-      skillToUpdate.proficiency = clampPercentage(req.body.proficiency);
-    }
+export const getLearningModules = (
+  req,
+  res,
+) =>
+  successResponse(
+    res,
+    "Learning modules fetched successfully",
+    {
+      modules:
+        req.student.learningProgress ||
+        [],
+    },
+  );
 
-    if (req.body.category !== undefined) {
-      skillToUpdate.category = req.body.category;
-    }
+export const updateLearningProgress =
+  async (req, res) => {
+    try {
+      const student =
+        await getAuthenticatedStudent(
+          req,
+          res,
+        );
 
-    if (req.body.yearsOfExperience !== undefined) {
-      skillToUpdate.yearsOfExperience = toNumber(req.body.yearsOfExperience) || 0;
-    }
-
-    syncSkillNames(student);
-    await student.save();
-
-    return successResponse(res, "Skill updated successfully", {
-      skill: skillToUpdate,
-      skills: buildSkillList(student),
-    });
-  } catch (error) {
-    return errorResponse(res, error.message || "Failed to update skill", 500);
-  }
-};
-
-export const deleteStudentSkill = async (req, res) => {
-  try {
-    const student = await getAuthenticatedStudent(req, res);
-    if (!student) {
-      return null;
-    }
-
-    const skill = findSkill(student, req.params.skillId || req.body.skillId || req.body.name);
-    const skillName = skill?.name || req.params.skillId || req.body.name;
-    const hadStringSkill = (student.skills || []).some(
-      (name) => String(name).toLowerCase() === String(skillName).toLowerCase()
-    );
-
-    if (skill) {
-      student.skillDetails.pull(skill._id);
-    }
-
-    student.skills = (student.skills || []).filter(
-      (name) => String(name).toLowerCase() !== String(skillName).toLowerCase()
-    );
-
-    if (!skill && !hadStringSkill) {
-      return errorResponse(res, "Skill not found", 404);
-    }
-
-    syncSkillNames(student);
-    await student.save();
-
-    return successResponse(res, "Skill deleted successfully", {
-      skills: buildSkillList(student),
-    });
-  } catch (error) {
-    return errorResponse(res, error.message || "Failed to delete skill", 500);
-  }
-};
-
-export const getLearningModules = (req, res) =>
-  successResponse(res, "Learning modules fetched successfully", {
-    modules: req.student.learningProgress || [],
-  });
-
-export const updateLearningProgress = async (req, res) => {
-  try {
-    const student = await getAuthenticatedStudent(req, res);
-    if (!student) {
-      return null;
-    }
-
-    const moduleId = String(req.params.moduleId || req.body.moduleId || "").trim();
-    const title = String(req.body.title || req.body.moduleTitle || moduleId).trim();
-    const progressPercentage = clampPercentage(req.body.progressPercentage);
-
-    if (!moduleId) {
-      return errorResponse(res, "Module id is required", 400);
-    }
-
-    if (progressPercentage === undefined) {
-      return errorResponse(res, "Progress percentage is required", 400);
-    }
-
-    let module = student.learningProgress.find((item) => item.moduleId === moduleId);
-    const status = progressPercentage >= 100 ? "completed" : progressPercentage > 0 ? "in-progress" : "enrolled";
-
-    if (!module) {
-      student.learningProgress.push({
-        moduleId,
-        title,
-        description: req.body.description,
-        progressPercentage,
-        status,
-        completedAt: status === "completed" ? new Date() : undefined,
-        history: [{ progressPercentage, status, note: req.body.note }],
-      });
-      module = student.learningProgress[student.learningProgress.length - 1];
-    } else {
-      module.title = title || module.title;
-      if (req.body.description !== undefined) {
-        module.description = req.body.description;
+      if (!student) {
+        return null;
       }
-      module.progressPercentage = progressPercentage;
-      module.status = status;
-      module.completedAt = status === "completed" ? new Date() : undefined;
-      module.history.push({ progressPercentage, status, note: req.body.note });
+
+      const moduleId = String(
+        req.params.moduleId ||
+          req.body.moduleId ||
+          "",
+      ).trim();
+
+      const title = String(
+        req.body.title ||
+          req.body.moduleTitle ||
+          moduleId,
+      ).trim();
+
+      const progressPercentage =
+        clampPercentage(
+          req.body.progressPercentage,
+        );
+
+      if (!moduleId) {
+        return errorResponse(
+          res,
+          "Module id is required",
+          400,
+        );
+      }
+
+      if (
+        progressPercentage ===
+        undefined
+      ) {
+        return errorResponse(
+          res,
+          "Progress percentage is required",
+          400,
+        );
+      }
+
+      let module =
+        student.learningProgress.find(
+          (item) =>
+            item.moduleId === moduleId,
+        );
+
+      const status =
+        progressPercentage >= 100
+          ? "completed"
+          : progressPercentage > 0
+          ? "in-progress"
+          : "enrolled";
+
+      if (!module) {
+        student.learningProgress.push(
+          {
+            moduleId,
+            title,
+            description:
+              req.body.description,
+            progressPercentage,
+            status,
+            completedAt:
+              status === "completed"
+                ? new Date()
+                : undefined,
+            history: [
+              {
+                progressPercentage,
+                status,
+                note: req.body.note,
+              },
+            ],
+          },
+        );
+
+        module =
+          student.learningProgress[
+            student.learningProgress.length -
+              1
+          ];
+      } else {
+        module.title =
+          title || module.title;
+
+        if (
+          req.body.description !==
+          undefined
+        ) {
+          module.description =
+            req.body.description;
+        }
+
+        module.progressPercentage =
+          progressPercentage;
+
+        module.status = status;
+
+        module.completedAt =
+          status === "completed"
+            ? new Date()
+            : undefined;
+
+        module.history.push({
+          progressPercentage,
+          status,
+          note: req.body.note,
+        });
+      }
+
+      await student.save();
+
+      return successResponse(
+        res,
+        "Learning progress updated successfully",
+        {
+          module,
+          modules:
+            student.learningProgress,
+        },
+      );
+    } catch (error) {
+      return errorResponse(
+        res,
+        error.message ||
+          "Failed to update learning progress",
+        500,
+      );
     }
+  };
 
-    await student.save();
-
-    return successResponse(res, "Learning progress updated successfully", {
-      module,
-      modules: student.learningProgress,
-    });
-  } catch (error) {
-    return errorResponse(res, error.message || "Failed to update learning progress", 500);
-  }
-};
-
-export const markModuleComplete = async (req, res) => {
+export const markModuleComplete = (
+  req,
+  res,
+) => {
   req.body = req.body || {};
   req.body.progressPercentage = 100;
-  return updateLearningProgress(req, res);
+
+  return updateLearningProgress(
+    req,
+    res,
+  );
 };
 
-export const getLearningProgressHistory = (req, res) => {
-  const moduleId = req.params.moduleId || req.query.moduleId;
-  const modules = moduleId
-    ? (req.student.learningProgress || []).filter((module) => module.moduleId === moduleId)
-    : req.student.learningProgress || [];
+export const getLearningProgressHistory =
+  (req, res) => {
+    const moduleId =
+      req.params.moduleId ||
+      req.query.moduleId;
 
-  return successResponse(res, "Learning progress history fetched successfully", {
-    history: modules.flatMap((module) =>
-      (module.history || []).map((entry) => {
-        const historyEntry = entry.toObject?.() || entry;
+    const modules = moduleId
+      ? (
+          req.student
+            .learningProgress || []
+        ).filter(
+          (module) =>
+            module.moduleId ===
+            moduleId,
+        )
+      : req.student.learningProgress ||
+        [];
 
-        return {
-          moduleId: module.moduleId,
-          title: module.title,
-          ...historyEntry,
-        };
-      })
-    ),
-  });
-};
+    return successResponse(
+      res,
+      "Learning progress history fetched successfully",
+      {
+        history: modules.flatMap(
+          (module) =>
+            (
+              module.history || []
+            ).map((entry) => {
+              const historyEntry =
+                entry.toObject?.() ||
+                entry;
 
-export const getAssignments = (req, res) =>
-  successResponse(res, "Assignments fetched successfully", {
-    assignments: req.student.assignmentSubmissions || [],
-  });
+              return {
+                moduleId:
+                  module.moduleId,
+                title: module.title,
+                ...historyEntry,
+              };
+            }),
+        ),
+      },
+    );
+  };
 
-export const submitAssignment = async (req, res) => {
+export const getAssignments = (
+  req,
+  res,
+) =>
+  successResponse(
+    res,
+    "Assignments fetched successfully",
+    {
+      assignments:
+        req.student
+          .assignmentSubmissions ||
+        [],
+    },
+  );
+
+export const submitAssignment = async (
+  req,
+  res,
+) => {
   try {
-    const student = await getAuthenticatedStudent(req, res);
+    const student =
+      await getAuthenticatedStudent(
+        req,
+        res,
+      );
+
     if (!student) {
       return null;
     }
 
-    const assignmentId = String(req.params.assignmentId || req.body.assignmentId || "").trim();
+    const assignmentId = String(
+      req.params.assignmentId ||
+        req.body.assignmentId ||
+        "",
+    ).trim();
+
     if (!assignmentId) {
-      return errorResponse(res, "Assignment id is required", 400);
+      return errorResponse(
+        res,
+        "Assignment id is required",
+        400,
+      );
     }
 
-    const duplicate = student.assignmentSubmissions.find(
-      (submission) => submission.assignmentId === assignmentId
-    );
+    const duplicate =
+      student.assignmentSubmissions.find(
+        (submission) =>
+          submission.assignmentId ===
+          assignmentId,
+      );
 
-    if (duplicate && !req.body.allowResubmit) {
-      return errorResponse(res, "Assignment already submitted", 409);
+    if (
+      duplicate &&
+      !req.body.allowResubmit
+    ) {
+      return errorResponse(
+        res,
+        "Assignment already submitted",
+        409,
+      );
     }
 
-    const score = clampPercentage(req.body.score);
+    const score =
+      clampPercentage(
+        req.body.score,
+      );
 
     const payload = {
       assignmentId,
       title: req.body.title,
       content: req.body.content,
-      submissionUrl: req.body.submissionUrl,
+      submissionUrl:
+        req.body.submissionUrl,
       answers: req.body.answers,
       score,
-      status: score === undefined ? "submitted" : "graded",
-      feedback: req.body.feedback,
+      status:
+        score === undefined
+          ? "submitted"
+          : "graded",
+      feedback:
+        req.body.feedback,
       submittedAt: new Date(),
     };
 
     let submission = duplicate;
+
     if (duplicate) {
-      Object.assign(duplicate, payload);
+      Object.assign(
+        duplicate,
+        payload,
+      );
     } else {
-      student.assignmentSubmissions.push(payload);
-      submission = student.assignmentSubmissions[student.assignmentSubmissions.length - 1];
+      student.assignmentSubmissions.push(
+        payload,
+      );
+
+      submission =
+        student.assignmentSubmissions[
+          student.assignmentSubmissions.length -
+            1
+        ];
     }
 
     await student.save();
 
-    return successResponse(res, "Assignment submitted successfully", {
-      submission,
-    }, duplicate ? 200 : 201);
+    return successResponse(
+      res,
+      "Assignment submitted successfully",
+      {
+        submission,
+      },
+      duplicate ? 200 : 201,
+    );
   } catch (error) {
-    return errorResponse(res, error.message || "Failed to submit assignment", 500);
+    return errorResponse(
+      res,
+      error.message ||
+        "Failed to submit assignment",
+      500,
+    );
   }
 };
 
-export const getQuizzes = (req, res) =>
-  successResponse(res, "Quizzes fetched successfully", {
-    quizzes: req.student.quizSubmissions || [],
-  });
+export const getQuizzes = (
+  req,
+  res,
+) =>
+  successResponse(
+    res,
+    "Quizzes fetched successfully",
+    {
+      quizzes:
+        req.student.quizSubmissions ||
+        [],
+    },
+  );
 
-export const submitQuiz = async (req, res) => {
+export const submitQuiz = async (
+  req,
+  res,
+) => {
   try {
-    const student = await getAuthenticatedStudent(req, res);
+    const student =
+      await getAuthenticatedStudent(
+        req,
+        res,
+      );
+
     if (!student) {
       return null;
     }
 
-    const quizId = String(req.params.quizId || req.body.quizId || "").trim();
+    const quizId = String(
+      req.params.quizId ||
+        req.body.quizId ||
+        "",
+    ).trim();
+
     if (!quizId) {
-      return errorResponse(res, "Quiz id is required", 400);
+      return errorResponse(
+        res,
+        "Quiz id is required",
+        400,
+      );
     }
 
-    if (req.body.answers === undefined) {
-      return errorResponse(res, "Quiz answers are required", 400);
+    if (
+      req.body.answers ===
+      undefined
+    ) {
+      return errorResponse(
+        res,
+        "Quiz answers are required",
+        400,
+      );
     }
 
-    const duplicate = student.quizSubmissions.find((submission) => submission.quizId === quizId);
-    if (duplicate && !req.body.allowResubmit) {
-      return errorResponse(res, "Quiz already submitted", 409);
+    const duplicate =
+      student.quizSubmissions.find(
+        (submission) =>
+          submission.quizId ===
+          quizId,
+      );
+
+    if (
+      duplicate &&
+      !req.body.allowResubmit
+    ) {
+      return errorResponse(
+        res,
+        "Quiz already submitted",
+        409,
+      );
     }
 
-    const totalQuestions = toNumber(req.body.totalQuestions);
-    const correctAnswers = toNumber(req.body.correctAnswers);
+    const totalQuestions =
+      toNumber(
+        req.body.totalQuestions,
+      );
+
+    const correctAnswers =
+      toNumber(
+        req.body.correctAnswers,
+      );
+
     const calculatedScore =
-      totalQuestions && correctAnswers !== undefined
-        ? (correctAnswers / totalQuestions) * 100
+      totalQuestions &&
+      correctAnswers !== undefined
+        ? (correctAnswers /
+            totalQuestions) *
+          100
         : undefined;
-    const score = clampPercentage(req.body.score ?? calculatedScore);
+
+    const score =
+      clampPercentage(
+        req.body.score ??
+          calculatedScore,
+      );
 
     const payload = {
       quizId,
@@ -734,52 +1526,306 @@ export const submitQuiz = async (req, res) => {
     };
 
     let submission = duplicate;
+
     if (duplicate) {
-      Object.assign(duplicate, payload);
+      Object.assign(
+        duplicate,
+        payload,
+      );
     } else {
-      student.quizSubmissions.push(payload);
-      submission = student.quizSubmissions[student.quizSubmissions.length - 1];
+      student.quizSubmissions.push(
+        payload,
+      );
+
+      submission =
+        student.quizSubmissions[
+          student.quizSubmissions.length -
+            1
+        ];
     }
 
     await student.save();
 
-    return successResponse(res, "Quiz submitted successfully", {
-      submission,
-    }, duplicate ? 200 : 201);
+    return successResponse(
+      res,
+      "Quiz submitted successfully",
+      {
+        submission,
+      },
+      duplicate ? 200 : 201,
+    );
   } catch (error) {
-    return errorResponse(res, error.message || "Failed to submit quiz", 500);
+    return errorResponse(
+      res,
+      error.message ||
+        "Failed to submit quiz",
+      500,
+    );
   }
 };
 
-export const getSkillScore = async (req, res) => {
+export const getSkillScore = async (
+  req,
+  res,
+) => {
   try {
-    const result = calculateScoreBreakdown(req.student);
+    const result =
+      calculateScoreBreakdown(
+        req.student,
+      );
 
-    return successResponse(res, "Skill score calculated successfully", result);
+    return successResponse(
+      res,
+      "Skill score calculated successfully",
+      result,
+    );
   } catch (error) {
-    return errorResponse(res, error.message || "Failed to calculate skill score", 500);
+    return errorResponse(
+      res,
+      error.message ||
+        "Failed to calculate skill score",
+      500,
+    );
   }
 };
 
-export const calculateAndStoreSkillScore = async (req, res) => {
+export const calculateAndStoreSkillScore =
+  async (req, res) => {
+    try {
+      const student =
+        await getAuthenticatedStudent(
+          req,
+          res,
+        );
+
+      if (!student) {
+        return null;
+      }
+
+      const result =
+        calculateScoreBreakdown(
+          student,
+        );
+
+      student.scoreHistory.push({
+        score: result.skillScore,
+        eligibilityStatus:
+          result.eligibilityStatus,
+        breakdown:
+          result.breakdown,
+      });
+
+      await student.save();
+
+      return successResponse(
+        res,
+        "Skill score calculated and stored successfully",
+        result,
+      );
+    } catch (error) {
+      return errorResponse(
+        res,
+        error.message ||
+          "Failed to store skill score",
+        500,
+      );
+    }
+  };
+
+/*
+ * =========================================================
+ * START HIRING PROCESS
+ * =========================================================
+ *
+ * POST /api/student/hiring/drives/:driveId/start
+ *
+ * This endpoint currently validates the authenticated
+ * student and starts the hiring-process session.
+ *
+ * Application creation will be connected once the actual
+ * hiring-drive data/model is connected to this flow.
+ */
+
+export const startHiringDrive = async (req, res) => {
   try {
     const student = await getAuthenticatedStudent(req, res);
+
     if (!student) {
       return null;
     }
 
-    const result = calculateScoreBreakdown(student);
+    const { driveId } = req.params;
 
-    student.scoreHistory.push({
-      score: result.skillScore,
-      eligibilityStatus: result.eligibilityStatus,
-      breakdown: result.breakdown,
-    });
+    if (!driveId) {
+      return errorResponse(
+        res,
+        "Hiring drive id is required",
+        400,
+      );
+    }
+
+    /*
+     * =====================================================
+     * DUMMY HIRING DRIVES
+     * =====================================================
+     *
+     * Temporary data until real Project/Hiring Drive
+     * records are connected.
+     */
+
+    const dummyDrives = {
+      "1": {
+        id: "1",
+        title: "Software Engineer Intern",
+        company: "C2C Technologies",
+        recruiter: "C2C Recruiter",
+        location: "Remote",
+        mode: "Remote",
+        duration: "6 Months",
+        stipend: 15000,
+        status: "Open",
+      },
+
+      "2": {
+        id: "2",
+        title: "AI/ML Engineer Intern",
+        company: "C2C Technologies",
+        recruiter: "C2C Recruiter",
+        location: "Remote",
+        mode: "Remote",
+        duration: "6 Months",
+        stipend: 20000,
+        status: "Open",
+      },
+    };
+
+    const drive = dummyDrives[String(driveId)];
+
+    if (!drive) {
+      return errorResponse(
+        res,
+        "Hiring drive not found",
+        404,
+      );
+    }
+
+    if (drive.status !== "Open") {
+      return errorResponse(
+        res,
+        "This hiring drive is no longer accepting applications",
+        400,
+      );
+    }
+
+    /*
+     * =====================================================
+     * RESUME UPLOAD
+     * =====================================================
+     *
+     * Resume comes from multer as req.file.
+     *
+     * Frontend sends:
+     *
+     * FormData:
+     *   resume: <PDF file>
+     *
+     * The upload middleware stores the actual file on
+     * the backend.
+     */
+
+    if (!req.file) {
+      return errorResponse(
+        res,
+        "Resume file is required",
+        400,
+      );
+    }
+
+    const resumePath =
+      `/uploads/resumes/${req.file.filename}`;
+
+    /*
+     * Save the uploaded resume against the student's
+     * profile as well.
+     */
+
+    student.resume = resumePath;
+    student.resumeUrl = resumePath;
 
     await student.save();
 
-    return successResponse(res, "Skill score calculated and stored successfully", result);
+    /*
+     * =====================================================
+     * DUMMY APPLICATION
+     * =====================================================
+     *
+     * We are NOT creating a MongoDB Application record yet.
+     *
+     * This allows the frontend hiring flow to work with
+     * dummy drives until the real Project/Application
+     * models are connected.
+     */
+
+    const applicationId =
+      new mongoose.Types.ObjectId();
+
+    const application = {
+      _id: applicationId,
+      id: applicationId,
+      student: student._id,
+      studentId: student._id,
+
+      driveId: drive.id,
+      projectId: drive.id,
+
+      project: {
+        id: drive.id,
+        title: drive.title,
+      },
+
+      company: drive.company,
+      recruiter: drive.recruiter,
+
+      resume: resumePath,
+      resumeUrl: resumePath,
+
+      status: "submitted",
+
+      submittedAt: new Date(),
+    };
+
+    return successResponse(
+      res,
+      "Application submitted successfully",
+      {
+        application,
+
+        drive: {
+          ...drive,
+        },
+
+        driveId: drive.id,
+        studentId: student._id,
+        applicationId,
+
+        resume: resumePath,
+        resumeUrl: resumePath,
+
+        status: "submitted",
+      },
+      201,
+    );
   } catch (error) {
-    return errorResponse(res, error.message || "Failed to store skill score", 500);
+    console.error(
+      "startHiringDrive error:",
+      error,
+    );
+
+    return errorResponse(
+      res,
+      error.message ||
+        "Failed to submit application",
+      500,
+    );
   }
 };

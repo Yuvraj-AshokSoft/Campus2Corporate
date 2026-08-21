@@ -13,12 +13,27 @@ const api = axios.create({
   timeout: 15000,
 });
 
+const persistStudentToken = (response?: { data?: any }) => {
+  const token = response?.data?.token || response?.data?.data?.token;
+
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.removeItem("token");
+    localStorage.removeItem("studentToken");
+    localStorage.removeItem("accessToken");
+  }
+};
+
 // =======================
 // Request Interceptor
 // =======================
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem(TOKEN_KEY);
+
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -101,7 +116,11 @@ export const unwrapData = <T>(
 const auth = {
   register: (data: any) => api.post("/auth/register", data),
 
-  login: (data: any) => api.post("/auth/login", data),
+  login: async (data: any) => {
+    const response = await api.post("/auth/login", data);
+    persistStudentToken(response);
+    return response;
+  },
 
   logout: () => api.post("/auth/logout"),
 
@@ -234,7 +253,7 @@ const hiring = {
   get: () =>
     api.get("/student/hiring/drives"),
 
-  start: (projectId: string, data: any = {}) =>
+  start: (projectId: string, data: FormData) =>
     api.post(
       `/student/hiring/drives/${projectId}/start`,
       data

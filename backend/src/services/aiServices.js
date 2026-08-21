@@ -1,332 +1,132 @@
 import "dotenv/config";
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
-
-const careerCoachAi = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    timeout: 14000,
-  },
-});
-
+const API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 const MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
-const CAREER_COACH_MODEL =
-  process.env.GEMINI_CAREER_COACH_MODEL || MODEL;
+const REQUEST_TIMEOUT_MS = 15000;
+const MAX_RETRIES = 2;
 
-async function generateResponse(prompt, client = ai, config = {}, model = MODEL) {
+const client = API_KEY
+  ? new GoogleGenAI({ apiKey: API_KEY, httpOptions: { timeout: REQUEST_TIMEOUT_MS } })
+  : null;
+
+const aiError = (code, message) => {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+};
+
+const isTransient = (error) => {
+  const message = String(error?.message || "").toLowerCase();
+  return error?.status === 429 || error?.status >= 500 ||
+    ["ETIMEDOUT", "ECONNRESET"].includes(error?.code) ||
+    message.includes("deadline_exceeded") || message.includes("timeout");
+};
+
+const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+const extractText = (response) => {
+  const text = response?.text || response?.candidates?.[0]?.content?.parts
+    ?.map((part) => part?.text || "").join("") || "";
+  if (!text.trim()) throw aiError("AI_EMPTY_RESPONSE", "Gemini returned an empty response.");
+  return text.trim();
+};
+
+const parseJson = (content) => {
+  const cleaned = String(content).replace(/```json/gi, "").replace(/```/g, "").trim();
   try {
-    const response = await client.models.generateContent({
-      model,
-      contents: prompt,
-      config: {
-        temperature: 0.3,
-        responseMimeType: "application/json",
-        ...config,
-      },
-    });
-
-    return response.text;
-  } catch (error) {
-    console.error("Gemini Error:", error);
-    const isTimeout =
-      error.name === "TimeoutError" ||
-      error.name === "AbortError" ||
-      error.code === "ETIMEDOUT" ||
-      error.status === 504 ||
-      error.message?.includes("DEADLINE_EXCEEDED");
-    const timeoutError = new Error(
-      isTimeout
-        ? "AI provider timed out. Please try again."
-        : "Failed to generate AI response."
-    );
-    timeoutError.code = isTimeout
-      ? "AI_PROVIDER_TIMEOUT"
-      : "AI_PROVIDER_ERROR";
-    throw timeoutError;
+    return JSON.parse(cleaned);
+  } catch {
+    const starts = [cleaned.indexOf("{"), cleaned.indexOf("[")].filter((index) => index >= 0);
+    const end = Math.max(cleaned.lastIndexOf("}"), cleaned.lastIndexOf("]"));
+    if (starts.length && end > Math.min(...starts)) {
+      try { return JSON.parse(cleaned.slice(Math.min(...starts), end + 1)); } catch { /* handled below */ }
+    }
   }
-}
+  throw aiError("AI_INVALID_RESPONSE", "Gemini returned invalid JSON.");
+};
 
-export async function generateStudyPlan(studentContext) {
-  const prompt = `
-You are an AI Study Planner.
+const arrayOfText = (value) => (Array.isArray(value) ? value : [])
+  .filter((item) => typeof item === "string").map((item) => item.trim()).filter(Boolean);
+const text = (value) => typeof value === "string" ? value.trim() : "";
+const score = (value) => Math.min(100, Math.max(0, Number(value) || 0));
 
-Generate a 5-day study plan.
-
-Student Context:
-${studentContext}
-
-Return ONLY valid JSON.
-
-[
-  {
-    "day":"Monday",
-    "tasks":["Task 1","Task 2","Task 3"]
+export const generateResponse = async ({ systemInstruction, prompt, responseMimeType = "text/plain", maxOutputTokens }) => {
+  if (!client || !API_KEY) {
+    console.error("Gemini API key is not configured.");
+    throw aiError("AI_CONFIGURATION_ERROR", "Gemini API key is not configured.");
   }
-]
-`;
 
-  return generateResponse(prompt);
-}
-
-export async function analyzePlacement(studentContext) {
-  const prompt = `
-Analyze the student's placement readiness.
-
-Student:
-${studentContext}
-
-Return ONLY valid JSON.
-
-{
-  "score":75,
-  "strengths":["","",""],
-  "gaps":["",""],
-  "tip":""
-}
-`;
-
-  return generateResponse(prompt);
-}
-
-export async function analyzeResume(resumeText) {
-  const prompt = `
-You are an ATS Resume Analyzer.
-
-Resume:
-
-${resumeText}
-
-Return ONLY valid JSON.
-
-{
-  "score":82,
-  "title":"",
-  "description":"",
-  "breakdown":[],
-  "keywords_found":[],
-  "keywords_missing":[],
-  "tip":""
-}
-`;
-
-  return generateResponse(prompt);
-}
-
-export async function analyzeSkillGap(studentContext, role) {
-  const prompt = `
-Target Role:
-${role}
-
-Student:
-${studentContext}
-
-Return ONLY valid JSON.
-
-{
-  "match_score":80,
-  "role":"",
-  "summary":"",
-  "matched_skills":[],
-  "missing_skills":[],
-  "suggested_modules":[],
-  "tip":""
-}
-`;
-
-  return generateResponse(prompt);
-}
-
-export async function careerCoach(question, studentContext) {
-  const compactContext = String(studentContext || "").slice(0, 4000);
-  const prompt = `
-You are an AI Career Coach.
-Answer the user's question directly and concisely. Do not repeat the student profile.
-
-Student Context:
-${compactContext || "No additional student context provided."}
-
-Question:
-${question}
-
-Return ONLY valid JSON.
-
-{
-  "answer":"Concise, practical career advice."
-}
-`;
-
-  return generateResponse(prompt, careerCoachAi, {
-    maxOutputTokens: 256,
-  }, CAREER_COACH_MODEL);
-}
-
-export async function generateResumeSummary(resume) {
-  const prompt = `
-You write concise, ATS-friendly resume summaries for engineering students.
-
-Return ONLY valid JSON.
-
-{
-  "summary":""
-}
-
-Rules:
-- 2-3 sentences, under 45 words total
-- No first person pronouns
-- Confident, specific, no empty clichés
-
-Candidate:
-${JSON.stringify(resume, null, 2)}
-`;
-
-  return generateResponse(prompt);
-}
-
-export async function enhanceResumeExperience(experience) {
-  const prompt = `
-You rewrite rough notes into strong, ATS-friendly resume bullet points.
-
-Return ONLY valid JSON.
-
-{
-  "bullets":[""]
-}
-
-Rules:
-- 3-4 bullets max
-- Each starts with a strong action verb
-- Add quantification only if implied by the notes
-- Each bullet under 20 words
-
-Experience:
-${JSON.stringify(experience, null, 2)}
-`;
-
-  return generateResponse(prompt);
-}
-
-export async function classifyResumeNote(note) {
-  const prompt = `
-Classify this note from a student building their resume, then extract structured data.
-
-Return ONLY valid JSON.
-
-{
-  "type":"experience",
-  "experience":{"role":"","organization":"","duration":"","bullets":[""]},
-  "certification":null,
-  "skills":[],
-  "confirmation":"Added to Experience / Projects."
-}
-
-Rules:
-- "type" must be exactly one of "experience", "certification", "skill"
-- Use "experience" for internships, jobs, hackathons, or projects
-- Use "certification" for courses, certificates, or credentials completed
-- Use "skill" for standalone tools, technologies, or languages
-- Only fill the object matching the chosen type; set the others to null or empty arrays
-- bullets: 2-4 short resume-style bullets built from the note
-- Do not invent metrics or credentials
-
-Student note:
-${note}
-`;
-
-  return generateResponse(prompt);
-}
-
-export async function generateHiringInterview(context) {
-  const prompt = `
-Generate a structured mock interview for a student placement process.
-
-Return ONLY valid JSON.
-
-{
-  "title":"",
-  "rounds":[{"name":"","focus":"","durationMinutes":30,"questions":[""]}]
-}
-
-Context:
-${JSON.stringify(context, null, 2)}
-`;
-
-  return generateResponse(prompt);
-}
-
-export async function generateHiringQuestions(context) {
-  const prompt = `
-Generate interview questions for a student hiring process.
-
-Return ONLY valid JSON.
-
-{
-  "questions":[{"id":"q1","type":"technical","question":"","expectedSignals":[""]}]
-}
-
-Context:
-${JSON.stringify(context, null, 2)}
-`;
-
-  return generateResponse(prompt);
-}
-
-export async function evaluateHiringAnswer(context) {
-  const prompt = `
-Evaluate a student's interview answer.
-
-Return ONLY valid JSON.
-
-{
-  "score":75,
-  "strengths":[""],
-  "improvements":[""],
-  "feedback":""
-}
-
-Context:
-${JSON.stringify(context, null, 2)}
-`;
-
-  return generateResponse(prompt);
-}
-
-export async function generateHiringFeedback(context) {
-  const prompt = `
-Generate concise hiring-process feedback for a student.
-
-Return ONLY valid JSON.
-
-{
-  "summary":"",
-  "nextSteps":[""],
-  "readinessScore":75
-}
-
-Context:
-${JSON.stringify(context, null, 2)}
-`;
-
-  return generateResponse(prompt);
-}
-
-export async function generateCareerRoadmap(studentContext) {
-  const prompt = `
-Create a practical career roadmap for this student.
-
-Return ONLY valid JSON.
-{
-  "goal":"",
-  "timeframe":"",
-  "phases":[{"title":"","duration":"","actions":[""],"milestone":""}],
-  "nextAction":""
-}
-
-Student context:
-${JSON.stringify(studentContext, null, 2)}
-`;
-
-  return generateResponse(prompt);
-}
+  const config = {
+    responseMimeType,
+    ...(systemInstruction ? { systemInstruction } : {}),
+    ...(maxOutputTokens ? { maxOutputTokens } : {}),
+  };
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+    try {
+      const response = await client.models.generateContent({ model: MODEL, contents: prompt, config });
+      return extractText(response);
+    } catch (error) {
+      if (attempt < MAX_RETRIES && isTransient(error)) {
+        await sleep(250 * 2 ** attempt);
+        continue;
+      }
+      if (error?.code === "AI_EMPTY_RESPONSE" || error?.code === "AI_INVALID_RESPONSE") throw error;
+      if (error?.status === 429) throw aiError("AI_RATE_LIMIT", "AI service is busy. Please try again shortly.");
+      console.error("Gemini provider error:", error?.message || "Unknown provider error");
+      throw aiError(isTransient(error) ? "AI_PROVIDER_TIMEOUT" : "AI_PROVIDER_ERROR", "AI service temporarily unavailable. Please try again.");
+    }
+  }
+  throw aiError("AI_PROVIDER_ERROR", "AI service temporarily unavailable. Please try again.");
+};
+
+const generateJson = (systemInstruction, prompt) => generateResponse({
+  systemInstruction,
+  prompt,
+  responseMimeType: "application/json",
+});
+
+export const generateStudyPlan = async (studentContext) => {
+  const result = parseJson(await generateJson("You are a practical AI study planner. Use only supplied facts.", `Create a realistic five-day plan. Return an array of {day,tasks} objects and include goals, priorities, effort, and milestones in the tasks.\nStudent context:\n${studentContext}`));
+  return (Array.isArray(result) ? result : []).map((day) => ({ day: text(day?.day), tasks: arrayOfText(day?.tasks) }));
+};
+
+export const analyzePlacement = async (studentContext) => {
+  const result = parseJson(await generateJson("You are an evidence-based placement analyst. Do not infer absent facts.", `Analyze readiness and return JSON with score, strengths, gaps, tip, missingSkills, recommendations, and priorityActions. Scores must be 0-100.\n${studentContext}`));
+  return { score: score(result?.score), strengths: arrayOfText(result?.strengths), gaps: arrayOfText(result?.gaps || result?.weaknesses || result?.missingSkills), tip: text(result?.tip), missingSkills: arrayOfText(result?.missingSkills), recommendations: arrayOfText(result?.recommendations), priorityActions: arrayOfText(result?.priorityActions) };
+};
+
+export const analyzeResume = async (resumeText, jobDescription = "") => {
+  const result = parseJson(await generateJson("You are an ATS analyst. Use only the supplied resume and optional job description.", `Return JSON with score, title, description, breakdown, keywords_found, keywords_missing, formatting_issues, and tip. Do not invent requirements.\nResume:\n${resumeText}\nJob description:\n${jobDescription || "Not supplied"}`));
+  return { score: score(result?.score), title: text(result?.title), description: text(result?.description), breakdown: Array.isArray(result?.breakdown) ? result.breakdown : [], keywords_found: arrayOfText(result?.keywords_found), keywords_missing: arrayOfText(result?.keywords_missing), formatting_issues: arrayOfText(result?.formatting_issues), tip: text(result?.tip) };
+};
+
+export const analyzeSkillGap = async (studentContext, role) => {
+  const result = parseJson(await generateJson("You are a grounded career skills analyst. Do not claim skills absent from context.", `Compare this student with the target role. Return JSON with match_score, role, summary, matched_skills, missing_skills, suggested_modules, priority, learning_path, and tip.\nRole:\n${role}\nStudent:\n${studentContext}`));
+  return { match_score: score(result?.match_score), role: text(result?.role || role), summary: text(result?.summary), matched_skills: arrayOfText(result?.matched_skills), missing_skills: arrayOfText(result?.missing_skills), suggested_modules: arrayOfText(result?.suggested_modules), priority: arrayOfText(result?.priority), learning_path: arrayOfText(result?.learning_path), tip: text(result?.tip) };
+};
+
+export const careerCoach = async (question, studentContext) => {
+  const result = parseJson(await generateJson("You are a concise career assistant. Give practical advice based only on the supplied context.", `Return JSON as {answer}. Do not invent details.\nContext:\n${String(studentContext || "No context supplied.").slice(0, 4000)}\nQuestion:\n${question}`));
+  let answer = text(result?.answer);
+
+  if (answer.startsWith("{") || answer.startsWith("[")) {
+    try {
+      answer = text(parseJson(answer)?.answer) || answer;
+    } catch {
+      // Keep the provider's useful text when it is not a complete nested object.
+    }
+  }
+
+  return { answer };
+};
+export const generateResumeSummary = async (resume) => ({ summary: text(parseJson(await generateJson("Write a factual ATS-friendly summary. Never invent details.", `Return JSON as {summary}, 2-3 sentences under 45 words.\n${JSON.stringify(resume)}`))?.summary) });
+export const enhanceResumeExperience = async (experience) => ({ bullets: arrayOfText(parseJson(await generateJson("Improve resume bullets without inventing metrics or achievements.", `Return JSON as {bullets}.\n${JSON.stringify(experience)}`))?.bullets) });
+export const classifyResumeNote = async (note) => { const result = parseJson(await generateJson("Classify resume notes factually without inventing credentials.", `Return JSON with type, experience, certification, skills, and confirmation. Type is experience, certification, or skill.\n${note}`)); return { type: ["experience", "certification", "skill"].includes(result?.type) ? result.type : "skill", experience: result?.experience || null, certification: result?.certification || null, skills: arrayOfText(result?.skills), confirmation: text(result?.confirmation) }; };
+export const generateHiringInterview = async (context) => parseJson(await generateJson("Design a role-specific student interview using only supplied context.", `Return JSON with title and rounds containing name, focus, durationMinutes, and questions.\n${JSON.stringify(context)}`));
+export const generateHiringQuestions = async (context) => parseJson(await generateJson("Generate role-specific interview questions, not static generic questions.", `Return JSON as {questions:[{id,type,question,expectedSignals}]}.\n${JSON.stringify(context)}`));
+export const evaluateHiringAnswer = async (context) => parseJson(await generateJson("Evaluate only the candidate answer provided; do not invent content.", `Return JSON with score (0-100), strengths, improvements, and feedback.\n${JSON.stringify(context)}`));
+export const generateHiringFeedback = async (context) => { const result = parseJson(await generateJson("Give concise factual hiring feedback from supplied evidence.", `Return JSON with summary, nextSteps, readinessScore (0-100).\n${JSON.stringify(context)}`)); return { summary: text(result?.summary), nextSteps: arrayOfText(result?.nextSteps), readinessScore: score(result?.readinessScore) }; };
+export const generateCareerRoadmap = async (studentContext) => parseJson(await generateJson("Create a realistic roadmap grounded only in student context.", `Return JSON with goal, timeframe, phases [{title,duration,actions,milestone}], and nextAction.\n${JSON.stringify(studentContext)}`));
+export const getGeminiConfig = () => ({ model: MODEL, configured: Boolean(API_KEY) });

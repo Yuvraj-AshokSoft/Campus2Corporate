@@ -1,5 +1,5 @@
-import User from '../models/User.js';
-import generateToken from '../utils/generateToken.js';
+import User from '../../../server/models/User.js';
+import generateToken from '../../../server/utils/generateToken.js';
 import mongoose from 'mongoose';
 
 // Check if database is connected

@@ -41,6 +41,7 @@ const Icon = ({
         <rect x="14" y="14" width="7" height="7" rx="1.5" />
       </>
     ),
+
     "user-check": (
       <>
         <path d="M15 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -48,6 +49,7 @@ const Icon = ({
         <path d="m16 11 2 2 4-5" />
       </>
     ),
+
     briefcase: (
       <>
         <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
@@ -55,6 +57,7 @@ const Icon = ({
         <path d="M4 12h16" />
       </>
     ),
+
     clipboard: (
       <>
         <rect x="6" y="4" width="12" height="17" rx="2" />
@@ -62,24 +65,28 @@ const Icon = ({
         <path d="m9 12 2 2 4-4" />
       </>
     ),
+
     bell: (
       <>
         <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7" />
         <path d="M10 20a2 2 0 0 0 4 0" />
       </>
     ),
+
     award: (
       <>
         <circle cx="12" cy="8" r="6" />
         <path d="m9 13.5-1 7.5 4-2 4 2-1-7.5" />
       </>
     ),
+
     settings: (
       <>
         <circle cx="12" cy="12" r="3" />
         <path d="M19 12a7.5 7.5 0 0 0-.1-1.2l2-1.5-2-3.5-2.4 1a7.5 7.5 0 0 0-2-1.2L14.2 3h-4.4l-.3 2.6a7.5 7.5 0 0 0-2 1.2l-2.4-1-2 3.5 2 1.5A7.5 7.5 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.5 2.4-1a7.5 7.5 0 0 0 2 1.2l.3 2.6h4.4l.3-2.6a7.5 7.5 0 0 0 2-1.2l2.4 1 2-3.5-2-1.5c.1-.4.1-.8.1-1.2Z" />
       </>
     ),
+
     resume: (
       <>
         <path d="M6 3h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
@@ -88,24 +95,28 @@ const Icon = ({
         <path d="M8 17h6" />
       </>
     ),
+
     search: (
       <>
         <circle cx="11" cy="11" r="7" />
         <path d="m16 16 4 4" />
       </>
     ),
+
     "map-pin": (
       <>
         <path d="M12 21s7-6.6 7-11a7 7 0 1 0-14 0c0 4.4 7 11 7 11Z" />
         <circle cx="12" cy="10" r="2.5" />
       </>
     ),
+
     clock: (
       <>
         <circle cx="12" cy="12" r="9" />
         <path d="M12 7v5l3 2" />
       </>
     ),
+
     users: (
       <>
         <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
@@ -114,7 +125,9 @@ const Icon = ({
         <path d="M16 3.2a4 4 0 0 1 0 7.6" />
       </>
     ),
+
     "chevron-right": <path d="m9 18 6-6-6-6" />,
+
     alert: (
       <>
         <path d="M12 4 3.5 18.5h17L12 4Z" />
@@ -122,6 +135,7 @@ const Icon = ({
         <path d="M12 16h.01" />
       </>
     ),
+
     sparkles: (
       <>
         <path d="M12 3 10.5 8.5 5 10l5.5 1.5L12 17l1.5-5.5L19 10l-5.5-1.5L12 3Z" />
@@ -131,6 +145,7 @@ const Icon = ({
         <path d="M17.5 4.5h3" />
       </>
     ),
+
     building: (
       <>
         <path d="M5 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" />
@@ -141,6 +156,7 @@ const Icon = ({
         <path d="M14 11h1" />
       </>
     ),
+
     calendar: (
       <>
         <path d="M7 3v4" />
@@ -149,8 +165,12 @@ const Icon = ({
         <path d="M4 10h16" />
       </>
     ),
-    zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
+
+    zap: (
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    ),
   };
+
   return (
     <svg
       className={className}
@@ -166,7 +186,6 @@ const Icon = ({
     </svg>
   );
 };
-
 
 const sidebarItems: Array<{
   label: string;
@@ -232,8 +251,14 @@ const sidebarItems: Array<{
     route: "/student/broadcast",
   },
 ];
+
 type DriveCategory = string;
-type DriveStatus = "Open" | "Closing Soon" | "Upcoming" | "Closed";
+
+type DriveStatus =
+  | "Open"
+  | "Closing Soon"
+  | "Upcoming"
+  | "Closed";
 
 interface HiringDrive {
   id: string;
@@ -258,6 +283,7 @@ const statusStyles: Record<DriveStatus, string> = {
   Upcoming: "bg-[#F4EFFF] text-[#4500AD] ring-[#E9DDFF]",
   Closed: "bg-slate-100 text-slate-500 ring-slate-200",
 };
+
 const dummyHiringDrives: HiringDrive[] = [
   {
     id: "1",
@@ -394,7 +420,7 @@ const HiringCard = ({
   onStart,
 }: {
   drive: HiringDrive;
-  onStart: (d: HiringDrive) => void;
+  onStart: (drive: HiringDrive) => void;
 }) => {
   const closed = drive.status === "Closed";
   const upcoming = drive.status === "Upcoming";
@@ -408,15 +434,18 @@ const HiringCard = ({
           >
             {drive.logoText}
           </div>
+
           <div>
             <h3 className="text-sm font-black leading-tight text-slate-900">
               {drive.company}
             </h3>
+
             <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
               {drive.category}
             </p>
           </div>
         </div>
+
         <span
           className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ring-1 ${statusStyles[drive.status]}`}
         >
@@ -425,30 +454,42 @@ const HiringCard = ({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-1.5">
-        {drive.roles.map((r) => (
+        {drive.roles.map((roleName) => (
           <span
-            key={r}
+            key={roleName}
             className="rounded-full bg-[#F4EFFF] px-2.5 py-1 text-[10px] font-semibold text-[#4500AD] ring-1 ring-[#E9DDFF]"
           >
-            {r}
+            {roleName}
           </span>
         ))}
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-y-2.5 border-t border-slate-100 pt-4 text-xs">
         <div className="flex items-center gap-1.5 text-slate-500">
-          <Icon name="map-pin" className="h-3.5 w-3.5 flex-shrink-0 text-slate-400" />
+          <Icon
+            name="map-pin"
+            className="h-3.5 w-3.5 flex-shrink-0 text-slate-400"
+          />
           {drive.location}
         </div>
+
         <div className="flex items-center gap-1.5 font-bold text-slate-700">
           {drive.ctc}
         </div>
+
         <div className="flex items-center gap-1.5 text-slate-500">
-          <Icon name="clock" className="h-3.5 w-3.5 flex-shrink-0 text-slate-400" />
+          <Icon
+            name="clock"
+            className="h-3.5 w-3.5 flex-shrink-0 text-slate-400"
+          />
           Closes {drive.deadline}
         </div>
+
         <div className="flex items-center gap-1.5 text-slate-500">
-          <Icon name="users" className="h-3.5 w-3.5 flex-shrink-0 text-slate-400" />
+          <Icon
+            name="users"
+            className="h-3.5 w-3.5 flex-shrink-0 text-slate-400"
+          />
           {drive.applicants} applied
         </div>
       </div>
@@ -463,8 +504,18 @@ const HiringCard = ({
         disabled={closed}
         className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {closed ? "Applications closed" : upcoming ? "View details" : "Start hiring process"}
-        {!closed && <Icon name="chevron-right" className="h-3.5 w-3.5" />}
+        {closed
+          ? "Applications closed"
+          : upcoming
+            ? "View details"
+            : "Start hiring process"}
+
+        {!closed && (
+          <Icon
+            name="chevron-right"
+            className="h-3.5 w-3.5"
+          />
+        )}
       </button>
     </div>
   );
@@ -474,13 +525,20 @@ export const PlacementPrep = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
-  const fullName = currentUser?.fullName || currentUser?.name || "Student";
+  const fullName =
+    currentUser?.fullName ||
+    currentUser?.name ||
+    "Student";
 
-  const [hiringDrives, setHiringDrives] = useState<HiringDrive[]>([]);
+  const [hiringDrives, setHiringDrives] =
+    useState<HiringDrive[]>([]);
+
   const [appliedCount, setAppliedCount] = useState(0);
   const [shortlistedCount, setShortlistedCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [startingId, setStartingId] = useState<string | null>(null);
+  const [startingId, setStartingId] =
+    useState<string | null>(null);
+
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
@@ -492,14 +550,18 @@ export const PlacementPrep = () => {
     const loadHiringDrives = async () => {
       setLoading(true);
       setError("");
+
       if (!mounted) return;
 
+      /*
+       * Keep the existing mock hiring drives for now.
+       * This can later be replaced with the real hiring-drive API.
+       */
       setHiringDrives(dummyHiringDrives);
       setAppliedCount(2);
       setShortlistedCount(1);
 
       setLoading(false);
-      return;
     };
 
     loadHiringDrives();
@@ -510,34 +572,88 @@ export const PlacementPrep = () => {
   }, []);
 
   const categories = useMemo(
-    () => ["All", ...Array.from(new Set(hiringDrives.map((drive) => drive.category).filter(Boolean)))],
-    [hiringDrives]
+    () => [
+      "All",
+      ...Array.from(
+        new Set(
+          hiringDrives
+            .map((drive) => drive.category)
+            .filter(Boolean),
+        ),
+      ),
+    ],
+    [hiringDrives],
   );
 
   const roles = useMemo(
-    () => ["All Roles", ...Array.from(new Set(hiringDrives.flatMap((drive) => drive.roles || []).filter(Boolean)))],
-    [hiringDrives]
+    () => [
+      "All Roles",
+      ...Array.from(
+        new Set(
+          hiringDrives
+            .flatMap((drive) => drive.roles || [])
+            .filter(Boolean),
+        ),
+      ),
+    ],
+    [hiringDrives],
   );
 
   const filteredDrives = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return hiringDrives.filter((d) => {
-      const matchesCategory = category === "All" || d.category === category;
-      const matchesRole = role === "All Roles" || d.roles.includes(role);
-      const matchesSearch = !q || d.company.toLowerCase().includes(q);
-      return matchesCategory && matchesRole && matchesSearch;
+    const query = search.trim().toLowerCase();
+
+    return hiringDrives.filter((drive) => {
+      const matchesCategory =
+        category === "All" ||
+        drive.category === category;
+
+      const matchesRole =
+        role === "All Roles" ||
+        drive.roles.includes(role);
+
+      const matchesSearch =
+        !query ||
+        drive.company.toLowerCase().includes(query);
+
+      return (
+        matchesCategory &&
+        matchesRole &&
+        matchesSearch
+      );
     });
   }, [hiringDrives, search, category, role]);
 
   const openCount = hiringDrives.filter(
-    (d) => d.status === "Open" || d.status === "Closing Soon"
+    (drive) =>
+      drive.status === "Open" ||
+      drive.status === "Closing Soon",
   ).length;
 
   const statsRow = [
-    { label: "Total drives", value: String(hiringDrives.length), icon: "building" as IconName, bg: "#F4EFFF" },
-    { label: "Open now", value: String(openCount), icon: "zap" as IconName, bg: "#ecfdf5" },
-    { label: "Applied", value: String(appliedCount), icon: "clipboard" as IconName, bg: "#fffbeb" },
-    { label: "Shortlisted", value: String(shortlistedCount), icon: "award" as IconName, bg: "#f5f3ff" },
+    {
+      label: "Total drives",
+      value: String(hiringDrives.length),
+      icon: "building" as IconName,
+      bg: "#F4EFFF",
+    },
+    {
+      label: "Open now",
+      value: String(openCount),
+      icon: "zap" as IconName,
+      bg: "#ecfdf5",
+    },
+    {
+      label: "Applied",
+      value: String(appliedCount),
+      icon: "clipboard" as IconName,
+      bg: "#fffbeb",
+    },
+    {
+      label: "Shortlisted",
+      value: String(shortlistedCount),
+      icon: "award" as IconName,
+      bg: "#f5f3ff",
+    },
   ];
 
   const resetFilters = () => {
@@ -546,36 +662,28 @@ export const PlacementPrep = () => {
     setRole("All Roles");
   };
 
-  const handleStart = async (drive: HiringDrive) => {
+  /*
+   * NEW FLOW:
+   *
+   * PlacementPrep
+   *      ↓
+   * ApplicationSubmission/:driveId
+   *
+   * The actual application is submitted on
+   * ApplicationSubmission.tsx.
+   */
+  const handleStart = (drive: HiringDrive) => {
     if (drive.status === "Closed") {
       return;
     }
 
-    if (drive.applied) {
-      navigate("/student/hiring-process");
+    if (drive.status === "Upcoming") {
       return;
     }
 
-    setStartingId(drive.id);
-    setError("");
-
-    try {
-      await studentApi.startHiringDrive(drive.id);
-
-      setHiringDrives((drives) =>
-        drives.map((item) =>
-          item.id === drive.id ? { ...item, applied: true } : item
-        )
-      );
-
-      setAppliedCount((count) => count + 1);
-
-      navigate("/student/hiring-process");
-    } catch (startError) {
-      setError(getApiErrorMessage(startError));
-    } finally {
-      setStartingId(null);
-    }
+    navigate(
+      `/student/application-submission/${drive.id}`,
+    );
   };
 
   return (
@@ -621,7 +729,10 @@ export const PlacementPrep = () => {
 
           <div className="relative">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[#E9DDFF] bg-[#F4EFFF] px-3 py-1 text-[11px] font-bold text-[#4500AD]">
-              <Icon name="sparkles" className="h-3 w-3" />
+              <Icon
+                name="sparkles"
+                className="h-3 w-3"
+              />
               Placement drives
             </span>
 
@@ -630,34 +741,35 @@ export const PlacementPrep = () => {
             </h1>
 
             <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-              Browse companies actively hiring, filter by category or role, and
-              start a company's hiring process to get matched and scored.
+              Browse companies actively hiring, filter by
+              category or role, and start a company's hiring
+              process to get matched and scored.
             </p>
           </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {statsRow.map((s) => (
+          {statsRow.map((stat) => (
             <article
-              key={s.label}
+              key={stat.label}
               className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
             >
               <div
                 className="flex h-10 w-10 items-center justify-center rounded-xl"
-                style={{ background: s.bg }}
+                style={{ background: stat.bg }}
               >
                 <Icon
-                  name={s.icon}
+                  name={stat.icon}
                   className="h-4 w-4 text-slate-700"
                 />
               </div>
 
               <p className="mt-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                {s.label}
+                {stat.label}
               </p>
 
               <p className="mt-0.5 text-3xl font-black tracking-tight text-slate-900">
-                {s.value}
+                {stat.value}
               </p>
             </article>
           ))}
@@ -674,7 +786,9 @@ export const PlacementPrep = () => {
 
               <input
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
                 placeholder="Search by company..."
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs text-slate-700 placeholder-slate-400 outline-none focus:border-[#B99AFF] focus:bg-white focus:ring-2 focus:ring-[#F4EFFF]"
               />
@@ -687,12 +801,17 @@ export const PlacementPrep = () => {
 
               <select
                 value={role}
-                onChange={(e) => setRole(e.target.value)}
+                onChange={(event) =>
+                  setRole(event.target.value)
+                }
                 className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-600 outline-none focus:border-[#B99AFF] focus:ring-2 focus:ring-[#F4EFFF]"
               >
-                {roles.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
+                {roles.map((roleName) => (
+                  <option
+                    key={roleName}
+                    value={roleName}
+                  >
+                    {roleName}
                   </option>
                 ))}
               </select>
@@ -700,21 +819,25 @@ export const PlacementPrep = () => {
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            {categories.map((c) => (
+            {categories.map((categoryName) => (
               <button
-                key={c}
-                onClick={() => setCategory(c)}
+                key={categoryName}
+                onClick={() =>
+                  setCategory(categoryName)
+                }
                 className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition ${
-                  category === c
+                  category === categoryName
                     ? "bg-slate-900 text-white"
                     : "border border-slate-200 bg-white text-slate-500 hover:border-[#DCCBFF] hover:bg-[#F4EFFF] hover:text-[#4500AD]"
                 }`}
               >
-                {c}
+                {categoryName}
               </button>
             ))}
 
-            {(search || category !== "All" || role !== "All Roles") && (
+            {(search ||
+              category !== "All" ||
+              role !== "All Roles") && (
               <button
                 onClick={resetFilters}
                 className="ml-auto text-[11px] font-bold text-slate-400 hover:text-slate-600"
@@ -758,9 +881,9 @@ export const PlacementPrep = () => {
             </button>
           </div>
         ) : null}
-
       </div>
-    </StudentLayout>  );
+    </StudentLayout>
+  );
 };
 
 export default PlacementPrep;

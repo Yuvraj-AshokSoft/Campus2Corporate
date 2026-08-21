@@ -532,7 +532,7 @@ function OptionRow({
 // ============================================================================
 
 export default function HiringProcess() {
-  const { id } = useParams<{ id: string }>();
+  const { driveId } = useParams<{ driveId: string }>();
   const navigate = useNavigate();
 
   // ---------------------------------------------------------------------
@@ -580,7 +580,6 @@ export default function HiringProcess() {
   const [timelineSteps, setTimelineSteps] = useState<TimelineStep[]>(INITIAL_TIMELINE_STEPS);
   const [roundOverview, setRoundOverview] = useState<RoundOverviewData[]>(INITIAL_ROUND_OVERVIEW);
 
-  const [showComingSoonToast, setShowComingSoonToast] = useState(false);
 
   // ---------------------------------------------------------------------
   // Refs
@@ -939,11 +938,12 @@ export default function HiringProcess() {
 
   const handlePrimaryCta = () => {
     if (aptitudePassed) {
-      setShowComingSoonToast(true);
-      window.setTimeout(() => setShowComingSoonToast(false), 2600);
+      if (driveId) {
+        navigate(`/student/ai-interview/${driveId}`);
+      }
       return;
     }
-    console.debug('Starting assessment for drive', id);
+    console.debug('Starting assessment for drive', driveId);
     setStage('permissions');
   };
 
@@ -1876,20 +1876,6 @@ export default function HiringProcess() {
                 {countdownValue > 0 ? countdownValue : 'Go'}
               </motion.span>
             </AnimatePresence>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showComingSoonToast && (
-          <motion.div
-            key="coming-soon-toast"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white shadow-lg"
-          >
-            Technical Round 1 assessment will be available soon.
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken";
-import Admin from "../models/admin.js";
 
 const authMiddleware = async (req, res, next) => {
     try {
@@ -15,7 +14,7 @@ const authMiddleware = async (req, res, next) => {
 
         const decoded = jwt.verify(
             token,
-            process.env.JWT_SECRET
+            process.env.JWT_SECRET || "fallback_jwt_secret_key_123456"
         );
 
         req.user = decoded;

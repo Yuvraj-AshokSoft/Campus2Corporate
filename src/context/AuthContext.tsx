@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth as useClerkAuth, useUser as useClerkUser, useSignIn, useSignUp } from '@clerk/clerk-react';
+import { studentApi } from '../services/studentApi';
 
 export interface User {
   id: string;
@@ -132,6 +133,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       )
     ).toLowerCase() as any;
 
+    let backendStudentLoginError = '';
+
+    if (requestedRole === 'student') {
+      try {
+        const response = await studentApi.login({
+          email: cleanEmail,
+          password,
+          role: 'student',
+        });
+
+        const payload = response.data?.data ?? response.data;
+        const student = payload?.student || response.data?.student || response.data?.user;
+
+        if (response.data?.success && student) {
+          const studentUser: User = {
+            id: String(student.id || student._id),
+            fullName: student.fullName || student.name || cleanEmail.split('@')[0],
+            name: student.name || student.fullName || cleanEmail.split('@')[0],
+            email: student.email || cleanEmail,
+            phone: student.phone || '',
+            role: 'student',
+            isVerified: true,
+            branch: student.branch || 'Computer Science',
+            semester: student.semester ? `Sem ${student.semester}` : 'Sem 6',
+          };
+
+          setLocalUser(studentUser);
+          setCurrentUser(studentUser);
+          localStorage.setItem('c2c_local_session', JSON.stringify(studentUser));
+          localStorage.setItem('c2c_student_user', JSON.stringify(studentUser));
+          return { success: true };
+        }
+      } catch (error: any) {
+        backendStudentLoginError =
+          error?.response?.data?.message ||
+          error?.message ||
+          'Student login failed';
+      }
+    }
+
     // 2. Try Clerk Cloud Auth if loaded
     if (isSignInLoaded && signIn) {
       try {
@@ -211,7 +252,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // 5. If account was neither registered nor a valid demo account, reject login!
-    return { success: false, message: 'Account not found. Please sign up first.' };
+    return {
+      success: false,
+      message: backendStudentLoginError || 'Account not found. Please sign up first.',
+    };
   };
 
   const register = async (userData: {
@@ -372,6 +416,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('c2c_local_session');
     localStorage.removeItem('c2c_admin_token');
     localStorage.removeItem('c2c_admin_session');
+    localStorage.removeItem('c2c_student_token');
+    localStorage.removeItem('c2c_student_user');
     setLocalUser(null);
     setCurrentUser(null);
     if (signOut) {

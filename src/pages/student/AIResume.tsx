@@ -613,8 +613,8 @@ Experience/projects: ${
       });
       const parsed = unwrapData<{ summary: string }>(response);
       setField("summary", parsed.summary);
-    } catch {
-      setError("Couldn't generate a summary. Please try again.");
+    } catch (error) {
+      setError(getApiErrorMessage(error));
     } finally {
       setSummaryLoading(false);
     }
@@ -641,8 +641,8 @@ Raw notes: ${entry.bullets || "Not specified"}`,
       });
       const parsed = unwrapData<{ bullets: string[] }>(response);
       updateExperience(entry.id, "bullets", parsed.bullets.join("\n"));
-    } catch {
-      setError("Couldn't enhance those bullet points. Please try again.");
+    } catch (error) {
+      setError(getApiErrorMessage(error));
     } finally {
       setEnhancingId(null);
     }
@@ -689,8 +689,8 @@ Note: ${note}`,
       }
       setAssistantNote(parsed.confirmation);
       setAssistantInput("");
-    } catch {
-      setError("Couldn't process that note. Please try again.");
+    } catch (error) {
+      setError(getApiErrorMessage(error));
     } finally {
       setAssistantLoading(false);
     }

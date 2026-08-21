@@ -28,11 +28,22 @@ const sendSuccess = (res, message, data) => {
 };
 
 const sendError = (res, error) => {
-  console.error(error);
+  console.error("AI request failed:", error?.code || "UNKNOWN_ERROR", error?.message);
 
-  return res.status(error.code === "AI_PROVIDER_TIMEOUT" ? 504 : 500).json({
+  const statusCode = {
+    AI_CONFIGURATION_ERROR: 503,
+    AI_PROVIDER_TIMEOUT: 503,
+    AI_RATE_LIMIT: 429,
+    AI_PROVIDER_ERROR: 503,
+    AI_EMPTY_RESPONSE: 502,
+    AI_INVALID_RESPONSE: 502,
+  }[error?.code] || 500;
+
+  return res.status(statusCode).json({
     success: false,
-    message: error.message || "Internal Server Error",
+    message: ["AI_CONFIGURATION_ERROR", "AI_PROVIDER_TIMEOUT", "AI_RATE_LIMIT", "AI_PROVIDER_ERROR"].includes(error?.code)
+      ? error.message
+      : "AI service returned an invalid response. Please try again.",
   });
 };
 
@@ -92,7 +103,7 @@ export const placementAnalysis = async (req, res) => {
 
 export const atsScore = async (req, res) => {
   try {
-    const { resumeText } = req.body;
+    const { resumeText, jobDescription } = req.body;
 
     if (!resumeText) {
       return res.status(400).json({
@@ -101,7 +112,7 @@ export const atsScore = async (req, res) => {
       });
     }
 
-    const result = await aiService.analyzeResume(resumeText);
+    const result = await aiService.analyzeResume(resumeText, jobDescription);
 
     sendSuccess(res, "Resume analyzed successfully.", parseAiJson(result));
   } catch (error) {
@@ -170,6 +181,9 @@ export const careerCoach = async (req, res) => {
 
 export const resumeSummary = async (req, res) => {
   try {
+    if (!req.body.resume && !req.body.prompt && !Object.keys(req.body).length) {
+      return res.status(400).json({ success: false, message: "Resume data is required." });
+    }
     const result = await aiService.generateResumeSummary(req.body.resume || req.body);
     sendSuccess(res, "Resume summary generated successfully.", parseAiJson(result));
   } catch (error) {
@@ -188,6 +202,9 @@ export const generateRoadmap = async (req, res) => {
 
 export const resumeExperience = async (req, res) => {
   try {
+    if (!req.body.experience && !req.body.prompt && !Object.keys(req.body).length) {
+      return res.status(400).json({ success: false, message: "Experience data is required." });
+    }
     const result = await aiService.enhanceResumeExperience(req.body.experience || req.body);
     sendSuccess(res, "Experience bullets enhanced successfully.", parseAiJson(result));
   } catch (error) {
@@ -197,6 +214,9 @@ export const resumeExperience = async (req, res) => {
 
 export const resumeNote = async (req, res) => {
   try {
+    if (!req.body.note && !req.body.prompt && !Object.keys(req.body).length) {
+      return res.status(400).json({ success: false, message: "Resume note is required." });
+    }
     const result = await aiService.classifyResumeNote(
       req.body.note || req.body
     );
