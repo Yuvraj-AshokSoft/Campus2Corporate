@@ -12,6 +12,7 @@ import Student from "../src/models/student.js";
 import Company from "../src/models/company.js";
 import Recruiter from "../src/models/recruiter.js";
 import Application from "../src/models/application.js";
+import ApplicationStatusHistory from "../src/models/applicationStatusHistory.js";
 
 const PORT = 5055;
 const BASE_URL = `http://localhost:${PORT}`;
@@ -45,6 +46,7 @@ async function runTests() {
     await Company.deleteMany({ name: "TestCorp" });
     await Recruiter.deleteMany({ email: "recruiter@testcorp.com" });
     await Application.deleteMany({});
+    await ApplicationStatusHistory.deleteMany({});
 
     await new Promise((resolve) => {
       server = app.listen(PORT, () => {
@@ -1024,6 +1026,233 @@ async function runTests() {
     );
     console.log("✔ Bulk student update common format ({ studentIds, updates }) verified");
 
+    // ==========================================
+    // --- PHASE 7: APPLICATION STATUS HISTORY TESTS ---
+    // ==========================================
+    console.log("\n--- PHASE 7: APPLICATION STATUS HISTORY TESTS ---");
+
+    // Test 34: Initial Status History Creation on Application Create
+    const createHistoryAppRes = await request("/api/college/applications", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      body: {
+        student: student1_Id,
+        recruiter: recruiterId,
+        company: companyId,
+        remarks: "First application submission",
+      },
+    });
+
+    console.assert(
+      createHistoryAppRes.status === 201,
+      `Expected 201 on create app for history test, got ${createHistoryAppRes.status}: ${JSON.stringify(createHistoryAppRes.body)}`
+    );
+    const historyAppId = createHistoryAppRes.body.data._id;
+
+    const initialHistoryRes = await request(
+      `/api/college/applications/${historyAppId}/history`,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      }
+    );
+
+    console.assert(
+      initialHistoryRes.status === 200,
+      `Expected 200 on initial history fetch, got ${initialHistoryRes.status}: ${JSON.stringify(initialHistoryRes.body)}`
+    );
+    console.assert(
+      Array.isArray(initialHistoryRes.body.data) &&
+        initialHistoryRes.body.data.length === 1,
+      `Expected 1 history entry, got ${initialHistoryRes.body.data?.length}`
+    );
+    console.assert(
+      initialHistoryRes.body.data[0].oldStatus === null &&
+        initialHistoryRes.body.data[0].newStatus === "Applied",
+      "Initial history entry must have oldStatus: null and newStatus: 'Applied'"
+    );
+    console.assert(
+      initialHistoryRes.body.data[0].remarks === "First application submission",
+      "Initial history entry must preserve initial remarks"
+    );
+    console.log("✔ Initial 'Applied' status history created reliably on application creation");
+
+    // Test 35: Status Transition History on Update
+    const updateHistoryRes1 = await request(
+      `/api/college/applications/${historyAppId}`,
+      {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${tokenCollegeA}` },
+        body: {
+          status: "Under Review",
+          remarks: "Application under screening",
+        },
+      }
+    );
+
+    console.assert(
+      updateHistoryRes1.status === 200,
+      `Expected 200 on update status, got ${updateHistoryRes1.status}`
+    );
+
+    const historyAfterUpdate1 = await request(
+      `/api/college/applications/${historyAppId}/history`,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      }
+    );
+
+    console.assert(
+      historyAfterUpdate1.body.data.length === 2,
+      `Expected 2 history records after first transition, got ${historyAfterUpdate1.body.data.length}`
+    );
+    console.assert(
+      historyAfterUpdate1.body.data[0].oldStatus === "Applied" &&
+        historyAfterUpdate1.body.data[0].newStatus === "Under Review" &&
+        historyAfterUpdate1.body.data[0].remarks === "Application under screening",
+      "Most recent history entry must record Applied -> Under Review"
+    );
+    console.log("✔ Single status transition recorded with oldStatus, newStatus, remarks and changedBy");
+
+    // Test 36: Multiple Status Transitions & Newest-First Ordering
+    await request(`/api/college/applications/${historyAppId}`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      body: {
+        status: "Shortlisted",
+        remarks: "Passed initial technical screening",
+      },
+    });
+
+    await request(`/api/college/applications/${historyAppId}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      body: {
+        status: "Interview",
+        remarks: "Technical interview scheduled",
+      },
+    });
+
+    const fullHistoryRes = await request(
+      `/api/college/applications/${historyAppId}/history`,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      }
+    );
+
+    console.assert(
+      fullHistoryRes.body.data.length === 4,
+      `Expected 4 history entries, got ${fullHistoryRes.body.data.length}`
+    );
+
+    const hList = fullHistoryRes.body.data;
+    console.assert(
+      hList[0].newStatus === "Interview" && hList[0].oldStatus === "Shortlisted",
+      "History index 0 must be Interview"
+    );
+    console.assert(
+      hList[1].newStatus === "Shortlisted" && hList[1].oldStatus === "Under Review",
+      "History index 1 must be Shortlisted"
+    );
+    console.assert(
+      hList[2].newStatus === "Under Review" && hList[2].oldStatus === "Applied",
+      "History index 2 must be Under Review"
+    );
+    console.assert(
+      hList[3].newStatus === "Applied" && hList[3].oldStatus === null,
+      "History index 3 must be Applied"
+    );
+
+    const t0 = new Date(hList[0].changedAt).getTime();
+    const t1 = new Date(hList[1].changedAt).getTime();
+    console.assert(
+      t0 >= t1,
+      "History entries must be sorted strictly newest-first"
+    );
+    console.log("✔ Multiple transitions and newest-first ordering verified");
+
+    // Test 37: No Duplicate History when Status does NOT change
+    const noChangeRes = await request(
+      `/api/college/applications/${historyAppId}`,
+      {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${tokenCollegeA}` },
+        body: {
+          coverLetter: "Updated cover letter without status change",
+        },
+      }
+    );
+    console.assert(
+      noChangeRes.status === 200,
+      `Expected 200 on non-status update, got ${noChangeRes.status}`
+    );
+
+    const historyAfterNoChange = await request(
+      `/api/college/applications/${historyAppId}/history`,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      }
+    );
+
+    console.assert(
+      historyAfterNoChange.body.data.length === 4,
+      `Expected history length to remain 4 when status did not change, got ${historyAfterNoChange.body.data.length}`
+    );
+    console.log("✔ No duplicate history created when status is unchanged");
+
+    // Test 38: Invalid ObjectId for History Endpoint -> 400
+    const invalidIdHistoryRes = await request(
+      "/api/college/applications/invalid-id-format/history",
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      }
+    );
+    console.assert(
+      invalidIdHistoryRes.status === 400,
+      `Expected 400 for invalid ObjectId on history, got ${invalidIdHistoryRes.status}`
+    );
+    console.log("✔ Invalid ObjectId on history endpoint returns 400 Bad Request");
+
+    // Test 39: Cross-College History Access Blocked -> 404
+    const crossCollegeHistoryRes = await request(
+      `/api/college/applications/${historyAppId}/history`,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${tokenCollegeB}` },
+      }
+    );
+    console.assert(
+      crossCollegeHistoryRes.status === 404,
+      `Expected 404 on cross-college history access, got ${crossCollegeHistoryRes.status}`
+    );
+    console.log("✔ Cross-college application history access blocked with 404");
+
+    // Test 40: Application Deletion Cascade Cleanup for History
+    const delHistoryAppRes = await request(
+      `/api/college/applications/${historyAppId}`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      }
+    );
+    console.assert(
+      delHistoryAppRes.status === 200,
+      `Expected 200 on delete app, got ${delHistoryAppRes.status}`
+    );
+
+    const historyAfterAppDel = await ApplicationStatusHistory.find({
+      application: historyAppId,
+    });
+    console.assert(
+      historyAfterAppDel.length === 0,
+      "ApplicationStatusHistory records must be cleaned up on application deletion"
+    );
+    console.log("✔ Cascade cleanup of status history on application deletion verified");
+
     console.log("\n=== ALL COLLEGE BACKEND TESTS PASSED SUCCESSFULLY! ===");
   } catch (error) {
     console.error("\n❌ TEST SUITE FAILED WITH ERROR:", error);
@@ -1036,6 +1265,7 @@ async function runTests() {
       await Company.deleteMany({ name: "TestCorp" });
       await Recruiter.deleteMany({ email: "recruiter@testcorp.com" });
       await Application.deleteMany({});
+      await ApplicationStatusHistory.deleteMany({});
       await mongoose.disconnect();
     } catch (e) {}
 

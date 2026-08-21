@@ -3,6 +3,7 @@ import College from "../models/college.js";
 import Student from "../models/student.js";
 import Project from "../models/project.js";
 import Application from "../models/application.js";
+import ApplicationStatusHistory from "../models/applicationStatusHistory.js";
 
 import generateToken from "../utils/generateToken.js";
 import { successResponse, errorResponse } from "../utils/apiResponse.js";
@@ -970,8 +971,12 @@ export const deleteStudent = async (req, res) => {
       return errorResponse(res, "Student not found", 404);
     }
 
-    // Cascade delete linked applications
+    // Cascade delete linked applications & status histories
+    const studentAppIds = await Application.find({ student: studentId }).distinct("_id");
     await Application.deleteMany({ student: studentId });
+    if (studentAppIds.length > 0) {
+      await ApplicationStatusHistory.deleteMany({ application: { $in: studentAppIds } });
+    }
 
     // Clean up student reference in college document
     await College.findByIdAndUpdate(req.college._id, {
@@ -1058,6 +1063,18 @@ export const createApplication = async (req, res) => {
 
     const application = await Application.create(req.body);
 
+    // Reliably record initial status history ("Applied")
+    await ApplicationStatusHistory.create({
+      application: application._id,
+      college: req.college._id,
+      oldStatus: null,
+      newStatus: application.status || "Applied",
+      changedBy: req.college._id,
+      changedByRole: "college",
+      remarks: req.body.remarks || "Application created",
+      changedAt: new Date(),
+    });
+
     const populatedApp = await Application.findById(application._id)
       .populate("student", "-password")
       .populate("recruiter")
@@ -1069,6 +1086,47 @@ export const createApplication = async (req, res) => {
       "Application created successfully",
       populatedApp,
       201
+    );
+  } catch (error) {
+    return handleControllerError(res, error);
+  }
+};
+
+// ================= Application Status History =================
+
+export const getApplicationStatusHistory = async (req, res) => {
+  try {
+    const appId = req.params.id;
+    if (!isValidObjectId(appId)) {
+      return errorResponse(res, "Invalid application ID format", 400);
+    }
+
+    const application = await Application.findById(appId).populate("student");
+
+    if (
+      !application ||
+      !application.student ||
+      application.student.college.toString() !== req.college._id.toString()
+    ) {
+      return errorResponse(
+        res,
+        "Application not found or does not belong to your college",
+        404
+      );
+    }
+
+    const history = await ApplicationStatusHistory.find({
+      application: appId,
+      college: req.college._id,
+    })
+      .sort({ changedAt: -1, createdAt: -1 })
+      .populate("changedBy", "name email");
+
+    return successResponse(
+      res,
+      "Application status history fetched successfully",
+      history,
+      200
     );
   } catch (error) {
     return handleControllerError(res, error);
@@ -1186,6 +1244,9 @@ export const updateApplication = async (req, res) => {
       return errorResponse(res, "Application not found or access denied", 404);
     }
 
+    const oldStatus = existingApp.status;
+    const isStatusChanged = req.body.status && req.body.status !== oldStatus;
+
     delete req.body.student;
 
     const application = await Application.findByIdAndUpdate(
@@ -1200,6 +1261,20 @@ export const updateApplication = async (req, res) => {
       .populate("recruiter")
       .populate("company")
       .populate("project");
+
+    // Only create history entry when status actually changes
+    if (isStatusChanged) {
+      await ApplicationStatusHistory.create({
+        application: application._id,
+        college: req.college._id,
+        oldStatus: oldStatus,
+        newStatus: application.status,
+        changedBy: req.college._id,
+        changedByRole: "college",
+        remarks: req.body.remarks || "",
+        changedAt: new Date(),
+      });
+    }
 
     return successResponse(
       res,
@@ -1232,6 +1307,9 @@ export const deleteApplication = async (req, res) => {
     }
 
     await Application.findByIdAndDelete(req.params.id);
+
+    // Clean up status history linked to this application
+    await ApplicationStatusHistory.deleteMany({ application: req.params.id });
 
     return successResponse(
       res,

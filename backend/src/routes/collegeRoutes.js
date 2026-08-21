@@ -15,6 +15,7 @@ import {
   updateStudent,
   deleteStudent,
   createApplication,
+  getApplicationStatusHistory,
   getAllApplications,
   getApplicationById,
   updateApplication,
@@ -73,6 +74,7 @@ router.delete("/students/:id", collegeAuthMiddleware, deleteStudent);
 // ==========================
 // Application Management
 // ==========================
+router.get("/applications/:id/history", collegeAuthMiddleware, getApplicationStatusHistory);
 router.post("/applications", collegeAuthMiddleware, createApplication);
 router.get("/applications", collegeAuthMiddleware, getAllApplications);
 router.get("/applications/:id", collegeAuthMiddleware, getApplicationById);
