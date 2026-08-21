@@ -57,7 +57,12 @@ async function runTests() {
     async function request(path, options = {}) {
       const url = `${BASE_URL}${path}`;
       const headers = { "Content-Type": "application/json", ...options.headers };
-      const body = options.body ? JSON.stringify(options.body) : undefined;
+      const body =
+        options.body !== undefined
+          ? typeof options.body === "string"
+            ? options.body
+            : JSON.stringify(options.body)
+          : undefined;
 
       const res = await fetch(url, {
         method: options.method || "GET",
@@ -65,8 +70,15 @@ async function runTests() {
         body,
       });
 
-      const data = await res.json().catch(() => null);
-      return { status: res.status, body: data };
+      const contentType = res.headers.get("content-type") || "";
+      let data = null;
+      let text = null;
+      if (contentType.includes("application/json")) {
+        data = await res.json().catch(() => null);
+      } else {
+        text = await res.text().catch(() => null);
+      }
+      return { status: res.status, body: data, text, headers: res.headers };
     }
 
     let tokenCollegeA;
@@ -685,6 +697,332 @@ async function runTests() {
       `Expected 200 on delete application, got ${delAppRes.status}`
     );
     console.log("✔ Delete Application succeeded");
+
+    // ==========================================
+    // --- PHASE 6: ENHANCEMENTS PHASE 1 TESTS ---
+    // ==========================================
+    console.log("\n--- PHASE 6: BULK IMPORT, CSV EXPORT & BULK UPDATE TESTS ---");
+
+    // Test 26: Bulk Student Import via JSON
+    const bulkImportJsonRes = await request("/api/college/students/bulk-import", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      body: {
+        students: [
+          {
+            name: "Bulk Student 1",
+            email: "bulk1@teststudent.com",
+            phone: "9876543231",
+            branch: "Computer Science",
+            semester: 6,
+            percentage: 82.5,
+            skills: ["JavaScript", "Node.js"],
+          },
+          {
+            name: "Bulk Student 2",
+            email: "bulk2@teststudent.com",
+            phone: "9876543232",
+            branch: "Information Technology",
+            semester: 6,
+            percentage: 76.0,
+            skills: ["Python", "Django"],
+          },
+          {
+            name: "Bulk Student 3",
+            email: "bulk3@teststudent.com",
+            phone: "9876543233",
+            branch: "Computer Science",
+            semester: 8,
+            percentage: 91.0,
+            skills: ["React", "TypeScript"],
+          },
+        ],
+      },
+    });
+
+    console.assert(
+      bulkImportJsonRes.status === 201,
+      `Expected 201 on bulk import JSON, got ${bulkImportJsonRes.status}: ${JSON.stringify(bulkImportJsonRes.body)}`
+    );
+    console.assert(
+      bulkImportJsonRes.body.data.importedCount === 3,
+      `Expected importedCount 3, got ${bulkImportJsonRes.body.data.importedCount}`
+    );
+    console.assert(
+      bulkImportJsonRes.body.data.failedCount === 0,
+      `Expected failedCount 0, got ${bulkImportJsonRes.body.data.failedCount}`
+    );
+
+    const importedIds = bulkImportJsonRes.body.data.importedStudents.map((s) => s._id);
+    const colADocAfterBulk = await College.findById(collegeA_Id);
+    const colAStudentIds = colADocAfterBulk.students.map((id) => id.toString());
+    console.assert(
+      importedIds.every((id) => colAStudentIds.includes(id)),
+      "All imported student IDs must be added to College.students array"
+    );
+    console.log("✔ Bulk student import via JSON succeeded & synced College.students");
+
+    // Test 27: Bulk Import with Validation Errors & Duplicate Email Detection
+    const bulkImportErrorsRes = await request("/api/college/students/bulk-import", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      body: {
+        students: [
+          {
+            name: "Valid Unique Student",
+            email: "validunique@teststudent.com",
+            branch: "Electronics",
+            semester: 4,
+            percentage: 78,
+          },
+          {
+            name: "Duplicate DB Email",
+            email: "bulk1@teststudent.com", // Already exists in DB
+            branch: "Computer Science",
+            semester: 6,
+            percentage: 80,
+          },
+          {
+            name: "Duplicate In Batch 1",
+            email: "batchdup@teststudent.com",
+            branch: "Computer Science",
+            semester: 6,
+            percentage: 75,
+          },
+          {
+            name: "Duplicate In Batch 2",
+            email: "batchdup@teststudent.com", // Duplicate in same batch
+            branch: "Computer Science",
+            semester: 6,
+            percentage: 75,
+          },
+          {
+            name: "Missing Percentage",
+            email: "nopercentage@teststudent.com",
+            branch: "Mechanical",
+            semester: 5,
+            percentage: -10, // Invalid percentage
+          },
+          {
+            name: "Invalid Email Format",
+            email: "invalid-email-format",
+            percentage: 85,
+          },
+        ],
+      },
+    });
+
+    console.assert(
+      bulkImportErrorsRes.status === 201 || bulkImportErrorsRes.status === 200,
+      `Expected 200/201 on partial bulk import, got ${bulkImportErrorsRes.status}`
+    );
+    console.assert(
+      bulkImportErrorsRes.body.data.importedCount === 2, // Valid Unique Student + Duplicate In Batch 1 (first instance)
+      `Expected importedCount 2, got ${bulkImportErrorsRes.body.data.importedCount}`
+    );
+    console.assert(
+      bulkImportErrorsRes.body.data.failedCount === 4,
+      `Expected failedCount 4, got ${bulkImportErrorsRes.body.data.failedCount}`
+    );
+    console.assert(
+      bulkImportErrorsRes.body.data.failedRows.length === 4,
+      "Failed rows array must contain details of the 4 invalid/duplicate rows"
+    );
+    console.log("✔ Bulk import invalid-row reporting & duplicate email detection verified");
+
+    // Test 28: Bulk Student Import via CSV string
+    const csvContent = [
+      "name,email,phone,branch,semester,percentage,skills",
+      'CSV Student 1,csv1@teststudent.com,9876543241,Information Technology,6,88.5,"Java, Spring"',
+      'CSV Student 2,csv2@teststudent.com,9876543242,Computer Science,7,79.0,"Python, FastAPI"',
+    ].join("\n");
+
+    const bulkImportCsvRes = await request("/api/college/students/bulk-import", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      body: { csvData: csvContent },
+    });
+
+    console.assert(
+      bulkImportCsvRes.status === 201,
+      `Expected 201 on bulk import CSV, got ${bulkImportCsvRes.status}: ${JSON.stringify(bulkImportCsvRes.body)}`
+    );
+    console.assert(
+      bulkImportCsvRes.body.data.importedCount === 2,
+      `Expected importedCount 2, got ${bulkImportCsvRes.body.data.importedCount}`
+    );
+    console.log("✔ Bulk student import via CSV string format succeeded");
+
+    // Test 29: Student CSV Export
+    const exportRes = await request("/api/college/students/export", {
+      method: "GET",
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+
+    console.assert(
+      exportRes.status === 200,
+      `Expected 200 on student export, got ${exportRes.status}`
+    );
+    console.assert(
+      exportRes.headers.get("content-type")?.includes("text/csv"),
+      "Response Content-Type header must be text/csv"
+    );
+    console.assert(
+      typeof exportRes.text === "string" && exportRes.text.length > 0,
+      "Export text response must be non-empty"
+    );
+    console.assert(
+      exportRes.text.includes("Name,Email,Phone,Branch,Semester,Percentage,Status,Skills,Registered At"),
+      "CSV header row must match expected columns"
+    );
+    console.assert(
+      exportRes.text.includes("bulk1@teststudent.com") &&
+        exportRes.text.includes("csv1@teststudent.com"),
+      "Exported CSV must contain College A's student records"
+    );
+    console.assert(
+      !exportRes.text.includes("password") && !exportRes.text.includes("$2a$"),
+      "CSV export must never leak password hashes or secrets"
+    );
+    console.log("✔ Student CSV export generated clean RFC 4180 output with no secret leakage");
+
+    // Test 30: Student CSV Export with Filters & College Isolation
+    const filteredExportRes = await request(
+      "/api/college/students/export?branch=Information Technology&minPercentage=80",
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      }
+    );
+
+    console.assert(
+      filteredExportRes.status === 200,
+      `Expected 200 on filtered export, got ${filteredExportRes.status}`
+    );
+    console.assert(
+      filteredExportRes.text.includes("csv1@teststudent.com"),
+      "Filtered CSV must include CSV Student 1 (IT, 88.5%)"
+    );
+    console.assert(
+      !filteredExportRes.text.includes("bulk2@teststudent.com"),
+      "Filtered CSV must exclude bulk2 (IT, 76.0% < 80%)"
+    );
+
+    // Cross-college export isolation: College B export must NOT have College A students
+    const collegeBExportRes = await request("/api/college/students/export", {
+      method: "GET",
+      headers: { Authorization: `Bearer ${tokenCollegeB}` },
+    });
+    console.assert(
+      collegeBExportRes.status === 200,
+      `Expected 200 on College B export, got ${collegeBExportRes.status}`
+    );
+    console.assert(
+      !collegeBExportRes.text.includes("bulk1@teststudent.com"),
+      "College B CSV export must strictly isolate College A's students"
+    );
+    console.log("✔ Student CSV export filtering and cross-college isolation verified");
+
+    // Test 31: Bulk Student Update
+    const bulk1Id = importedIds[0];
+    const bulk2Id = importedIds[1];
+
+    const bulkUpdateRes = await request("/api/college/students/bulk", {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      body: {
+        updates: [
+          {
+            id: bulk1Id,
+            branch: "Artificial Intelligence",
+            semester: 7,
+            percentage: 95.0,
+            status: "Inactive",
+          },
+          {
+            id: bulk2Id,
+            skills: ["Python", "FastAPI", "Docker"],
+            percentage: 84.0,
+          },
+        ],
+      },
+    });
+
+    console.assert(
+      bulkUpdateRes.status === 200,
+      `Expected 200 on bulk update, got ${bulkUpdateRes.status}: ${JSON.stringify(bulkUpdateRes.body)}`
+    );
+    console.assert(
+      bulkUpdateRes.body.data.updatedCount === 2,
+      `Expected updatedCount 2, got ${bulkUpdateRes.body.data.updatedCount}`
+    );
+    console.assert(
+      bulkUpdateRes.body.data.failedCount === 0,
+      `Expected failedCount 0, got ${bulkUpdateRes.body.data.failedCount}`
+    );
+
+    const updatedDoc1 = await Student.findById(bulk1Id);
+    console.assert(
+      updatedDoc1.branch === "Artificial Intelligence" &&
+        updatedDoc1.semester === 7 &&
+        updatedDoc1.percentage === 95.0 &&
+        updatedDoc1.status === "Inactive",
+      "Student 1 document in DB must reflect all updated fields"
+    );
+    console.log("✔ Bulk student update applied valid changes successfully");
+
+    // Test 32: Bulk Student Update - Cross College Isolation & Validation
+    const bulkUpdateErrorsRes = await request("/api/college/students/bulk", {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      body: {
+        updates: [
+          {
+            id: studentB_Id, // Belongs to College B!
+            branch: "Hacked Branch",
+          },
+          {
+            id: "507f1f77bcf86cd799439011", // Non-existent student
+            semester: 8,
+          },
+          {
+            id: bulk1Id,
+            percentage: 150, // Invalid percentage > 100
+          },
+        ],
+      },
+    });
+
+    console.assert(
+      bulkUpdateErrorsRes.status === 200,
+      `Expected 200 on bulk update with errors, got ${bulkUpdateErrorsRes.status}`
+    );
+    console.assert(
+      bulkUpdateErrorsRes.body.data.updatedCount === 0,
+      `Expected updatedCount 0, got ${bulkUpdateErrorsRes.body.data.updatedCount}`
+    );
+    console.assert(
+      bulkUpdateErrorsRes.body.data.failedCount === 3,
+      `Expected failedCount 3, got ${bulkUpdateErrorsRes.body.data.failedCount}`
+    );
+    console.log("✔ Bulk student update cross-college isolation and validation verified");
+
+    // Test 33: Bulk Student Update Common Format ({ studentIds, updates })
+    const commonBulkUpdateRes = await request("/api/college/students/bulk", {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      body: {
+        studentIds: [bulk1Id, bulk2Id],
+        updates: {
+          status: "Active",
+        },
+      },
+    });
+    console.assert(
+      commonBulkUpdateRes.status === 200 && commonBulkUpdateRes.body.data.updatedCount === 2,
+      "Common format bulk update succeeded"
+    );
+    console.log("✔ Bulk student update common format ({ studentIds, updates }) verified");
 
     console.log("\n=== ALL COLLEGE BACKEND TESTS PASSED SUCCESSFULLY! ===");
   } catch (error) {

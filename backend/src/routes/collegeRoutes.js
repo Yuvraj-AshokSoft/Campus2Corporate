@@ -7,6 +7,9 @@ import {
   updateCollegeProfile,
   getCollegeDashboard,
   createStudent,
+  bulkImportStudents,
+  exportStudentsCSV,
+  bulkUpdateStudents,
   getAllStudents,
   getStudentById,
   updateStudent,
@@ -56,6 +59,9 @@ router.get("/drives", collegeAuthMiddleware, getCollegeDrives);
 // ==========================
 // Student Pool Management
 // ==========================
+router.post("/students/bulk-import", collegeAuthMiddleware, bulkImportStudents);
+router.get("/students/export", collegeAuthMiddleware, exportStudentsCSV);
+router.patch("/students/bulk", collegeAuthMiddleware, bulkUpdateStudents);
 router.post("/students", collegeAuthMiddleware, createStudent);
 router.get("/students", collegeAuthMiddleware, getAllStudents);
 router.get("/students/eligible", collegeAuthMiddleware, getEligibleStudents);

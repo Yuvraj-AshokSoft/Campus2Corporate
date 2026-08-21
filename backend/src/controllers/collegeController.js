@@ -6,6 +6,7 @@ import Application from "../models/application.js";
 
 import generateToken from "../utils/generateToken.js";
 import { successResponse, errorResponse } from "../utils/apiResponse.js";
+import { recordsToCsv, parseCsv } from "../utils/csvHelper.js";
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -344,6 +345,391 @@ export const getCollegeDrives = async (req, res) => {
   }
 };
 
+// ================= Bulk Student Import =================
+
+export const bulkImportStudents = async (req, res) => {
+  try {
+    let rawStudents = [];
+
+    // Support JSON array, JSON object with students, or CSV data
+    if (Array.isArray(req.body)) {
+      rawStudents = req.body;
+    } else if (req.body && Array.isArray(req.body.students)) {
+      rawStudents = req.body.students;
+    } else if (req.body && typeof req.body.csvData === "string" && req.body.csvData.trim()) {
+      rawStudents = parseCsv(req.body.csvData);
+    } else if (typeof req.body === "string" && req.body.trim()) {
+      rawStudents = parseCsv(req.body);
+    }
+
+    if (!rawStudents || rawStudents.length === 0) {
+      return errorResponse(res, "No student data provided for import", 400);
+    }
+
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/;
+    const seenEmailsInBatch = new Set();
+    const candidateEmails = [];
+    const parsedRows = [];
+
+    // Step 1: Pre-process and validate structure per row
+    rawStudents.forEach((row, index) => {
+      const rowNum = index + 1;
+      const name = (row.name || row.studentname || "").trim();
+      const email = (row.email || row.studentemail || "").toLowerCase().trim();
+      const phone = (row.phone || row.contact || row.phonenumber || "").trim();
+      const branch = (row.branch || row.department || "Computer Science").trim();
+      const semesterRaw = row.semester !== undefined && row.semester !== "" ? Number(row.semester) : 6;
+      const percentageRaw = row.percentage !== undefined && row.percentage !== "" ? Number(row.percentage) : NaN;
+      const status = row.status && ["Active", "Inactive"].includes(row.status) ? row.status : "Active";
+
+      let skills = [];
+      if (Array.isArray(row.skills)) {
+        skills = row.skills.map((s) => String(s).trim()).filter(Boolean);
+      } else if (typeof row.skills === "string" && row.skills.trim()) {
+        skills = row.skills.split(/[;,]/).map((s) => s.trim()).filter(Boolean);
+      }
+
+      const errors = [];
+
+      if (!name) {
+        errors.push("Student name is required");
+      }
+
+      if (!email) {
+        errors.push("Email is required");
+      } else if (!emailRegex.test(email)) {
+        errors.push("Please enter a valid email address");
+      } else if (seenEmailsInBatch.has(email)) {
+        errors.push("Duplicate email within the import batch");
+      } else {
+        seenEmailsInBatch.add(email);
+        candidateEmails.push(email);
+      }
+
+      if (isNaN(percentageRaw) || percentageRaw < 0 || percentageRaw > 100) {
+        errors.push("Valid percentage between 0 and 100 is required");
+      }
+
+      if (isNaN(semesterRaw) || semesterRaw < 1 || semesterRaw > 12) {
+        errors.push("Semester must be a number between 1 and 12");
+      }
+
+      parsedRows.push({
+        row: rowNum,
+        name,
+        email,
+        phone,
+        branch: branch || "Computer Science",
+        semester: !isNaN(semesterRaw) ? semesterRaw : 6,
+        percentage: percentageRaw,
+        skills,
+        status,
+        errors,
+      });
+    });
+
+    // Step 2: Check for existing emails in database
+    const existingInDb = await Student.find({
+      email: { $in: candidateEmails },
+    }).select("email");
+    const existingEmailSet = new Set(existingInDb.map((s) => s.email.toLowerCase()));
+
+    const validToInsert = [];
+    const failedRows = [];
+
+    parsedRows.forEach((item) => {
+      const rowErrors = [...item.errors];
+
+      if (item.email && existingEmailSet.has(item.email)) {
+        rowErrors.push("Student with this email already exists");
+      }
+
+      if (rowErrors.length > 0) {
+        failedRows.push({
+          row: item.row,
+          name: item.name,
+          email: item.email || undefined,
+          errors: rowErrors,
+        });
+      } else {
+        validToInsert.push({
+          name: item.name,
+          email: item.email,
+          phone: item.phone,
+          branch: item.branch,
+          semester: item.semester,
+          percentage: item.percentage,
+          skills: item.skills,
+          status: item.status,
+          college: req.college._id,
+        });
+      }
+    });
+
+    let insertedStudents = [];
+
+    if (validToInsert.length > 0) {
+      insertedStudents = await Student.insertMany(validToInsert, {
+        ordered: false,
+      });
+
+      const insertedIds = insertedStudents.map((s) => s._id);
+
+      // Synchronize with College.students array
+      await College.findByIdAndUpdate(req.college._id, {
+        $addToSet: { students: { $each: insertedIds } },
+      });
+    }
+
+    return successResponse(
+      res,
+      `Bulk import completed: ${insertedStudents.length} imported, ${failedRows.length} failed`,
+      {
+        total: rawStudents.length,
+        importedCount: insertedStudents.length,
+        failedCount: failedRows.length,
+        importedStudents: insertedStudents,
+        failedRows,
+      },
+      insertedStudents.length > 0 ? 201 : 200
+    );
+  } catch (error) {
+    return handleControllerError(res, error);
+  }
+};
+
+// ================= Export Students to CSV =================
+
+export const exportStudentsCSV = async (req, res) => {
+  try {
+    const { search, branch, semester, status, minPercentage } = req.query;
+
+    const query = { college: req.college._id };
+
+    if (search) {
+      query.$or = [
+        { name: new RegExp(search, "i") },
+        { email: new RegExp(search, "i") },
+      ];
+    }
+
+    if (branch) query.branch = new RegExp(branch, "i");
+    if (semester) query.semester = Number(semester);
+    if (status) query.status = status;
+    if (minPercentage !== undefined && minPercentage !== "") {
+      const minP = Number(minPercentage);
+      if (!isNaN(minP)) {
+        query.percentage = { $gte: minP };
+      }
+    }
+
+    const students = await Student.find(query)
+      .select("name email phone branch semester percentage status skills createdAt")
+      .sort({ createdAt: -1 });
+
+    const columns = [
+      { key: "name", label: "Name" },
+      { key: "email", label: "Email" },
+      { key: "phone", label: "Phone" },
+      { key: "branch", label: "Branch" },
+      { key: "semester", label: "Semester" },
+      { key: "percentage", label: "Percentage" },
+      { key: "status", label: "Status" },
+      { key: "skills", label: "Skills" },
+      { key: "createdAt", label: "Registered At" },
+    ];
+
+    const records = students.map((s) => ({
+      name: s.name || "",
+      email: s.email || "",
+      phone: s.phone || "",
+      branch: s.branch || "",
+      semester: s.semester !== undefined ? s.semester : "",
+      percentage: s.percentage !== undefined ? s.percentage : "",
+      status: s.status || "Active",
+      skills: Array.isArray(s.skills) ? s.skills.join(", ") : "",
+      createdAt: s.createdAt ? new Date(s.createdAt).toISOString() : "",
+    }));
+
+    const csvOutput = recordsToCsv(records, columns);
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", 'attachment; filename="students_export.csv"');
+
+    return res.status(200).send(csvOutput);
+  } catch (error) {
+    return handleControllerError(res, error);
+  }
+};
+
+// ================= Bulk Update Students =================
+
+export const bulkUpdateStudents = async (req, res) => {
+  try {
+    let itemsToUpdate = [];
+
+    // Support format 1: { updates: [ { id: "...", ...fields }, ... ] }
+    // Support format 2: { studentIds: ["id1", "id2"], updates: { status: "Inactive", ... } }
+    // Support format 3: [ { id: "...", ...fields }, ... ]
+    if (Array.isArray(req.body)) {
+      itemsToUpdate = req.body;
+    } else if (req.body && Array.isArray(req.body.updates)) {
+      itemsToUpdate = req.body.updates;
+    } else if (req.body && Array.isArray(req.body.studentIds) && req.body.updates && typeof req.body.updates === "object") {
+      const commonUpdate = { ...req.body.updates };
+      delete commonUpdate.id;
+      delete commonUpdate._id;
+      itemsToUpdate = req.body.studentIds.map((id) => ({
+        id,
+        ...commonUpdate,
+      }));
+    }
+
+    if (!itemsToUpdate || itemsToUpdate.length === 0) {
+      return errorResponse(res, "No student update data provided", 400);
+    }
+
+    const allowedFields = [
+      "branch",
+      "semester",
+      "percentage",
+      "status",
+      "skills",
+      "phone",
+      "bio",
+      "location",
+      "resumeUrl",
+      "interests",
+      "linkedIn",
+      "github",
+      "portfolio",
+    ];
+
+    const updatedStudents = [];
+    const errors = [];
+
+    for (let i = 0; i < itemsToUpdate.length; i++) {
+      const item = itemsToUpdate[i];
+      const studentId = item.id || item._id;
+
+      if (!studentId || !isValidObjectId(studentId)) {
+        errors.push({
+          index: i + 1,
+          id: studentId || null,
+          error: "Invalid or missing student ID format",
+        });
+        continue;
+      }
+
+      // Check student exists and belongs to authenticated college
+      const student = await Student.findOne({
+        _id: studentId,
+        college: req.college._id,
+      });
+
+      if (!student) {
+        errors.push({
+          index: i + 1,
+          id: studentId,
+          error: "Student not found or does not belong to your college",
+        });
+        continue;
+      }
+
+      // Filter and sanitize update fields
+      const cleanUpdate = {};
+      allowedFields.forEach((field) => {
+        if (item[field] !== undefined) {
+          cleanUpdate[field] = item[field];
+        }
+      });
+
+      if (cleanUpdate.skills) {
+        if (typeof cleanUpdate.skills === "string") {
+          cleanUpdate.skills = cleanUpdate.skills
+            .split(/[;,]/)
+            .map((s) => s.trim())
+            .filter(Boolean);
+        }
+      }
+
+      if (cleanUpdate.percentage !== undefined) {
+        const p = Number(cleanUpdate.percentage);
+        if (isNaN(p) || p < 0 || p > 100) {
+          errors.push({
+            index: i + 1,
+            id: studentId,
+            error: "Percentage must be a number between 0 and 100",
+          });
+          continue;
+        }
+        cleanUpdate.percentage = p;
+      }
+
+      if (cleanUpdate.semester !== undefined) {
+        const s = Number(cleanUpdate.semester);
+        if (isNaN(s) || s < 1 || s > 12) {
+          errors.push({
+            index: i + 1,
+            id: studentId,
+            error: "Semester must be a number between 1 and 12",
+          });
+          continue;
+        }
+        cleanUpdate.semester = s;
+      }
+
+      if (cleanUpdate.status !== undefined && !["Active", "Inactive"].includes(cleanUpdate.status)) {
+        errors.push({
+          index: i + 1,
+          id: studentId,
+          error: "Status must be either 'Active' or 'Inactive'",
+        });
+        continue;
+      }
+
+      if (Object.keys(cleanUpdate).length === 0) {
+        errors.push({
+          index: i + 1,
+          id: studentId,
+          error: "No valid updatable fields provided",
+        });
+        continue;
+      }
+
+      try {
+        const updated = await Student.findByIdAndUpdate(studentId, cleanUpdate, {
+          returnDocument: "after",
+          runValidators: true,
+        }).select("-password");
+
+        updatedStudents.push(updated);
+      } catch (err) {
+        errors.push({
+          index: i + 1,
+          id: studentId,
+          error: err.message || "Failed to update student",
+        });
+      }
+    }
+
+    return successResponse(
+      res,
+      `Bulk update completed: ${updatedStudents.length} updated, ${errors.length} failed`,
+      {
+        total: itemsToUpdate.length,
+        updatedCount: updatedStudents.length,
+        failedCount: errors.length,
+        updatedStudents,
+        errors,
+      },
+      200
+    );
+  } catch (error) {
+    return handleControllerError(res, error);
+  }
+};
+
 // ================= Create Student =================
 
 export const createStudent = async (req, res) => {
@@ -383,6 +769,7 @@ export const createStudent = async (req, res) => {
       branch,
       semester: Number(semester) || 6,
       skills: skillsArray,
+      percentage: req.body.percentage !== undefined ? Number(req.body.percentage) : 0,
       status: req.body.status || "Active",
       college: req.college._id,
     });
