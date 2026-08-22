@@ -9,10 +9,12 @@ import {
   completeAIInterview,
   getAIInterviewResult,
   uploadAIInterviewRecording,
+  transcribeInterviewAudio,
 } from "../controllers/aiInterviewController.js";
 
 import {
   uploadInterviewVideo,
+  uploadInterviewAudio,
 } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
@@ -26,6 +28,18 @@ router.post(
   "/start",
   studentAuthMiddleware,
   startAIInterview,
+);
+
+/*
+ * Transcribe candidate audio answer
+ *
+ * POST /api/ai-interview/:sessionId/transcribe
+ */
+router.post(
+  "/:sessionId/transcribe",
+  studentAuthMiddleware,
+  uploadInterviewAudio,
+  transcribeInterviewAudio,
 );
 
 /*

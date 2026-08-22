@@ -10,6 +10,11 @@ import {
   saveInterviewVideo,
 } from "../services/aiInterviewService.js";
 
+import {
+  transcribeAudio,
+  cleanupFile,
+} from "../services/groqTranscriptionService.js";
+
 const getCandidateId = (req) =>
   req.student?._id || req.user?._id || req.user?.id;
 
@@ -511,6 +516,85 @@ const uploadAIInterviewRecording =
 
 /*
  * ---------------------------------------------------------
+ * TRANSCRIBE INTERVIEW AUDIO
+ * POST /api/ai-interview/:sessionId/transcribe
+ * ---------------------------------------------------------
+ */
+const transcribeInterviewAudio = async (
+  req,
+  res,
+) => {
+  const filePath = req.file?.path || null;
+
+  try {
+    const { sessionId } = req.params;
+
+    const candidateId = getCandidateId(req);
+
+    if (!candidateId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    const ownership = await getOwnedInterview({
+      sessionId,
+      candidateId,
+    });
+
+    if (ownership.statusCode) {
+      return res.status(ownership.statusCode).json({
+        success: false,
+        message: ownership.message,
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Audio file is required for transcription.",
+      });
+    }
+
+    const transcript = await transcribeAudio(
+      req.file.path,
+      req.file.mimetype,
+    );
+
+    return res.status(200).json({
+      success: true,
+      transcript,
+    });
+  } catch (error) {
+    console.error(
+      "Transcribe Interview Audio Error:",
+      error.message,
+    );
+
+    const status =
+      error.message?.includes("busy") ? 429 :
+      error.message?.includes("authentication") ? 401 :
+      error.message?.includes("too large") ? 413 :
+      500;
+
+    return res.status(status).json({
+      success: false,
+      message:
+        error.message ||
+        "Unable to transcribe your response. Please try again.",
+    });
+  } finally {
+    /*
+     * Always delete the temporary audio file regardless of
+     * success or failure so raw audio is never stored.
+     */
+    cleanupFile(filePath);
+  }
+};
+
+/*
+ * ---------------------------------------------------------
  * GET INTERVIEW SESSION
  * GET /api/ai-interview/:sessionId
  * ---------------------------------------------------------
@@ -573,4 +657,5 @@ export {
   getAIInterviewResult,
   uploadAIInterviewRecording,
   getAIInterview,
+  transcribeInterviewAudio,
 };

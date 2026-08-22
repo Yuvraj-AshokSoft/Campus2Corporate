@@ -1,205 +1,326 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { transcribeAnswer } from "../services/aiInterviewApi";
 
-type RecognitionEvent = {
-  resultIndex?: number;
-  results: {
-    length: number;
-    [index: number]: { isFinal: boolean; [index: number]: { transcript: string } };
-  };
-};
+/*
+ * Voice state machine
+ *
+ *  idle  ──► speaking  ──► listening  ──► transcribing  ──► processing
+ *   ▲                                                           │
+ *   └───────────────────── (via callback) ─────────────────────┘
+ *
+ * "error" can be reached from any state.
+ */
+export type VoiceInterviewState =
+  | "idle"
+  | "speaking"
+  | "listening"
+  | "transcribing"
+  | "processing"
+  | "error";
 
-type Recognition = {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  onresult: ((event: RecognitionEvent) => void) | null;
-  onend: (() => void) | null;
-  onerror: ((event: { error: string }) => void) | null;
-  start: () => void;
-  stop: () => void;
-};
+export function useVoiceInterview(
+  onTranscriptComplete: (transcript: string) => void,
+) {
+  const [state, setState] =
+    useState<VoiceInterviewState>("idle");
 
-type RecognitionWindow = Window & {
-  SpeechRecognition?: new () => Recognition;
-  webkitSpeechRecognition?: new () => Recognition;
-};
-
-export type VoiceInterviewState = "idle" | "speaking" | "listening" | "processing" | "error";
-
-const ANSWER_SILENCE_MS = 4500;
-
-export function useVoiceInterview(onTranscriptComplete: (transcript: string) => void) {
-  const [state, setState] = useState<VoiceInterviewState>("idle");
-  const [transcript, setTranscript] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [supported, setSupported] = useState(true);
-  const recognitionRef = useRef<Recognition | null>(null);
-  const silenceTimerRef = useRef<number | null>(null);
+
+  // ── refs ────────────────────────────────────────────────────
+
+  /** MediaRecorder for the current answer recording */
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+
+  /** Accumulated audio chunks while recording */
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  /** The mic-only stream we opened */
+  const micStreamRef = useRef<MediaStream | null>(null);
+
+  /** Question spoken last — prevents duplicate TTS */
   const lastSpokenQuestionRef = useRef("");
-  const transcriptRef = useRef("");
-  const finalTranscriptRef = useRef("");
-  const listeningRef = useRef(false);
-  const shouldKeepListeningRef = useRef(false);
-  const submittedRef = useRef(false);
-  const restartTimerRef = useRef<number | null>(null);
+
+  /** Stable reference to the callback so effects don't re-run */
   const callbackRef = useRef(onTranscriptComplete);
+
+  /** Prevents double-submit if finishListening is called twice */
+  const isSubmittingRef = useRef(false);
+
+  /** sessionId stored when startListening is called */
+  const sessionIdRef = useRef<string>("");
 
   useEffect(() => {
     callbackRef.current = onTranscriptComplete;
   }, [onTranscriptComplete]);
 
-  const finishListening = useCallback(() => {
-    if (submittedRef.current) return;
+  // ── cleanup helpers ──────────────────────────────────────────
 
-    submittedRef.current = true;
-    listeningRef.current = false;
-    shouldKeepListeningRef.current = false;
-    if (silenceTimerRef.current !== null) {
-      window.clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = null;
-    }
-    recognitionRef.current?.stop();
-    recognitionRef.current = null;
-    const completedTranscript = transcriptRef.current.trim();
-    if (completedTranscript) {
-      setState("processing");
-      callbackRef.current(completedTranscript);
-    } else {
-      setState("idle");
-    }
+  /** Stop and release the microphone stream */
+  const stopMicStream = useCallback(() => {
+    micStreamRef.current
+      ?.getTracks()
+      .forEach((track) => track.stop());
+    micStreamRef.current = null;
   }, []);
 
-  const startListening = useCallback(() => {
-    const recognitionConstructor = (window as RecognitionWindow).SpeechRecognition ||
-      (window as RecognitionWindow).webkitSpeechRecognition;
-    if (!recognitionConstructor) {
-      setSupported(false);
+  // ── finishListening ─────────────────────────────────────────
+  /**
+   * Called when the candidate clicks "Finish Answer".
+   * Stops MediaRecorder, assembles the Blob, sends to backend
+   * for Groq transcription, then hands the transcript to the
+   * existing submitAnswer flow.
+   */
+  const finishListening = useCallback(async () => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+
+    const recorder = mediaRecorderRef.current;
+
+    if (!recorder || recorder.state === "inactive") {
+      // Nothing was recorded — reset quietly
+      isSubmittingRef.current = false;
       setState("idle");
       return;
     }
 
-    if (recognitionRef.current || listeningRef.current) return;
+    /*
+     * Stop the MediaRecorder.  The "stop" event fires
+     * asynchronously, so we wait for it with a Promise.
+     */
+    await new Promise<void>((resolve) => {
+      recorder.addEventListener(
+        "stop",
+        () => resolve(),
+        { once: true },
+      );
+      recorder.stop();
+    });
 
-    transcriptRef.current = "";
-    finalTranscriptRef.current = "";
-    setTranscript("");
-    setErrorMessage("");
-    submittedRef.current = false;
-    listeningRef.current = true;
-    shouldKeepListeningRef.current = true;
-    const recognition = new recognitionConstructor();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
-    recognition.onresult = (event) => {
-      let interimTranscript = "";
-      const resultIndex = event.resultIndex || 0;
+    const mimeType =
+      recorder.mimeType || "audio/webm";
 
-      for (let index = resultIndex; index < event.results.length; index += 1) {
-        const result = event.results[index];
-        if (result.isFinal) {
-          finalTranscriptRef.current += result[0].transcript;
-        } else {
-          interimTranscript += result[0].transcript;
-        }
-      }
-      transcriptRef.current = `${finalTranscriptRef.current} ${interimTranscript}`.trim();
-      setTranscript(transcriptRef.current);
-      if (silenceTimerRef.current !== null) window.clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = window.setTimeout(finishListening, ANSWER_SILENCE_MS);
-    };
-    recognition.onerror = (event) => {
-      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-        listeningRef.current = false;
-        shouldKeepListeningRef.current = false;
-        setErrorMessage("Microphone permission denied. Allow microphone access and try again.");
+    const audioBlob = new Blob(audioChunksRef.current, {
+      type: mimeType,
+    });
+
+    // Clear chunks immediately so they aren't retained
+    audioChunksRef.current = [];
+
+    // Stop mic tracks — camera is unaffected
+    stopMicStream();
+    mediaRecorderRef.current = null;
+
+    if (audioBlob.size === 0) {
+      setErrorMessage(
+        "No audio was recorded. Please try again.",
+      );
+      setState("error");
+      isSubmittingRef.current = false;
+      return;
+    }
+
+    // Transition to transcribing state
+    setState("transcribing");
+
+    try {
+      const result = await transcribeAnswer(
+        sessionIdRef.current,
+        audioBlob,
+      );
+
+      const transcript = result.transcript?.trim() || "";
+
+      if (!transcript) {
+        setErrorMessage(
+          "Could not understand the audio. Please try again or use text input.",
+        );
         setState("error");
+        isSubmittingRef.current = false;
         return;
       }
 
-      if (event.error !== "aborted" && event.error !== "no-speech") {
+      setState("processing");
+      callbackRef.current(transcript);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to transcribe your response. Please try again.",
+      );
+      setState("error");
+    } finally {
+      isSubmittingRef.current = false;
+    }
+  }, [stopMicStream]);
+
+  // ── startListening ──────────────────────────────────────────
+  /**
+   * Opens an audio-only MediaRecorder.
+   * Does NOT touch the existing camera stream.
+   *
+   * @param sessionId  The active interview session ID needed
+   *                   to call the transcription endpoint.
+   */
+  const startListening = useCallback(
+    async (sessionId: string) => {
+      if (
+        mediaRecorderRef.current ||
+        isSubmittingRef.current
+      ) {
+        return;
+      }
+
+      setErrorMessage("");
+      sessionIdRef.current = sessionId;
+      audioChunksRef.current = [];
+
+      try {
+        /*
+         * Request audio-only.  The camera stream opened by
+         * AIInterview.tsx is completely separate and must not
+         * be touched here.
+         */
+        const stream =
+          await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+
+        micStreamRef.current = stream;
+
+        /*
+         * Pick the most compatible MIME type.
+         * Groq Whisper accepts audio/webm.
+         */
+        const mimeType =
+          MediaRecorder.isTypeSupported(
+            "audio/webm;codecs=opus",
+          )
+            ? "audio/webm;codecs=opus"
+            : MediaRecorder.isTypeSupported("audio/webm")
+              ? "audio/webm"
+              : "";
+
+        const recorder = mimeType
+          ? new MediaRecorder(stream, { mimeType })
+          : new MediaRecorder(stream);
+
+        mediaRecorderRef.current = recorder;
+
+        recorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+
+        // Collect data every second so chunks accumulate
+        recorder.start(1000);
+
+        setState("listening");
+      } catch (error) {
+        stopMicStream();
+        mediaRecorderRef.current = null;
+
+        const name =
+          error instanceof DOMException ? error.name : "";
+
         setErrorMessage(
-          event.error === "audio-capture"
-            ? "No microphone detected or the microphone is being used by another application."
-            : `Speech recognition error: ${event.error}.`,
+          name === "NotAllowedError" ||
+            name === "SecurityError"
+            ? "Microphone permission denied. Allow microphone access and try again."
+            : name === "NotFoundError"
+              ? "No microphone detected."
+              : name === "NotReadableError"
+                ? "Microphone is in use by another application."
+                : "Unable to access the microphone. Check browser permissions.",
         );
+
         setState("error");
       }
-    };
-    recognition.onend = () => {
-      recognitionRef.current = null;
+    },
+    [stopMicStream],
+  );
 
-      if (!shouldKeepListeningRef.current || submittedRef.current) return;
+  // ── speak ────────────────────────────────────────────────────
+  /**
+   * Speaks the question text via browser speechSynthesis (TTS).
+   * Unchanged from original behaviour.
+   */
+  const speak = useCallback(
+    (question: string) => {
+      if (
+        !question ||
+        question === lastSpokenQuestionRef.current
+      ) {
+        return;
+      }
 
-      if (restartTimerRef.current !== null) window.clearTimeout(restartTimerRef.current);
-      restartTimerRef.current = window.setTimeout(() => {
-        restartTimerRef.current = null;
-        if (!shouldKeepListeningRef.current || submittedRef.current) return;
+      lastSpokenQuestionRef.current = question;
+      window.speechSynthesis.cancel();
+      setState("speaking");
 
-        try {
-          const restartedRecognition = new recognitionConstructor();
-          restartedRecognition.continuous = true;
-          restartedRecognition.interimResults = true;
-          restartedRecognition.lang = "en-US";
-          restartedRecognition.onresult = recognition.onresult;
-          restartedRecognition.onerror = recognition.onerror;
-          restartedRecognition.onend = recognition.onend;
-          recognitionRef.current = restartedRecognition;
-          restartedRecognition.start();
-        } catch {
-          if (shouldKeepListeningRef.current) setState("error");
-        }
-      }, 100);
-    };
-    recognitionRef.current = recognition;
-    setState("listening");
-    try {
-      recognition.start();
-    } catch {
-      recognitionRef.current = null;
-      listeningRef.current = false;
-      shouldKeepListeningRef.current = false;
-      setState("error");
-    }
-  }, [finishListening]);
+      const utterance = new SpeechSynthesisUtterance(
+        question,
+      );
+      utterance.rate = 0.95;
+      utterance.pitch = 1;
+      utterance.volume = 1;
 
-  const speak = useCallback((question: string) => {
-    if (!question || question === lastSpokenQuestionRef.current) return;
-    lastSpokenQuestionRef.current = question;
-    recognitionRef.current?.stop();
-    window.speechSynthesis.cancel();
-    setState("speaking");
-    const utterance = new SpeechSynthesisUtterance(question);
-    utterance.rate = 0.95;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-    utterance.onend = startListening;
-    utterance.onerror = () => setState("error");
-    window.speechSynthesis.speak(utterance);
-  }, [startListening]);
+      // After AI finishes speaking the state returns to idle
+      // so the candidate can click "Start Speaking"
+      utterance.onend = () => setState("idle");
+      utterance.onerror = () => setState("error");
 
+      window.speechSynthesis.speak(utterance);
+    },
+    [],
+  );
+
+  // ── stop ─────────────────────────────────────────────────────
+  /** Hard-stop everything (unmount / interview ends) */
   const stop = useCallback(() => {
-    listeningRef.current = false;
-    shouldKeepListeningRef.current = false;
-    submittedRef.current = true;
-    if (silenceTimerRef.current !== null) window.clearTimeout(silenceTimerRef.current);
-    if (restartTimerRef.current !== null) window.clearTimeout(restartTimerRef.current);
-    recognitionRef.current?.stop();
-    recognitionRef.current = null;
-    window.speechSynthesis.cancel();
-    setState("idle");
-  }, []);
+    isSubmittingRef.current = true; // prevent re-entry
 
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !== "inactive"
+    ) {
+      mediaRecorderRef.current.stop();
+    }
+
+    mediaRecorderRef.current = null;
+    audioChunksRef.current = [];
+
+    stopMicStream();
+    window.speechSynthesis.cancel();
+
+    setState("idle");
+    isSubmittingRef.current = false;
+  }, [stopMicStream]);
+
+  // ── cleanup on unmount ───────────────────────────────────────
   useEffect(() => {
     return () => {
-      if (silenceTimerRef.current !== null) window.clearTimeout(silenceTimerRef.current);
-      if (restartTimerRef.current !== null) window.clearTimeout(restartTimerRef.current);
-      listeningRef.current = false;
-      shouldKeepListeningRef.current = false;
-      recognitionRef.current?.stop();
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state !== "inactive"
+      ) {
+        mediaRecorderRef.current.stop();
+      }
+
+      micStreamRef.current
+        ?.getTracks()
+        .forEach((track) => track.stop());
+
       window.speechSynthesis.cancel();
     };
   }, []);
 
-  return { state, transcript, errorMessage, supported, speak, startListening, finishListening, stop };
+  return {
+    state,
+    errorMessage,
+    speak,
+    startListening,
+    finishListening,
+    stop,
+  };
 }

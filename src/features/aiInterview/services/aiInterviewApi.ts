@@ -172,6 +172,43 @@ export const uploadInterviewRecording = async (
 };
 
 /*
+ * Transcribe candidate audio answer via Groq Whisper
+ *
+ * The audio blob is sent as multipart/form-data.
+ * Do NOT set Content-Type manually — the browser must
+ * generate the multipart boundary automatically.
+ */
+export const transcribeAnswer = async (
+  sessionId: string,
+  audioBlob: Blob,
+): Promise<{ success: boolean; transcript: string }> => {
+  const formData = new FormData();
+
+  formData.append(
+    "audio",
+    audioBlob,
+    `interview-answer-${sessionId}.webm`,
+  );
+
+  const response = await fetch(
+    `${API_BASE_URL}/ai-interview/${sessionId}/transcribe`,
+    {
+      method: "POST",
+      headers: {
+        // Only auth header — no Content-Type.
+        // The browser sets multipart/form-data + boundary.
+        ...getAuthHeaders(),
+      },
+      body: formData,
+    },
+  );
+
+  return handleResponse<{ success: boolean; transcript: string }>(
+    response,
+  );
+};
+
+/*
  * Finish interview and get final evaluation
  */
 export const finishAIInterview = async (
