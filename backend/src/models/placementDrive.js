@@ -41,6 +41,27 @@ const placementDriveSchema = new mongoose.Schema(
       default: "Virtual",
     },
 
+    eligibilityPreset: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "EligibilityPreset",
+    },
+
+    minCgpa: {
+      type: Number,
+      default: 0,
+    },
+
+    maxActiveBacklogs: {
+      type: Number,
+      default: 0,
+    },
+
+    allowedPassingYears: [
+      {
+        type: Number,
+      },
+    ],
+
     eligibleBranches: [
       {
         type: String,

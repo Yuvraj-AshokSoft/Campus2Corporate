@@ -11,18 +11,26 @@ const applicationSchema = new mongoose.Schema(
     recruiter: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Recruiter",
-      required: true,
     },
 
     company: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Company",
-      required: true,
     },
 
     project: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
+    },
+
+    placementDrive: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PlacementDrive",
+    },
+
+    drive: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "PlacementDrive",
     },
 
     status: {
@@ -32,7 +40,10 @@ const applicationSchema = new mongoose.Schema(
         "Under Review",
         "Shortlisted",
         "Interview",
+        "Interviewed",
+        "Offered",
         "Selected",
+        "Placed",
         "Rejected",
       ],
       default: "Applied",

@@ -143,11 +143,30 @@ const studentSchema = new mongoose.Schema(
       max: 12,
     },
     percentage: {
-  type: Number,
-  required: true,
-  min: 0,
-  max: 100,
-},
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+    },
+    cgpa: {
+      type: Number,
+      min: 0,
+      max: 10,
+    },
+    backlogs: {
+      type: Number,
+      default: 0,
+    },
+    activeBacklogs: {
+      type: Number,
+      default: 0,
+    },
+    passingYear: {
+      type: Number,
+    },
+    graduationYear: {
+      type: Number,
+    },
     skills: [
       {
         type: String,

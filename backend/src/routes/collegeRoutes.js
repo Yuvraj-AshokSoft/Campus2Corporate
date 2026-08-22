@@ -38,7 +38,23 @@ import {
   deleteBroadcast,
   getCoordinatingCompanies,
   getCompanyDetailsForCollege,
-  getCoordinatingRecruiters
+  getCoordinatingRecruiters,
+  createEligibilityPreset,
+  getEligibilityPresets,
+  getEligibilityPresetById,
+  updateEligibilityPreset,
+  deleteEligibilityPreset,
+  getDriveParticipants,
+  updateParticipantStatus,
+  evaluateDriveEligibleStudents,
+  getCollegeNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteCollegeNotification,
+  getCollegeActivityLogs,
+  getCampusVisits,
+  getCompanyPlacementSummary,
+  getRecruiterPlacementSummary
 } from "../controllers/collegeController.js";
 
 import collegeAuth from "../middleware/collegeAuth.js";
@@ -81,6 +97,9 @@ router.get("/drives", collegeAuth, getPlacementDrives);
 router.get("/drives/:id", collegeAuth, getPlacementDriveById);
 router.put("/drives/:id", collegeAuth, updatePlacementDrive);
 router.delete("/drives/:id", collegeAuth, deletePlacementDrive);
+router.get("/drives/:driveId/participants", collegeAuth, getDriveParticipants);
+router.patch("/drives/:driveId/participants/:participantId", collegeAuth, updateParticipantStatus);
+router.get("/drives/:driveId/eligible-students", collegeAuth, evaluateDriveEligibleStudents);
 
 // Broadcast / Announcement Management
 router.post("/broadcasts", collegeAuth, createBroadcast);
@@ -93,5 +112,24 @@ router.delete("/broadcasts/:id", collegeAuth, deleteBroadcast);
 router.get("/companies", collegeAuth, getCoordinatingCompanies);
 router.get("/companies/:id", collegeAuth, getCompanyDetailsForCollege);
 router.get("/recruiters", collegeAuth, getCoordinatingRecruiters);
+router.get("/coordination/visits", collegeAuth, getCampusVisits);
+router.get("/coordination/company-summary", collegeAuth, getCompanyPlacementSummary);
+router.get("/coordination/recruiter-summary", collegeAuth, getRecruiterPlacementSummary);
+
+// Eligibility Presets Management
+router.post("/eligibility-presets", collegeAuth, createEligibilityPreset);
+router.get("/eligibility-presets", collegeAuth, getEligibilityPresets);
+router.get("/eligibility-presets/:id", collegeAuth, getEligibilityPresetById);
+router.put("/eligibility-presets/:id", collegeAuth, updateEligibilityPreset);
+router.delete("/eligibility-presets/:id", collegeAuth, deleteEligibilityPreset);
+
+// College Notifications Management
+router.get("/notifications", collegeAuth, getCollegeNotifications);
+router.patch("/notifications/read-all", collegeAuth, markAllNotificationsAsRead);
+router.patch("/notifications/:id/read", collegeAuth, markNotificationAsRead);
+router.delete("/notifications/:id", collegeAuth, deleteCollegeNotification);
+
+// Activity & Audit Logs Management
+router.get("/activity-logs", collegeAuth, getCollegeActivityLogs);
 
 export default router;
