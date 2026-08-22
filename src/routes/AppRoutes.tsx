@@ -27,6 +27,7 @@ import StudentRoadmap from "../pages/student/StudentRoadmap";
 import StudentBroadcast from "../pages/student/StudentBroadcast";
 import StudentHiring from "../pages/student/HiringProcess";
 import AIInterview from "../pages/student/AIInterview";
+import FinalScoreCard from "../pages/student/FinalScore";
 
 // Admin pages
 import { AdminDashboard } from "../pages/AdminDashboard";
@@ -427,6 +428,20 @@ export const AppRoutes: React.FC = () => {
               }
             />
 
+            {/* =====================================================
+                FINAL SCORECARD
+            ===================================================== */}
+
+            <Route
+              path="/student/final-scorecard"
+              element={
+                <ProtectedRoute
+                  allowedRoles={["student"]}
+                >
+                  <FinalScoreCard />
+                </ProtectedRoute>
+              }
+            />
             {/* =====================================================
                 COLLEGE ROUTES
             ===================================================== */}

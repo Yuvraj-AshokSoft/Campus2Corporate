@@ -138,7 +138,7 @@ const DRIVE = {
   deadline: '5 Aug 2026',
   status: 'Application Active',
   currentRoundIndex: 0,
-  totalRounds: 5,
+  totalRounds: 4,
 };
 
 const CANDIDATE_NAME = 'Aarav Mehta';
@@ -147,9 +147,8 @@ const INITIAL_TIMELINE_STEPS: TimelineStep[] = [
   { id: 'applied', label: 'Application Submitted', status: 'completed' },
   { id: 'aptitude', label: 'Aptitude Test', status: 'current' },
   { id: 'tech1', label: 'Technical Round 1', status: 'upcoming' },
-  { id: 'tech2', label: 'Technical Round 2', status: 'upcoming' },
   { id: 'hr', label: 'HR Interview', status: 'upcoming' },
-  { id: 'offer', label: 'Offer Letter', status: 'upcoming' },
+  { id: 'scorecard', label: 'Final Score & Feedback', status: 'upcoming' },
 ];
 
 const ACTIVE_ASSESSMENT = {
@@ -194,8 +193,8 @@ const INITIAL_ROUND_OVERVIEW: RoundOverviewData[] = [
     status: 'ready',
   },
   { id: 'tech1', name: 'Technical Round 1', tag: 'Coding Assessment', status: 'pending' },
-  { id: 'tech2', name: 'Technical Round 2', tag: 'Technical Interview', status: 'pending' },
   { id: 'hr', name: 'HR Round', tag: 'Interview', status: 'pending' },
+  { id: 'scorecard', name: 'Final Score & Feedback', tag: 'Performance Review', status: 'pending' },
 ];
 
 const COMPANY_INFO = {
@@ -242,7 +241,7 @@ const VIOLATION_LABELS: Record<ViolationKey, string> = {
 // Temporary test question
 const QUESTIONS: Question[] = [
   // Temporary test question
-{
+  {
     id: 1,
     category: 'Quantitative Aptitude',
     text: 'A train travels 60 km in 45 minutes. What is its average speed in km/h?',
@@ -509,16 +508,14 @@ function OptionRow({
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-sm transition-colors ${
-        selected
+      className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-left text-sm transition-colors ${selected
           ? 'border-[#5400D6] bg-[#F4EFFF] text-blue-900'
           : 'border-slate-100 bg-slate-50/70 text-slate-700 hover:bg-slate-50'
-      }`}
+        }`}
     >
       <span
-        className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-          selected ? 'bg-[#5400D6] text-white' : 'border border-slate-200 bg-white text-slate-500'
-        }`}
+        className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold ${selected ? 'bg-[#5400D6] text-white' : 'border border-slate-200 bg-white text-slate-500'
+          }`}
       >
         {letter}
       </span>
@@ -1027,9 +1024,8 @@ export default function HiringProcess() {
             </div>
             <div className="flex items-center gap-3">
               <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
-                  timerDanger ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-600'
-                }`}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${timerDanger ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-600'
+                  }`}
               >
                 <Clock className="h-3.5 w-3.5" /> {formatTime(timeLeft)} Remaining
               </span>
@@ -1059,11 +1055,10 @@ export default function HiringProcess() {
                   <button
                     type="button"
                     onClick={toggleMarkForReview}
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                      markedForReview[currentQuestion.id]
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${markedForReview[currentQuestion.id]
                         ? 'bg-amber-400 text-white'
                         : 'border border-slate-200 text-slate-500 hover:bg-slate-50'
-                    }`}
+                      }`}
                   >
                     <Flag className="h-3.5 w-3.5" />
                     {markedForReview[currentQuestion.id] ? 'Marked for Review' : 'Mark for Review'}
@@ -1295,9 +1290,8 @@ export default function HiringProcess() {
           className="w-full max-w-lg rounded-2xl border border-slate-200/70 bg-white p-8 text-center shadow-sm sm:p-10"
         >
           <div
-            className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${
-              passed ? 'bg-emerald-50' : 'bg-rose-50'
-            }`}
+            className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${passed ? 'bg-emerald-50' : 'bg-rose-50'
+              }`}
           >
             {terminated ? (
               <AlertTriangle className="h-8 w-8 text-rose-600" />
@@ -1313,9 +1307,8 @@ export default function HiringProcess() {
           </p>
           <p className="mt-1 text-lg font-medium text-slate-500">{percent}%</p>
           <span
-            className={`mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold ${
-              passed ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
-            }`}
+            className={`mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold ${passed ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+              }`}
           >
             {terminated ? 'Terminated' : passed ? 'Passed' : 'Failed'}
           </span>
@@ -1323,7 +1316,7 @@ export default function HiringProcess() {
           {passed && (
             <div className="mt-8 space-y-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-4 text-left text-sm text-slate-600">
               <p className="font-semibold text-slate-900">What&apos;s next</p>
-              <p>Your hiring timeline has been updated. Technical Round 1 is now unlocked.</p>
+              <p>Your score has been recorded and your hiring timeline has been updated. Technical Round 1 is now unlocked.</p>
             </div>
           )}
 
@@ -1437,9 +1430,8 @@ export default function HiringProcess() {
                     )}
                   </div>
                   <span
-                    className={`mt-3 max-w-[96px] text-center text-xs font-medium leading-tight sm:text-sm ${
-                      step.status === 'upcoming' ? 'text-slate-400' : 'text-slate-700'
-                    }`}
+                    className={`mt-3 max-w-[96px] text-center text-xs font-medium leading-tight sm:text-sm ${step.status === 'upcoming' ? 'text-slate-400' : 'text-slate-700'
+                      }`}
                   >
                     {step.label}
                   </span>
@@ -1466,9 +1458,8 @@ export default function HiringProcess() {
                   {ACTIVE_ASSESSMENT.title}
                 </h2>
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    aptitudePassed ? 'bg-emerald-50 text-emerald-700' : 'bg-[#F4EFFF] text-[#4500AD]'
-                  }`}
+                  className={`rounded-full px-3 py-1 text-xs font-semibold ${aptitudePassed ? 'bg-emerald-50 text-emerald-700' : 'bg-[#F4EFFF] text-[#4500AD]'
+                    }`}
                 >
                   {aptitudePassed ? 'Completed' : 'Current Round'}
                 </span>
@@ -1588,7 +1579,7 @@ export default function HiringProcess() {
             >
               <Info className="h-5 w-5 flex-shrink-0 text-[#5400D6]" />
               <p className="text-sm text-blue-800">
-                Complete every round in sequence. Technical Round 1 will unlock only after passing Aptitude.
+                Complete every round in sequence. Technical Round 1 unlocks after passing Aptitude, followed by HR Interview and a final scorecard with personalized feedback.
               </p>
             </motion.div>
           </div>
@@ -1795,9 +1786,8 @@ export default function HiringProcess() {
                 <div className="flex items-center justify-between">
                   <dt className="text-slate-500">Network</dt>
                   <dd
-                    className={`flex items-center gap-1.5 font-medium ${
-                      isOnline ? 'text-emerald-600' : 'text-rose-600'
-                    }`}
+                    className={`flex items-center gap-1.5 font-medium ${isOnline ? 'text-emerald-600' : 'text-rose-600'
+                      }`}
                   >
                     {isOnline ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
                     {isOnline ? 'Stable' : 'Unstable'}
