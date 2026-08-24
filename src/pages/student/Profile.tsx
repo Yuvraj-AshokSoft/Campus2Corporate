@@ -6,10 +6,9 @@ import {
   getApiErrorMessage,
   studentApi,
   unwrapData,
-  type StudentProfile as StudentProfileData,
+  type StudentProfile as StudentProfileType,
 } from "../../services/studentApi";
 
-// ─── Icon System (matches Student Dashboard / Admin Dashboard) ───────────────
 type IconName =
   | "activity" | "alert" | "arrow-up" | "arrow-down" | "bell" | "briefcase"
   | "building" | "calendar" | "chart" | "check" | "clock" | "dashboard"
@@ -20,9 +19,9 @@ type IconName =
   | "wand" | "zap" | "trending-up" | "cpu" | "mail" | "phone" | "book"
   | "award" | "upload" | "eye" | "message" | "chevron-down" | "lightbulb"
   | "clipboard" | "logout" | "camera" | "edit" | "trash" | "link" | "github"
-  | "linkedin" | "globe" | "key" | "sun" | "moon" | "download" | "plus";
+  | "linkedin" | "globe" | "key" | "sun" | "moon" | "download" | "plus" | "megaphone";
 
-const Icon = ({ name, className = "h-4 w-4" }: { name: IconName; className?: string }) => {
+const Icon = ({ name, className = "h-4 w-4", style }: { name: IconName; className?: string; style?: React.CSSProperties }) => {
   const paths: Record<IconName, React.ReactNode> = {
     activity: <path d="M4 12h3l2-6 4 12 2-6h5" />,
     alert: <><path d="M12 4 3.5 18.5h17L12 4Z" /><path d="M12 9v4" /><path d="M12 16h.01" /></>,
@@ -87,16 +86,16 @@ const Icon = ({ name, className = "h-4 w-4" }: { name: IconName; className?: str
     moon: <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" />,
     download: <><path d="M12 3v12" /><path d="m7 11 5 5 5-5" /><path d="M4 20h16" /></>,
     plus: <path d="M12 5v14M5 12h14" />,
+    megaphone: <><path d="m3 11 16-5v12L3 13v-2Z" /><path d="M19 9v6" /><path d="M7 14.5 8.5 20H12l-1.5-5" /></>,
   };
   return (
-    <svg className={className} fill="none" stroke="currentColor" strokeLinecap="round"
+    <svg className={className} style={style} fill="none" stroke="currentColor" strokeLinecap="round"
       strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
       {paths[name]}
     </svg>
   );
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 const getInitials = (name: string) =>
   name.trim().split(/\s+/).map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "YS";
 
@@ -110,7 +109,7 @@ const useStudentProfile = () => {
   return { fullName, firstName, initials, email, phone, currentUser, updateCurrentUser };
 };
 
-const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#2563eb" }:
+const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#8b5cf6" }:
   { eyebrow: string; title: string; sub?: string; icon: IconName; iconColor?: string }) => (
   <div className="flex items-start justify-between">
     <div>
@@ -126,17 +125,71 @@ const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#2563eb" }:
   </div>
 );
 
-const sidebarItems: Array<{ label: string; icon: StudentSidebarIconName; route: string; badge?: number }> = [
-  { label: "Dashboard", icon: "dashboard", route: "/student-dashboard" },
-  { label: "My Profile", icon: "user-check", route: "/student/profile" },
-  { label: "Project List", icon: "briefcase", route: "/student/projects" },
-  { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects", badge: 2 },
-  { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
-  { label: "Certificates", icon: "award", route: "/student/certificates" },
-  { label: "Settings", icon: "settings", route: "/student/settings" },
+const sidebarItems: Array<{
+  label: string;
+  icon: StudentSidebarIconName;
+  route: string;
+  badge?: number;
+}> = [
+  {
+    label: "Dashboard",
+    icon: "dashboard",
+    route: "/student-dashboard",
+  },
+  {
+    label: "My Profile",
+    icon: "user-check",
+    route: "/student/profile",
+  },
+  {
+    label: "My Projects",
+    icon: "briefcase",
+    route: "/student/projects",
+  },
+  {
+    label: "Applications",
+    icon: "clipboard",
+    route: "/student/applications",
+    badge: 2,
+  },
+  {
+    label: "Placement Prep",
+    icon: "building",
+    route: "/student/placementprep",
+  },
+  {
+    label: "Notifications",
+    icon: "bell",
+    route: "/student/notifications",
+    badge: 3,
+  },
+  {
+    label: "Certificates",
+    icon: "award",
+    route: "/student/certificates",
+  },
+  {
+    label: "Settings",
+    icon: "settings",
+    route: "/student/settings",
+  },
+  {
+    label: "AI Resume",
+    icon: "resume",
+    route: "/student/ai-resume",
+  },
+  {
+    label: "Career Roadmap",
+    icon: "map",
+    route: "/student/roadmap",
+  },
+  {
+    label: "Career Updates",
+    icon: "megaphone",
+    route: "/student/broadcast",
+  },
 ];
 
-// ─── Field types ──────────────────────────────────────────────────────────────
 interface EditableField {
   key: string; label: string; icon: IconName; value: string; type?: string; disabled?: boolean;
 }
@@ -154,24 +207,24 @@ const InputRow = ({ field, editing, onChange }: {
       value={field.value}
       disabled={!editing || field.disabled}
       onChange={(e) => onChange(field.key, e.target.value)}
-      className={`w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition ${editing && !field.disabled
-          ? "border-slate-200 bg-white text-slate-800 focus:border-blue-300 focus:ring-2 focus:ring-blue-50"
+      className={`w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition ${
+        editing && !field.disabled
+          ? "border-slate-200 bg-white text-slate-800 focus:border-purple-300 focus:ring-2 focus:ring-purple-50"
           : "border-slate-100 bg-slate-50 text-slate-500"
         }`}
     />
   </div>
 );
 
-// ═══════════════════════════════════════════════════════════════════════════
-// MAIN PROFILE PAGE
-// ═══════════════════════════════════════════════════════════════════════════
 export const StudentProfile = () => {
   const { fullName, initials, email, phone, currentUser, updateCurrentUser } = useStudentProfile();
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [profile, setProfile] = useState<StudentProfileData | null>(currentUser);
+  const [profile, setProfile] = useState<StudentProfileType | null>(
+    currentUser ? (currentUser as unknown as StudentProfileType) : null
+  );
 
   const [personal, setPersonal] = useState<EditableField[]>([
     { key: "fullName", label: "Full Name", icon: "user-check", value: fullName },
@@ -205,7 +258,7 @@ export const StudentProfile = () => {
 
       try {
         const response = await studentApi.getProfile();
-        const student = unwrapData<{ student: StudentProfileData }>(response).student;
+        const student = unwrapData<{ student: StudentProfileType }>(response).student;
         if (!mounted) return;
 
         setProfile(student);
@@ -275,16 +328,18 @@ export const StudentProfile = () => {
       };
 
       const response = await studentApi.updateProfile(payload);
-      const student = unwrapData<{ student: StudentProfileData }>(response).student;
+      const student = unwrapData<{ student: StudentProfileType }>(response).student;
       setProfile(student);
-      updateCurrentUser({
-        ...(currentUser || student),
+      updateCurrentUser?.({
+        ...(currentUser || {}),
         ...student,
         id: student.id,
         fullName: student.fullName || student.name || "",
         name: student.name || student.fullName || "",
         email: student.email,
+        phone: student.phone || "",
         role: "student",
+        semester: student.semester ? String(student.semester) : undefined,
       });
       setEditing(false);
     } catch (saveError) {
@@ -300,23 +355,39 @@ export const StudentProfile = () => {
       sidebarHighlight="My Profile"
       userSummary={{
         fullName,
-        role: [profile?.branch, profile?.semester ? `Semester ${profile.semester}` : ""].filter(Boolean).join(" · ") || "Student",
+        role:
+          [profile?.branch, profile?.semester ? `Semester ${profile.semester}` : ""]
+            .filter(Boolean)
+            .join(" · ") || "Student",
         status: "Placement track active",
       }}
       stats={{
         label: "Profile completeness",
-        value: String(Math.min(100, [profile?.name, profile?.email, profile?.phone, profile?.bio, profile?.github, profile?.portfolio].filter(Boolean).length * 16)),
+        value: String(
+          Math.min(
+            100,
+            [
+              profile?.name,
+              profile?.email,
+              profile?.phone,
+              profile?.bio,
+              profile?.github,
+              profile?.portfolio,
+            ].filter(Boolean).length * 16,
+          ),
+        ),
         subtitle: profile?.portfolio ? "Portfolio added" : "Add portfolio",
         accent: profile?.portfolio ? "Complete" : "Add portfolio",
       }}
-      showAiButton={false}
     >
-      <>
+      <div className="space-y-5">
+
         {error && (
           <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
             {error}
           </div>
         )}
+
         {loading && (
           <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
             Loading profile...
@@ -324,149 +395,413 @@ export const StudentProfile = () => {
         )}
 
         {/* Profile hero */}
-        <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="h-28 bg-gradient-to-br from-blue-600 via-blue-700 to-slate-900" />
-          <div className="relative px-6 pb-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex items-end gap-4">
-                <div className="relative -mt-10 flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-slate-900 text-2xl font-black text-white shadow-lg">
+        <section className="relative overflow-hidden rounded-3xl border border-[#e8e0ed] bg-white shadow-sm">
+          <div className="h-28 bg-[#5400D6]" />
+
+          <div className="relative px-5 pb-5 sm:px-7 sm:pb-7">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+
+              <div className="flex min-w-0 items-end gap-4">
+                <div className="relative -mt-11 flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-slate-900 text-2xl font-black text-white shadow-lg">
                   {initials}
-                  <button className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-md transition hover:bg-blue-500">
+
+                  <button
+                    type="button"
+                    className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#5400D6] text-white shadow-md transition hover:bg-[#4500ad]"
+                  >
                     <Icon name="camera" className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                <div className="pb-1">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-black text-slate-900">{fullName}</h1>
-                    <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
-                      {profile?.id ? profile.id.slice(-6).toUpperCase() : "STUDENT"}
+
+                <div className="min-w-0 pb-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="truncate text-xl font-black text-slate-900 sm:text-2xl">
+                      {fullName}
+                    </h1>
+
+                    <span className="rounded-full bg-[#5400D6]/10 px-2.5 py-1 text-[9px] font-bold text-[#5400D6]">
+                      STUDENT
                     </span>
                   </div>
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    {[profile?.branch, profile?.semester ? `Semester ${profile.semester}` : ""].filter(Boolean).join(" · ") || "Academic details not added"}
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    {[profile?.branch, profile?.semester ? `Semester ${profile.semester}` : ""]
+                      .filter(Boolean)
+                      .join(" · ") || "Academic details not added"}
                   </p>
                 </div>
               </div>
+
               <button
+                type="button"
                 onClick={() => (editing ? saveProfile() : setEditing(true))}
                 disabled={saving}
-                className={`inline-flex items-center gap-1.5 self-start rounded-xl px-4 py-2 text-xs font-bold shadow-sm transition ${editing ? "bg-emerald-600 text-white hover:bg-emerald-500" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  }`}>
+                className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition ${
+                  editing
+                    ? "bg-emerald-600 text-white hover:bg-emerald-500"
+                    : "border border-slate-200 bg-white text-slate-700 hover:border-[#5400D6]/20 hover:bg-[#5400D6]/5 hover:text-[#5400D6]"
+                }`}
+              >
                 <Icon name={editing ? "check" : "edit"} className="h-3.5 w-3.5" />
                 {saving ? "Saving..." : editing ? "Save changes" : "Edit profile"}
               </button>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {/* Profile metrics */}
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
-                { label: "Skills", value: String(skills.length), icon: "target" as IconName, color: "#10b981" },
-                { label: "Education", value: String(profile?.education?.length || 0), icon: "briefcase" as IconName, color: "#2563eb" },
-                { label: "Certificates", value: String(profile?.resumeUrl || profile?.resume ? 1 : 0), icon: "award" as IconName, color: "#f59e0b" },
-                { label: "Resume", value: resumeName ? "Yes" : "No", icon: "zap" as IconName, color: "#f43f5e" },
-              ].map((s) => (
-                <div key={s.label} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
-                  <div className="flex items-center gap-1.5">
-                    <Icon name={s.icon} className="h-3.5 w-3.5" />
-                    <span style={{ color: s.color }} className="text-sm font-black">{s.value}</span>
+                {
+                  label: "Skills",
+                  value: String(skills.length),
+                  icon: "target" as IconName,
+                  accent: "#10b981",
+                },
+                {
+                  label: "Education",
+                  value: String(profile?.education?.length || 0),
+                  icon: "graduation" as IconName,
+                  accent: "#5400D6",
+                },
+                {
+                  label: "Certificates",
+                  value: String(profile?.resumeUrl || profile?.resume ? 1 : 0),
+                  icon: "award" as IconName,
+                  accent: "#f59e0b",
+                },
+                {
+                  label: "Resume",
+                  value: resumeName ? "Yes" : "No",
+                  icon: "resume" as IconName,
+                  accent: "#f43f5e",
+                },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-xl border border-slate-100 bg-slate-50 p-3"
+                >
+                  <div className="flex items-center gap-2">
+                    <Icon
+                      name={item.icon}
+                      className="h-4 w-4"
+                      style={{ color: item.accent } as React.CSSProperties}
+                    />
+                    <span
+                      className="text-lg font-black"
+                      style={{ color: item.accent }}
+                    >
+                      {item.value}
+                    </span>
                   </div>
-                  <p className="mt-0.5 text-[10px] font-semibold text-slate-400">{s.label}</p>
+                  <p className="mt-1 text-[10px] font-semibold text-slate-400">
+                    {item.label}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Personal info + About */}
-        <div className="grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <SectionHeader eyebrow="Account" title="Personal information" icon="user-check" iconColor="#2563eb" />
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              {personal.map((f) => (
-                <InputRow key={f.key} field={f} editing={editing} onChange={(k, v) => updateField(personal, setPersonal, k, v)} />
+        {/* Main profile information */}
+        <section className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <SectionHeader
+              eyebrow="Account"
+              title="Personal information"
+              sub="Keep your academic and contact information current."
+              icon="user-check"
+              iconColor="#5400D6"
+            />
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              {personal.map((field) => (
+                <InputRow
+                  key={field.key}
+                  field={field}
+                  editing={editing}
+                  onChange={(key, value) =>
+                    updateField(personal, setPersonal, key, value)
+                  }
+                />
               ))}
             </div>
-          </section>
+          </div>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <SectionHeader eyebrow="Summary" title="About me" icon="message" iconColor="#8b5cf6" />
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <SectionHeader
+              eyebrow="About"
+              title="Professional summary"
+              sub="A short introduction recruiters can understand quickly."
+              icon="message"
+              iconColor="#5400D6"
+            />
+
             <textarea
               value={bio}
               disabled={!editing}
               onChange={(e) => setBio(e.target.value)}
-              rows={6}
-              className={`mt-4 w-full resize-none rounded-xl border px-3.5 py-3 text-xs leading-5 outline-none transition ${editing ? "border-slate-200 bg-white text-slate-700 focus:border-blue-300 focus:ring-2 focus:ring-blue-50" : "border-slate-100 bg-slate-50 text-slate-500"
-                }`}
+              rows={8}
+              placeholder="Tell recruiters about your interests, technical strengths and career goals..."
+              className={`mt-5 w-full resize-none rounded-xl border px-4 py-3 text-xs leading-6 outline-none transition ${
+                editing
+                  ? "border-slate-200 bg-white text-slate-700 focus:border-[#5400D6]/30 focus:ring-2 focus:ring-[#5400D6]/10"
+                  : "border-slate-100 bg-slate-50 text-slate-500"
+              }`}
             />
-          </section>
-        </div>
 
-        {/* Skills + Links + Resume */}
-        <div className="grid gap-5 xl:grid-cols-3">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <SectionHeader eyebrow="Expertise" title="Skills" icon="sparkles" iconColor="#10b981" />
-            <div className="mt-4 flex flex-wrap gap-1.5">
-              {skills.map((s) => (
-                <span key={s} className="flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700 ring-1 ring-blue-100">
-                  {s}
-                  {editing && (
-                    <button onClick={() => removeSkill(s)} className="text-blue-400 transition hover:text-rose-500">
-                      <Icon name="close" className="h-2.5 w-2.5" />
-                    </button>
-                  )}
-                </span>
-              ))}
+            <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#5400D6]/5 px-3 py-2.5">
+              <Icon name="sparkles" className="h-3.5 w-3.5 text-[#5400D6]" />
+              <p className="text-[10px] font-semibold text-slate-500">
+                A complete summary helps your AI Resume and placement analysis.
+              </p>
             </div>
+          </div>
+        </section>
+
+        {/* Skills + online presence */}
+        <section className="grid gap-5 xl:grid-cols-2">
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <SectionHeader
+              eyebrow="Expertise"
+              title="Skills"
+              sub="These skills can be used across project and job matching."
+              icon="sparkles"
+              iconColor="#10b981"
+            />
+
+            <div className="mt-5 flex min-h-[92px] flex-wrap content-start gap-2">
+              {skills.length > 0 ? (
+                skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[#5400D6]/10 px-3 py-1.5 text-[10px] font-bold text-[#5400D6]"
+                  >
+                    {skill}
+
+                    {editing && (
+                      <button
+                        type="button"
+                        onClick={() => removeSkill(skill)}
+                        className="text-[#5400D6]/50 transition hover:text-rose-500"
+                      >
+                        <Icon name="close" className="h-2.5 w-2.5" />
+                      </button>
+                    )}
+                  </span>
+                ))
+              ) : (
+                <div className="w-full rounded-xl border border-dashed border-slate-200 bg-slate-50 p-5 text-center">
+                  <Icon name="sparkles" className="mx-auto h-5 w-5 text-slate-300" />
+                  <p className="mt-2 text-xs font-semibold text-slate-500">
+                    No skills added yet
+                  </p>
+                </div>
+              )}
+            </div>
+
             {editing && (
-              <div className="mt-3 flex gap-2">
+              <div className="mt-4 flex gap-2">
                 <input
                   value={newSkill}
                   onChange={(e) => setNewSkill(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addSkill()}
-                  placeholder="Add a skill…"
-                  className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-50"
+                  placeholder="Add a skill..."
+                  className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs outline-none focus:border-[#5400D6]/30 focus:ring-2 focus:ring-[#5400D6]/10"
                 />
-                <button onClick={addSkill} className="flex-shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-white transition hover:bg-slate-800">
-                  <Icon name="plus" className="h-3.5 w-3.5" />
+
+                <button
+                  type="button"
+                  onClick={addSkill}
+                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#5400D6] text-white transition hover:bg-[#4500ad]"
+                >
+                  <Icon name="plus" className="h-4 w-4" />
                 </button>
               </div>
             )}
-          </section>
+          </div>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <SectionHeader eyebrow="Presence" title="Social & links" icon="link" iconColor="#f59e0b" />
-            <div className="mt-4 space-y-3">
-              {links.map((f) => (
-                <InputRow key={f.key} field={f} editing={editing} onChange={(k, v) => updateField(links, setLinks, k, v)} />
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <SectionHeader
+              eyebrow="Professional presence"
+              title="Social & portfolio links"
+              sub="Connect your work so recruiters can verify your projects."
+              icon="link"
+              iconColor="#f59e0b"
+            />
+
+            <div className="mt-5 space-y-4">
+              {links.map((field) => (
+                <InputRow
+                  key={field.key}
+                  field={field}
+                  editing={editing}
+                  onChange={(key, value) =>
+                    updateField(links, setLinks, key, value)
+                  }
+                />
               ))}
             </div>
-          </section>
+          </div>
+        </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <SectionHeader eyebrow="Documents" title="Resume" icon="resume" iconColor="#f43f5e" />
-            <div className="mt-4 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-5 text-center transition hover:border-blue-300 hover:bg-blue-50">
-              <div className="mx-auto mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200">
-                <Icon name="file" className="h-4 w-4 text-emerald-500" />
+        {/* Resume + profile readiness */}
+        <section className="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <SectionHeader
+              eyebrow="Documents"
+              title="Resume"
+              sub="Keep the resume connected to your student profile."
+              icon="resume"
+              iconColor="#f43f5e"
+            />
+
+            <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white text-[#5400D6] ring-1 ring-slate-200">
+                  <Icon name="file" className="h-5 w-5" />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-black text-slate-800">
+                    {resumeName || "No resume uploaded"}
+                  </p>
+                  <p className="mt-1 text-[10px] leading-4 text-slate-400">
+                    {resumeName
+                      ? "Resume is connected to your profile."
+                      : "Upload your latest resume to improve placement readiness."}
+                  </p>
+                </div>
               </div>
-              <p className="truncate text-xs font-bold text-slate-700">{resumeName || "No resume uploaded"}</p>
-              <p className="mt-1 text-[11px] text-slate-400">{resumeName ? "Saved to profile" : "Add a resume link or file name"}</p>
-              <div className="mt-3 flex justify-center gap-2">
-                <button className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-600 transition hover:bg-slate-50">
-                  <Icon name="download" className="h-3 w-3" />
-                  Download
-                </button>
-                <label className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-slate-800">
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {resumeName && (
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50"
+                  >
+                    <Icon name="download" className="h-3 w-3" />
+                    Download
+                  </button>
+                )}
+
+                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[#5400D6] px-3 py-2 text-[10px] font-bold text-white hover:bg-[#4500ad]">
                   <Icon name="upload" className="h-3 w-3" />
-                  Replace
-                  <input type="file" accept=".pdf,.doc,.docx" className="hidden"
-                    onChange={(e) => e.target.files?.[0] && setResumeName(e.target.files[0].name)} />
+                  {resumeName ? "Replace resume" : "Upload resume"}
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    className="hidden"
+                    onChange={(e) =>
+                      e.target.files?.[0] &&
+                      setResumeName(e.target.files[0].name)
+                    }
+                  />
                 </label>
               </div>
             </div>
-          </section>
-        </div>
-      </>
+          </div>
+
+          <div className="rounded-2xl border border-[#5400D6]/10 bg-white p-5 shadow-sm sm:p-6">
+            <SectionHeader
+              eyebrow="Placement readiness"
+              title="Profile readiness"
+              sub="Complete these areas before applying to opportunities."
+              icon="target"
+              iconColor="#5400D6"
+            />
+
+            <div className="mt-5 space-y-4">
+              {[
+                {
+                  label: "Basic information",
+                  complete: Boolean(
+                    fieldValue(personal, "fullName") &&
+                      fieldValue(personal, "email") &&
+                      fieldValue(personal, "phone"),
+                  ),
+                  detail: "Name, email and phone",
+                },
+                {
+                  label: "Academic details",
+                  complete: Boolean(
+                    fieldValue(personal, "college") &&
+                      fieldValue(personal, "branch") &&
+                      fieldValue(personal, "semester"),
+                  ),
+                  detail: "College, branch and semester",
+                },
+                {
+                  label: "Skills",
+                  complete: skills.length >= 3,
+                  detail: `${skills.length} skills added`,
+                },
+                {
+                  label: "Professional links",
+                  complete: Boolean(
+                    fieldValue(links, "github") ||
+                      fieldValue(links, "linkedIn") ||
+                      fieldValue(links, "portfolio"),
+                  ),
+                  detail: "GitHub, LinkedIn or portfolio",
+                },
+                {
+                  label: "Resume",
+                  complete: Boolean(resumeName),
+                  detail: resumeName ? "Resume connected" : "Resume missing",
+                },
+              ].map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => {
+                    if (!item.complete) {
+                      setEditing(true);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }
+                  }}
+                  className="flex w-full text-left items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 transition hover:border-[#5400D6]/30 hover:bg-[#5400D6]/5 cursor-pointer"
+                >
+                  <div
+                    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${
+                      item.complete
+                        ? "bg-emerald-50 text-emerald-600"
+                        : "bg-amber-50 text-amber-600"
+                    }`}
+                  >
+                    <Icon
+                      name={item.complete ? "check" : "alert"}
+                      className="h-3.5 w-3.5"
+                    />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-slate-700">
+                      {item.label}
+                    </p>
+                    <p className="mt-0.5 truncate text-[10px] text-slate-400">
+                      {item.detail}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`text-[9px] font-black ${
+                      item.complete ? "text-emerald-600" : "text-amber-600"
+                    }`}
+                  >
+                    {item.complete ? "READY" : "ADD"}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+      </div>
     </StudentLayout>
   );
+
 };
 
 export default StudentProfile;

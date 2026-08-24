@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import StudentLayout from "../../components/student/StudentLayout";
 import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
+import { getApiErrorMessage, studentApi, unwrapData } from "../../services/studentApi";
 
 // ─── Icon System (matches Student Dashboard / Admin Dashboard) ───────────────
 type IconName =
@@ -98,14 +99,14 @@ const getInitials = (name: string) =>
 
 const useStudentProfile = () => {
   const { currentUser, logout } = useAuth();
-  const fullName = currentUser?.fullName || "Yuvraj Singh";
+  const fullName = currentUser?.fullName || currentUser?.name || "Student";
   const initials = getInitials(fullName);
-  const email = currentUser?.email || "yuvraj@example.com";
-  const phone = currentUser?.phone || "+91 9876543210";
+  const email = currentUser?.email || "";
+  const phone = currentUser?.phone || "";
   return { fullName, initials, email, phone, logout };
 };
 
-const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#2563eb" }:
+const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#5400D6" }:
   { eyebrow: string; title: string; sub?: string; icon: IconName; iconColor?: string }) => (
   <div className="flex items-start justify-between">
     <div>
@@ -121,16 +122,72 @@ const SectionHeader = ({ eyebrow, title, sub, icon, iconColor = "#2563eb" }:
   </div>
 );
 
-const sidebarItems: Array<{ label: string; icon: StudentSidebarIconName; route: string; badge?: number }> = [
-  { label: "Dashboard", icon: "dashboard", route: "/student-dashboard" },
-  { label: "My Profile", icon: "user-check", route: "/student/profile" },
-  { label: "Project List", icon: "briefcase", route: "/student/projects" },
-  { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects", badge: 2 },
-  { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
-  { label: "Certificates", icon: "award", route: "/student/certificates" },
-  { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume" , route: "/student/ai-resume" },
+
+const sidebarItems: Array<{
+  label: string;
+  icon: StudentSidebarIconName;
+  route: string;
+  badge?: number;
+}> = [
+  {
+    label: "Dashboard",
+    icon: "dashboard",
+    route: "/student-dashboard",
+  },
+  {
+    label: "My Profile",
+    icon: "user-check",
+    route: "/student/profile",
+  },
+  {
+    label: "My Projects",
+    icon: "briefcase",
+    route: "/student/projects",
+  },
+  {
+    label: "Applications",
+    icon: "clipboard",
+    route: "/student/applications",
+    badge: 2,
+  },
+  {
+    label: "Placement Prep",
+    icon: "building",
+    route: "/student/placementprep",
+  },
+  {
+    label: "Notifications",
+    icon: "bell",
+    route: "/student/notifications",
+    badge: 3,
+  },
+  {
+    label: "Certificates",
+    icon: "award",
+    route: "/student/certificates",
+  },
+  {
+    label: "Settings",
+    icon: "settings",
+    route: "/student/settings",
+  },
+  {
+    label: "AI Resume",
+    icon: "resume",
+    route: "/student/ai-resume",
+  },
+  {
+    label: "Career Roadmap",
+    icon: "map",
+    route: "/student/roadmap",
+  },
+  {
+    label: "Career Updates",
+    icon: "megaphone",
+    route: "/student/broadcast",
+  },
 ];
+
 
 // ─── Toggle switch ─────────────────────────────────────────────────────────────
 const Toggle = ({
@@ -145,7 +202,7 @@ const Toggle = ({
     role="switch"
     aria-checked={checked}
     className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors ${
-      checked ? "bg-blue-600" : "bg-slate-200"
+      checked ? "bg-[#5400D6]" : "bg-slate-200"
     }`}
   >
     <span
@@ -157,6 +214,38 @@ const Toggle = ({
 );
 
 interface ToggleRow { key: string; label: string; sub: string; icon: IconName; value: boolean }
+
+interface StudentSettingsPayload {
+  email: string;
+  settings: {
+    notifications: Record<string, boolean>;
+    privacy: Record<string, boolean>;
+    theme: "light" | "dark" | "system";
+    connectedAccounts?: {
+      github?: boolean;
+      linkedIn?: boolean;
+    };
+  };
+}
+
+const notificationRows: Omit<ToggleRow, "value">[] = [
+  { key: "email", label: "Email notifications", sub: "Assignment updates, deadlines & results", icon: "mail" },
+  { key: "sms", label: "SMS alerts", sub: "Time-sensitive reminders via text", icon: "smartphone" },
+  { key: "assignments", label: "Assignment reminders", sub: "Notify before submission deadlines", icon: "clipboard" },
+  { key: "mentorSessions", label: "Mentor session reminders", sub: "Alerts before scheduled sessions", icon: "users" },
+  { key: "marketing", label: "Placement drive updates", sub: "New opportunities matching your profile", icon: "briefcase" },
+];
+
+const privacyRows: Omit<ToggleRow, "value">[] = [
+  { key: "recruiterVisible", label: "Visible to recruiters", sub: "Allow verified recruiters to view your profile", icon: "eye" },
+  { key: "leaderboard", label: "Show me on leaderboards", sub: "Display your rank on public leaderboards", icon: "trending-up" },
+  { key: "twoFactor", label: "Two-factor authentication", sub: "Extra security step at every login", icon: "shield" },
+];
+
+const rowsFromSettings = (
+  rows: Omit<ToggleRow, "value">[],
+  values: Record<string, boolean> = {}
+): ToggleRow[] => rows.map((row) => ({ ...row, value: Boolean(values[row.key]) }));
 
 const ToggleList = ({ items, onToggle }: { items: ToggleRow[]; onToggle: (key: string) => void }) => (
   <div className="divide-y divide-slate-100">
@@ -184,190 +273,448 @@ export const StudentSettings = () => {
   const { fullName, email, logout } = useStudentProfile();
   const navigate = useNavigate();
   const [savedToast, setSavedToast] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const [accountEmail, setAccountEmail] = useState(email);
   const [currentPwd, setCurrentPwd] = useState("");
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
 
-  const [notifications, setNotifications] = useState<ToggleRow[]>([
-    { key: "email", label: "Email notifications", sub: "Assignment updates, deadlines & results", icon: "mail", value: true },
-    { key: "sms", label: "SMS alerts", sub: "Time-sensitive reminders via text", icon: "smartphone", value: false },
-    { key: "assignments", label: "Assignment reminders", sub: "Notify before submission deadlines", icon: "clipboard", value: true },
-    { key: "mentor", label: "Mentor session reminders", sub: "Alerts before scheduled sessions", icon: "users", value: true },
-    { key: "marketing", label: "Placement drive updates", sub: "New opportunities matching your profile", icon: "briefcase", value: true },
-  ]);
-
-  const [privacy, setPrivacy] = useState<ToggleRow[]>([
-    { key: "recruiterVisible", label: "Visible to recruiters", sub: "Allow verified recruiters to view your profile", icon: "eye", value: true },
-    { key: "leaderboard", label: "Show me on leaderboards", sub: "Display your rank on public leaderboards", icon: "trending-up", value: true },
-    { key: "twoFactor", label: "Two-factor authentication", sub: "Extra security step at every login", icon: "shield", value: false },
-  ]);
+  const [notifications, setNotifications] = useState<ToggleRow[]>(rowsFromSettings(notificationRows));
+  const [privacy, setPrivacy] = useState<ToggleRow[]>(rowsFromSettings(privacyRows));
 
   const [theme, setTheme] = useState<"light" | "dark" | "system">("light");
+  const [connectedAccounts, setConnectedAccounts] = useState({ github: false, linkedIn: false });
 
-  const toggle = (list: ToggleRow[], setList: (v: ToggleRow[]) => void, key: string) =>
-    setList(list.map((i) => (i.key === key ? { ...i, value: !i.value } : i)));
+  useEffect(() => {
+    let mounted = true;
+
+    const loadSettings = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await studentApi.getSettings();
+        const payload = unwrapData<StudentSettingsPayload>(response);
+        if (!mounted) return;
+
+        setAccountEmail(payload.email || email);
+        setNotifications(rowsFromSettings(notificationRows, payload.settings?.notifications));
+        setPrivacy(rowsFromSettings(privacyRows, payload.settings?.privacy));
+        setTheme(payload.settings?.theme || "light");
+        setConnectedAccounts({
+          github: Boolean(payload.settings?.connectedAccounts?.github),
+          linkedIn: Boolean(payload.settings?.connectedAccounts?.linkedIn),
+        });
+      } catch (loadError) {
+        if (mounted) setError(getApiErrorMessage(loadError));
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadSettings();
+
+    return () => {
+      mounted = false;
+    };
+  }, [email]);
+
+  const rowValues = (rows: ToggleRow[]) =>
+    rows.reduce<Record<string, boolean>>((acc, row) => {
+      acc[row.key] = row.value;
+      return acc;
+    }, {});
 
   const showSaved = () => {
     setSavedToast(true);
     setTimeout(() => setSavedToast(false), 2200);
   };
 
+  const persistSettings = async (payload: Partial<StudentSettingsPayload>) => {
+    setSaving(true);
+    setError("");
+    try {
+      const response = await studentApi.updateSettings(payload);
+      const next = unwrapData<StudentSettingsPayload>(response);
+      setAccountEmail(next.email || accountEmail);
+      setNotifications(rowsFromSettings(notificationRows, next.settings?.notifications));
+      setPrivacy(rowsFromSettings(privacyRows, next.settings?.privacy));
+      setTheme(next.settings?.theme || theme);
+      showSaved();
+    } catch (saveError) {
+      setError(getApiErrorMessage(saveError));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggle = (
+    list: ToggleRow[],
+    setList: (v: ToggleRow[]) => void,
+    key: string,
+    section: "notifications" | "privacy"
+  ) => {
+    const next = list.map((i) => (i.key === key ? { ...i, value: !i.value } : i));
+    setList(next);
+    void persistSettings({ settings: { [section]: rowValues(next) } as any });
+  };
+
+  const saveAccount = () =>
+    persistSettings({
+      email: accountEmail,
+      settings: {
+        notifications: rowValues(notifications),
+        privacy: rowValues(privacy),
+        theme,
+      },
+    });
+
+  const updatePassword = () => {
+    if (newPwd !== confirmPwd) {
+      setError("New password and confirmation do not match.");
+      return;
+    }
+
+    void persistSettings({
+      currentPassword: currentPwd,
+      newPassword: newPwd,
+    } as any);
+    setCurrentPwd("");
+    setNewPwd("");
+    setConfirmPwd("");
+  };
+
+  const updateTheme = (nextTheme: typeof theme) => {
+    setTheme(nextTheme);
+    void persistSettings({ settings: { theme: nextTheme } as any });
+  };
+
   return (
     <StudentLayout
       sidebarItems={sidebarItems}
       sidebarHighlight="Settings"
-      userSummary={{ fullName, role: "B.Tech CSE · 4th Year", status: "Placement track active" }}
-      stats={{ label: "Account security", value: "Off", subtitle: "Two-factor authentication", accent: "Off" }}
-      showAiButton={false}
+      userSummary={{ fullName, role: "Student", status: "Placement track active" }}
+      stats={{
+        label: "Account security",
+        value: privacy.find((item) => item.key === "twoFactor")?.value ? "On" : "Off",
+        subtitle: "Two-factor authentication",
+        accent: privacy.find((item) => item.key === "twoFactor")?.value ? "On" : "Off",
+      }}
     >
-      <>
+      <div className="space-y-5">
+        {error && (
+          <div className="flex items-start gap-3 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+            <Icon name="alert" className="mt-0.5 h-4 w-4 flex-shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
 
-            {/* Header banner */}
-            <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#e0e7ff_1px,transparent_1px)] opacity-60 [background-size:18px_18px]" />
-              <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full bg-blue-100/60 blur-3xl" />
-              <div className="relative">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-700">
-                  <Icon name="settings" className="h-3 w-3" />
-                  Account settings
-                </span>
-                <h1 className="mt-3 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Manage your account</h1>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-                  Control your login details, notifications, privacy and appearance preferences.
+        {loading && (
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-[#5400D6]" />
+            Loading settings...
+          </div>
+        )}
+
+        {saving && (
+          <div className="flex items-center gap-3 rounded-2xl border border-[#DCCBFF] bg-[#F4EFFF] px-4 py-3 text-sm font-semibold text-[#5400D6]">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-[#5400D6]" />
+            Saving your changes...
+          </div>
+        )}
+
+        <section className="relative overflow-hidden rounded-3xl bg-[#5400D6] p-6 text-white shadow-lg sm:p-8">
+          <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-28 left-1/3 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+
+          <div className="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-2xl">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider">
+                <Icon name="settings" className="h-3.5 w-3.5" />
+                Account control center
+              </span>
+
+              <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">
+                Settings
+              </h1>
+
+              <p className="mt-3 max-w-xl text-sm leading-6 text-white/75">
+                Manage your account, security, notifications, privacy,
+                appearance, and connected services from one place.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
+                <Icon name="shield" className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-wider text-white/60">
+                  Account security
+                </p>
+                <p className="mt-0.5 text-sm font-black">
+                  {privacy.find((item) => item.key === "twoFactor")?.value ? "Protected" : "Standard"}
                 </p>
               </div>
             </div>
+          </div>
+        </section>
 
-            {/* Account + Password */}
-            <div className="grid gap-5 xl:grid-cols-2">
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <SectionHeader eyebrow="Login" title="Account details" icon="user-check" iconColor="#2563eb" />
-                <div className="mt-4 space-y-4">
-                  <div>
-                    <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
-                      <Icon name="mail" className="h-3.5 w-3.5 text-slate-400" />
-                      Email address
-                    </label>
-                    <input value={accountEmail} onChange={(e) => setAccountEmail(e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-50" />
-                  </div>
-                  <button onClick={showSaved}
-                    className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800">
-                    <Icon name="check" className="h-3.5 w-3.5" />
-                    Save changes
-                  </button>
-                </div>
-              </section>
+        <div className="grid gap-5 xl:grid-cols-2">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <SectionHeader
+              eyebrow="Login"
+              title="Account details"
+              sub="Update the email address associated with your account."
+              icon="user-check"
+              iconColor="#5400D6"
+            />
 
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <SectionHeader eyebrow="Security" title="Change password" icon="key" iconColor="#f59e0b" />
-                <div className="mt-4 space-y-3">
-                  <input type="password" value={currentPwd} onChange={(e) => setCurrentPwd(e.target.value)} placeholder="Current password"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-50" />
-                  <input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} placeholder="New password"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-50" />
-                  <input type="password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} placeholder="Confirm new password"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-50" />
-                  <button onClick={showSaved}
-                    className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-slate-800">
-                    <Icon name="lock" className="h-3.5 w-3.5" />
-                    Update password
-                  </button>
-                </div>
-              </section>
+            <div className="mt-5">
+              <label className="mb-2 flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
+                <Icon name="mail" className="h-3.5 w-3.5 text-[#5400D6]" />
+                Email address
+              </label>
+
+              <input
+                value={accountEmail}
+                onChange={(e) => setAccountEmail(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#B99AFF] focus:bg-white focus:ring-4 focus:ring-[#F4EFFF]"
+              />
+
+              <button
+                onClick={saveAccount}
+                disabled={saving}
+                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-[#5400D6] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#4500AD] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Icon name="check" className="h-3.5 w-3.5" />
+                Save changes
+              </button>
             </div>
+          </section>
 
-            {/* Notifications + Privacy */}
-            <div className="grid gap-5 xl:grid-cols-2">
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <SectionHeader eyebrow="Alerts" title="Notification preferences" icon="bell" iconColor="#8b5cf6" />
-                <div className="mt-4">
-                  <ToggleList items={notifications} onToggle={(k) => toggle(notifications, setNotifications, k)} />
-                </div>
-              </section>
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <SectionHeader
+              eyebrow="Security"
+              title="Change password"
+              sub="Use a strong password to keep your account secure."
+              icon="key"
+              iconColor="#5400D6"
+            />
 
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <SectionHeader eyebrow="Visibility" title="Privacy & security" icon="shield" iconColor="#10b981" />
-                <div className="mt-4">
-                  <ToggleList items={privacy} onToggle={(k) => toggle(privacy, setPrivacy, k)} />
-                </div>
-              </section>
+            <div className="mt-5 space-y-3">
+              <input
+                type="password"
+                value={currentPwd}
+                onChange={(e) => setCurrentPwd(e.target.value)}
+                placeholder="Current password"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-800 outline-none transition focus:border-[#B99AFF] focus:bg-white focus:ring-4 focus:ring-[#F4EFFF]"
+              />
+
+              <input
+                type="password"
+                value={newPwd}
+                onChange={(e) => setNewPwd(e.target.value)}
+                placeholder="New password"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-800 outline-none transition focus:border-[#B99AFF] focus:bg-white focus:ring-4 focus:ring-[#F4EFFF]"
+              />
+
+              <input
+                type="password"
+                value={confirmPwd}
+                onChange={(e) => setConfirmPwd(e.target.value)}
+                placeholder="Confirm new password"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-800 outline-none transition focus:border-[#B99AFF] focus:bg-white focus:ring-4 focus:ring-[#F4EFFF]"
+              />
+
+              <button
+                onClick={updatePassword}
+                disabled={saving || !currentPwd || !newPwd || !confirmPwd}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#5400D6] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#4500AD] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Icon name="lock" className="h-3.5 w-3.5" />
+                Update password
+              </button>
             </div>
+          </section>
+        </div>
 
-            {/* Appearance + Connected accounts */}
-            <div className="grid gap-5 xl:grid-cols-2">
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <SectionHeader eyebrow="Display" title="Appearance" icon="monitor" iconColor="#2563eb" />
-                <div className="mt-4 grid grid-cols-3 gap-2.5">
-                  {[
-                    { key: "light", label: "Light", icon: "sun" as IconName },
-                    { key: "dark", label: "Dark", icon: "moon" as IconName },
-                    { key: "system", label: "System", icon: "monitor" as IconName },
-                  ].map((t) => (
-                    <button key={t.key} onClick={() => setTheme(t.key as typeof theme)}
-                      className={`flex flex-col items-center gap-2 rounded-xl border p-3.5 text-xs font-bold transition ${
-                        theme === t.key ? "border-blue-300 bg-blue-50 text-blue-700 ring-1 ring-blue-100" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
-                      }`}>
-                      <Icon name={t.icon} className="h-4 w-4" />
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-              </section>
+        <div className="grid gap-5 xl:grid-cols-2">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <SectionHeader
+              eyebrow="Alerts"
+              title="Notification preferences"
+              sub="Choose which updates you want to receive."
+              icon="bell"
+              iconColor="#5400D6"
+            />
 
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <SectionHeader eyebrow="Integrations" title="Connected accounts" icon="link" iconColor="#f43f5e" />
-                <div className="mt-4 space-y-2.5">
-                  {[
-                    { label: "GitHub", icon: "github" as IconName, connected: true },
-                    { label: "LinkedIn", icon: "linkedin" as IconName, connected: false },
-                  ].map((acc) => (
-                    <div key={acc.label} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-2.5">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white ring-1 ring-slate-200">
-                          <Icon name={acc.icon} className="h-4 w-4 text-slate-700" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-800">{acc.label}</p>
-                          <p className="text-[10px] text-slate-400">{acc.connected ? "Connected" : "Not connected"}</p>
-                        </div>
-                      </div>
-                      <button className={`rounded-lg px-3 py-1.5 text-[11px] font-bold transition ${
-                        acc.connected ? "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100" : "bg-slate-900 text-white hover:bg-slate-800"
-                      }`}>
-                        {acc.connected ? "Disconnect" : "Connect"}
-                      </button>
+            <div className="mt-5">
+              <ToggleList
+                items={notifications}
+                onToggle={(k) =>
+                  toggle(notifications, setNotifications, k, "notifications")
+                }
+              />
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <SectionHeader
+              eyebrow="Visibility"
+              title="Privacy & security"
+              sub="Control profile visibility and account protection."
+              icon="shield"
+              iconColor="#5400D6"
+            />
+
+            <div className="mt-5">
+              <ToggleList
+                items={privacy}
+                onToggle={(k) =>
+                  toggle(privacy, setPrivacy, k, "privacy")
+                }
+              />
+            </div>
+          </section>
+        </div>
+
+        <div className="grid gap-5 xl:grid-cols-2">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <SectionHeader
+              eyebrow="Display"
+              title="Appearance"
+              sub="Choose how the student portal should look."
+              icon="monitor"
+              iconColor="#5400D6"
+            />
+
+            <div className="mt-5 grid grid-cols-3 gap-2.5">
+              {[
+                { key: "light", label: "Light", icon: "sun" as IconName },
+                { key: "dark", label: "Dark", icon: "moon" as IconName },
+                { key: "system", label: "System", icon: "monitor" as IconName },
+              ].map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => updateTheme(t.key as typeof theme)}
+                  className={`flex flex-col items-center gap-2 rounded-xl border p-4 text-xs font-bold transition ${
+                    theme === t.key
+                      ? "border-[#B99AFF] bg-[#F4EFFF] text-[#5400D6] ring-1 ring-[#DCCBFF]"
+                      : "border-slate-200 bg-white text-slate-500 hover:border-[#DCCBFF] hover:bg-[#F4EFFF]/50 hover:text-[#5400D6]"
+                  }`}
+                >
+                  <Icon name={t.icon} className="h-4 w-4" />
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <SectionHeader
+              eyebrow="Integrations"
+              title="Connected accounts"
+              sub="Manage the services linked to your student profile."
+              icon="link"
+              iconColor="#5400D6"
+            />
+
+            <div className="mt-5 space-y-3">
+              {[
+                {
+                  label: "GitHub",
+                  icon: "github" as IconName,
+                  connected: connectedAccounts.github,
+                },
+                {
+                  label: "LinkedIn",
+                  icon: "linkedin" as IconName,
+                  connected: connectedAccounts.linkedIn,
+                },
+              ].map((acc) => (
+                <div
+                  key={acc.label}
+                  className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-700 shadow-sm ring-1 ring-slate-200">
+                      <Icon name={acc.icon} className="h-4 w-4" />
                     </div>
-                  ))}
+
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">
+                        {acc.label}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-slate-400">
+                        {acc.connected ? "Connected to your profile" : "Not connected"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className={`rounded-lg px-3 py-1.5 text-[10px] font-bold transition ${
+                      acc.connected
+                        ? "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                        : "bg-[#5400D6] text-white hover:bg-[#4500AD]"
+                    }`}
+                  >
+                    {acc.connected ? "Disconnect" : "Connect"}
+                  </button>
                 </div>
-              </section>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <section className="rounded-2xl border border-rose-100 bg-rose-50/50 p-5 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
+              <Icon name="alert" className="h-4 w-4" />
             </div>
 
-            {/* Danger zone */}
-            <section className="rounded-2xl border border-rose-100 bg-rose-50/40 p-5 shadow-sm">
-              <SectionHeader eyebrow="Caution" title="Danger zone" icon="alert" iconColor="#ef4444" />
-              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-xs font-bold text-slate-800">Deactivate or delete your account</p>
-                  <p className="mt-0.5 text-[11px] text-slate-500">This will remove your access to placement tracking, mentors, and applied projects.</p>
-                </div>
-                <div className="flex flex-shrink-0 gap-2">
-                  <button
-                    onClick={() => { logout?.(); navigate("/login"); }}
-                    className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50">
-                    <Icon name="logout" className="h-3.5 w-3.5" />
-                    Log out
-                  </button>
-                  <button className="flex items-center gap-1.5 rounded-xl bg-rose-600 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-rose-500">
-                    <Icon name="trash" className="h-3.5 w-3.5" />
-                    Delete account
-                  </button>
-                </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-rose-500">
+                Caution
+              </p>
+
+              <h2 className="mt-1 text-lg font-black text-slate-900">
+                Danger zone
+              </h2>
+
+              <p className="mt-1 text-[11px] leading-5 text-slate-500">
+                Deactivate or delete your account. This can remove your access
+                to placement tracking, mentors, and applied projects.
+              </p>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  onClick={() => {
+                    logout?.();
+                    navigate("/login");
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50"
+                >
+                  <Icon name="logout" className="h-3.5 w-3.5" />
+                  Log out
+                </button>
+
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-rose-500"
+                >
+                  <Icon name="trash" className="h-3.5 w-3.5" />
+                  Delete account
+                </button>
               </div>
-            </section>
-      </>
+            </div>
+          </div>
+        </section>
+      </div>
 
       {/* ── Saved toast ── */}
       {savedToast && (

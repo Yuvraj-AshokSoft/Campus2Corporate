@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
+import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
+import { getApiErrorMessage, studentApi, unwrapData } from "../../services/studentApi";
 
 // ─── Icon System (matches Admin Dashboard / Student Dashboard) ───────────────
 type IconName =
@@ -79,17 +81,71 @@ const Icon = ({ name, className = "h-4 w-4", style }: { name: IconName; classNam
   );
 };
 
-const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?: number }> = [
-  { label: "Dashboard", icon: "dashboard", route: "/student-dashboard" },
-  { label: "My Profile", icon: "user-check", route: "/student/profile" },
-  { label: "Project List", icon: "briefcase", route: "/student/projects" },
-  { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects", badge: 2 },
-  { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
-  { label: "Certificates", icon: "award", route: "/student/certificates" },
-  { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume" , route: "/student/ai-resume" },
-];
 
+const sidebarItems: Array<{
+  label: string;
+  icon: StudentSidebarIconName;
+  route: string;
+  badge?: number;
+}> = [
+  {
+    label: "Dashboard",
+    icon: "dashboard",
+    route: "/student-dashboard",
+  },
+  {
+    label: "My Profile",
+    icon: "user-check",
+    route: "/student/profile",
+  },
+  {
+    label: "My Projects",
+    icon: "briefcase",
+    route: "/student/projects",
+  },
+  {
+    label: "Applications",
+    icon: "clipboard",
+    route: "/student/applications",
+    badge: 2,
+  },
+  {
+    label: "Placement Prep",
+    icon: "building",
+    route: "/student/placementprep",
+  },
+  {
+    label: "Notifications",
+    icon: "bell",
+    route: "/student/notifications",
+    badge: 3,
+  },
+  {
+    label: "Certificates",
+    icon: "award",
+    route: "/student/certificates",
+  },
+  {
+    label: "Settings",
+    icon: "settings",
+    route: "/student/settings",
+  },
+  {
+    label: "AI Resume",
+    icon: "resume",
+    route: "/student/ai-resume",
+  },
+  {
+    label: "Career Roadmap",
+    icon: "map",
+    route: "/student/roadmap",
+  },
+  {
+    label: "Career Updates",
+    icon: "megaphone",
+    route: "/student/broadcast",
+  },
+];
 // ─── Certificate Data ───────────────────────────────────────────────────────
 interface EarnedCertificate {
   id: string;
@@ -97,6 +153,8 @@ interface EarnedCertificate {
   issuer: string;
   issuedOn: string;
   credentialId: string;
+  downloadUrl?: string;
+  shareUrl?: string;
   color: string;
   icon: IconName;
 }
@@ -109,23 +167,6 @@ interface InProgressCertificate {
   icon: IconName;
 }
 
-const earnedCertificates: EarnedCertificate[] = [
-  {
-    id: "c1", title: "Aptitude Training — Placement Prep", issuer: "Campus2Corporate University",
-    issuedOn: "02 May 2026", credentialId: "C2C-APT-20260502-YS1", color: "#f59e0b", icon: "target",
-  },
-  {
-    id: "c2", title: "Foundations of React Development", issuer: "Campus2Corporate University",
-    issuedOn: "18 Mar 2026", credentialId: "C2C-REACT-20260318-YS1", color: "#2563eb", icon: "cpu",
-  },
-];
-
-const inProgressCertificates: InProgressCertificate[] = [
-  { id: "ip1", title: "React Development", progress: 70, color: "#2563eb", icon: "cpu" },
-  { id: "ip2", title: "Python Programming", progress: 45, color: "#10b981", icon: "book" },
-  { id: "ip3", title: "Data Structures & Algorithms", progress: 60, color: "#8b5cf6", icon: "database" },
-];
-
 type FilterTab = "all" | "earned" | "in-progress";
 const filterTabs: { key: FilterTab; label: string }[] = [
   { key: "all", label: "All" },
@@ -133,14 +174,75 @@ const filterTabs: { key: FilterTab; label: string }[] = [
   { key: "in-progress", label: "In progress" },
 ];
 
+const toIconName = (icon?: string): IconName => {
+  const allowed = new Set<IconName>([
+    "activity", "alert", "arrow-up", "arrow-down", "bell", "briefcase",
+    "building", "calendar", "chart", "check", "clock", "dashboard",
+    "database", "file", "graduation", "lock", "plug", "search",
+    "settings", "shield", "sparkles", "target", "user-check", "users",
+    "ai-brain", "placement", "resume", "interview", "risk", "campus",
+    "automation", "monitor", "send", "refresh", "close", "chevron-right",
+    "wand", "zap", "trending-up", "cpu", "mail", "phone", "book",
+    "award", "upload", "eye", "message", "chevron-down", "lightbulb",
+    "clipboard", "logout", "download", "share", "lock-open",
+  ]);
+
+  return allowed.has(icon as IconName) ? (icon as IconName) : "award";
+};
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════════════════
 export const StudentCertificates = () => {
   const { currentUser } = useAuth();
-  const fullName = currentUser?.fullName || "Yuvraj Singh";
+  const fullName = currentUser?.fullName || currentUser?.name || "Student";
 
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [earnedCertificates, setEarnedCertificates] = useState<EarnedCertificate[]>([]);
+  const [inProgressCertificates, setInProgressCertificates] = useState<InProgressCertificate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadCertificates = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await studentApi.getCertificates();
+        const payload = unwrapData<{
+          earned: Array<Omit<EarnedCertificate, "icon"> & { icon?: string }>;
+          inProgress: Array<Omit<InProgressCertificate, "icon"> & { icon?: string }>;
+        }>(response);
+
+        if (!mounted) return;
+        setEarnedCertificates((payload.earned || []).map((certificate) => ({
+          ...certificate,
+          icon: toIconName(certificate.icon),
+        })));
+        setInProgressCertificates((payload.inProgress || []).map((certificate) => ({
+          ...certificate,
+          progress: Math.max(0, Math.min(100, Number(certificate.progress) || 0)),
+          icon: toIconName(certificate.icon),
+        })));
+      } catch (loadError) {
+        if (mounted) {
+          setError(getApiErrorMessage(loadError));
+          setEarnedCertificates([]);
+          setInProgressCertificates([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    loadCertificates();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const showEarned = activeTab === "all" || activeTab === "earned";
   const showInProgress = activeTab === "all" || activeTab === "in-progress";
@@ -149,140 +251,308 @@ export const StudentCertificates = () => {
     <StudentLayout
       sidebarItems={sidebarItems}
       sidebarHighlight="Certificates"
-      userSummary={{ fullName, role: "B.Tech CSE · 4th Year", status: "Placement track active" }}
-      stats={{ label: "Certificate count", value: "5", subtitle: "Verified", accent: "Verified" }}
-      showAiButton={false}
+      userSummary={{ fullName, role: "Student", status: "Placement track active" }}
+      stats={{
+        label: "Certificate count",
+        value: String(earnedCertificates.length + inProgressCertificates.length),
+        subtitle: "Verified",
+        accent: "Verified",
+      }}
     >
-      <>
+      <div className="space-y-5">
+        {error && (
+          <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+            {error}
+          </div>
+        )}
 
-            {/* Page header banner */}
-            <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#e0e7ff_1px,transparent_1px)] opacity-60 [background-size:18px_18px]" />
-              <div className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full bg-blue-100/60 blur-3xl" />
-              <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {loading && (
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
+            Loading certificates...
+          </div>
+        )}
+
+        <section className="relative overflow-hidden rounded-3xl bg-[#5400D6] p-6 text-white shadow-lg sm:p-8">
+          <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 left-1/3 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
+
+          <div className="relative flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider">
+                <Icon name="award" className="h-3.5 w-3.5" />
+                Achievement center
+              </span>
+
+              <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">
+                Your Certificates
+              </h1>
+
+              <p className="mt-3 max-w-xl text-sm leading-6 text-white/75">
+                Keep track of your verified achievements, share your credentials,
+                and see which certifications you're currently working toward.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="min-w-[125px] rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
+                <Icon name="award" className="h-5 w-5 text-white/80" />
+                <p className="mt-3 text-2xl font-black">{earnedCertificates.length}</p>
+                <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-white/60">
+                  Earned
+                </p>
+              </div>
+
+              <div className="min-w-[125px] rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
+                <Icon name="clock" className="h-5 w-5 text-white/80" />
+                <p className="mt-3 text-2xl font-black">{inProgressCertificates.length}</p>
+                <p className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-white/60">
+                  In progress
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-3 sm:grid-cols-3">
+          {[
+            {
+              label: "Total credentials",
+              value: earnedCertificates.length + inProgressCertificates.length,
+              icon: "award" as IconName,
+              text: "#5400D6",
+              bg: "#F4EFFF",
+            },
+            {
+              label: "Verified achievements",
+              value: earnedCertificates.length,
+              icon: "check-circle" as IconName,
+              text: "#059669",
+              bg: "#ECFDF5",
+            },
+            {
+              label: "Learning in progress",
+              value: inProgressCertificates.length,
+              icon: "trending-up" as IconName,
+              text: "#D97706",
+              bg: "#FFFBEB",
+            },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex h-10 w-10 items-center justify-center rounded-xl"
+                  style={{ background: item.bg, color: item.text }}
+                >
+                  <Icon name={item.icon} className="h-4 w-4" />
+                </div>
                 <div>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-700">
-                    <Icon name="award" className="h-3 w-3" />
-                    Proof of your progress
-                  </span>
-                  <h1 className="mt-3 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Certificates</h1>
-                  <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-                    View, download, and share the certificates you've earned — and see what's next.
+                  <p className="text-2xl font-black text-slate-900">{item.value}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                    {item.label}
                   </p>
                 </div>
-                <div className="flex flex-shrink-0 items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200">
-                    <Icon name="award" className="h-4 w-4 text-amber-500" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-black text-slate-900">{earnedCertificates.length}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Earned so far</p>
-                  </div>
-                </div>
               </div>
             </div>
+          ))}
+        </section>
 
-            {/* Filter tabs */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-              <div className="flex flex-wrap gap-1.5">
-                {filterTabs.map((tab) => (
-                  <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                    className={`rounded-xl px-3.5 py-2 text-xs font-bold transition ${
-                      activeTab === tab.key ? "bg-slate-900 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
-                    }`}>
-                    {tab.label}
-                  </button>
+        <section className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+          <div className="flex flex-wrap gap-1.5">
+            {filterTabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`rounded-xl px-4 py-2.5 text-xs font-bold transition ${
+                  activeTab === tab.key
+                    ? "bg-[#5400D6] text-white shadow-sm"
+                    : "text-slate-500 hover:bg-[#F4EFFF] hover:text-[#5400D6]"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {showEarned && (
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#5400D6]">
+                  Verified achievements
+                </p>
+                <h2 className="mt-1 text-xl font-black text-slate-900">
+                  Earned certificates
+                </h2>
+              </div>
+              <p className="text-xs font-semibold text-slate-400">
+                {earnedCertificates.length} credential{earnedCertificates.length === 1 ? "" : "s"}
+              </p>
+            </div>
+
+            {earnedCertificates.length === 0 ? (
+              <div className="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-[#DCCBFF] bg-[#F4EFFF] py-14 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#5400D6] shadow-sm">
+                  <Icon name="lock" className="h-5 w-5" />
+                </div>
+                <p className="mt-3 text-sm font-bold text-slate-700">No certificates yet</p>
+                <p className="mt-1 max-w-sm text-xs leading-5 text-slate-400">
+                  Complete your learning modules and assessments to earn your first verified credential.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {earnedCertificates.map((c) => (
+                  <article
+                    key={c.id}
+                    className="group overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-[#DCCBFF] hover:shadow-md"
+                  >
+                    <div
+                      className="relative flex h-36 items-center justify-center overflow-hidden"
+                      style={{ background: `linear-gradient(135deg, #5400D6, ${c.color})` }}
+                    >
+                      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(white_1px,transparent_1px)] opacity-10 [background-size:14px_14px]" />
+
+                      <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/30 backdrop-blur">
+                        <Icon name={c.icon} className="h-7 w-7 text-white" />
+                      </div>
+
+                      <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[8px] font-black uppercase tracking-wider text-white ring-1 ring-white/20 backdrop-blur">
+                        <Icon name="check" className="h-2.5 w-2.5" />
+                        Verified
+                      </span>
+                    </div>
+
+                    <div className="p-4">
+                      <h3 className="text-sm font-black leading-5 text-slate-900">
+                        {c.title}
+                      </h3>
+
+                      <p className="mt-1 text-xs text-slate-400">{c.issuer}</p>
+
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        <div className="rounded-xl bg-slate-50 p-2.5">
+                          <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                            Issued
+                          </p>
+                          <p className="mt-1 text-[10px] font-bold text-slate-700">
+                            {c.issuedOn}
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl bg-slate-50 p-2.5">
+                          <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                            Credential
+                          </p>
+                          <p className="mt-1 truncate font-mono text-[9px] font-bold text-slate-700">
+                            {c.credentialId}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex gap-2">
+                        <button
+                          type="button"
+                          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#5400D6] py-2.5 text-[10px] font-bold text-white transition hover:bg-[#4500AD]"
+                        >
+                          <Icon name="download" className="h-3 w-3" />
+                          Download
+                        </button>
+
+                        <button
+                          type="button"
+                          className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2.5 text-[10px] font-bold text-slate-600 transition hover:border-[#DCCBFF] hover:bg-[#F4EFFF] hover:text-[#5400D6]"
+                        >
+                          <Icon name="share" className="h-3 w-3" />
+                          Share
+                        </button>
+                      </div>
+                    </div>
+                  </article>
                 ))}
               </div>
+            )}
+          </section>
+        )}
+
+        {showInProgress && (
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#5400D6]">
+                  Keep learning
+                </p>
+                <h2 className="mt-1 text-xl font-black text-slate-900">
+                  Certificates in progress
+                </h2>
+              </div>
+              <Icon name="lock-open" className="h-5 w-5 text-[#5400D6]" />
             </div>
 
-            {/* Earned certificates */}
-            {showEarned && (
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Achievements</p>
-                    <h2 className="mt-0.5 text-lg font-black text-slate-900">Earned certificates</h2>
-                  </div>
-                  <Icon name="award" className="h-4 w-4 text-slate-300" />
-                </div>
+            {inProgressCertificates.length === 0 ? (
+              <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                <p className="text-xs font-semibold text-slate-500">
+                  No certifications are currently in progress.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {inProgressCertificates.map((c) => (
+                  <article
+                    key={c.id}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-[#DCCBFF] hover:bg-[#F4EFFF]/50"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+                        <Icon
+                          name={c.icon}
+                          className="h-4 w-4"
+                          style={{ color: c.color } as React.CSSProperties}
+                        />
+                      </div>
 
-                {earnedCertificates.length === 0 ? (
-                  <div className="mt-6 flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 py-12 text-center">
-                    <Icon name="lock" className="h-5 w-5 text-slate-300" />
-                    <p className="text-sm font-bold text-slate-600">No certificates yet</p>
-                    <p className="text-xs text-slate-400">Complete a module to earn your first certificate.</p>
-                  </div>
-                ) : (
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                    {earnedCertificates.map((c) => (
-                      <div key={c.id} className="overflow-hidden rounded-2xl border border-slate-100">
-                        <div className="relative flex h-28 items-center justify-center overflow-hidden"
-                          style={{ background: `linear-gradient(135deg, ${c.color}, ${c.color}cc)` }}>
-                          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(white_1px,transparent_1px)] opacity-10 [background-size:14px_14px]" />
-                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/30 backdrop-blur">
-                            <Icon name={c.icon} className="h-6 w-6 text-white" />
-                          </div>
-                          <span className="absolute right-3 top-3 rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white backdrop-blur">Verified</span>
-                        </div>
-                        <div className="p-4">
-                          <h3 className="text-[13px] font-bold leading-5 text-slate-900">{c.title}</h3>
-                          <p className="mt-0.5 text-[11px] text-slate-400">{c.issuer}</p>
-                          <div className="mt-3 flex items-center justify-between text-[10px] text-slate-400">
-                            <span className="flex items-center gap-1"><Icon name="calendar" className="h-3 w-3" />{c.issuedOn}</span>
-                            <span className="font-mono">{c.credentialId}</span>
-                          </div>
-                          <div className="mt-3 flex gap-2">
-                            <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-900 py-2 text-[11px] font-bold text-white transition hover:bg-slate-800">
-                              <Icon name="download" className="h-3 w-3" />
-                              Download
-                            </button>
-                            <button className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-[11px] font-bold text-slate-600 transition hover:bg-slate-50">
-                              <Icon name="share" className="h-3 w-3" />
-                              Share
-                            </button>
-                          </div>
-                        </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-xs font-black leading-5 text-slate-800">
+                          {c.title}
+                        </h3>
+                        <p className="mt-0.5 text-[9px] text-slate-400">
+                          Certificate progress
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-            )}
 
-            {/* In-progress certifications */}
-            {showInProgress && (
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">On the way</p>
-                    <h2 className="mt-0.5 text-lg font-black text-slate-900">Certificates in progress</h2>
-                  </div>
-                  <Icon name="lock-open" className="h-4 w-4 text-slate-300" />
-                </div>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {inProgressCertificates.map((c) => (
-                    <div key={c.id} className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200">
-                          <Icon name={c.icon} className="h-4 w-4" style={{ color: c.color } as React.CSSProperties} />
-                        </div>
-                        <h3 className="text-[13px] font-bold leading-4 text-slate-800">{c.title}</h3>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between text-[11px]">
-                        <span className="text-slate-400">Progress</span>
-                        <span className="font-bold text-slate-700">{c.progress}%</span>
-                      </div>
-                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
-                        <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${c.progress}%`, background: c.color }} />
-                      </div>
-                      <p className="mt-2.5 text-[10px] text-slate-400">Complete the module to unlock your certificate.</p>
+                      <span className="text-sm font-black text-[#5400D6]">
+                        {c.progress}%
+                      </span>
                     </div>
-                  ))}
-                </div>
-              </section>
+
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${c.progress}%`,
+                          background: "#5400D6",
+                        }}
+                      />
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between">
+                      <p className="text-[9px] font-semibold text-slate-400">
+                        {c.progress >= 80
+                          ? "Almost there"
+                          : "Continue the module to unlock your certificate."}
+                      </p>
+                      <Icon name="chevron-right" className="h-3 w-3 text-slate-300" />
+                    </div>
+                  </article>
+                ))}
+              </div>
             )}
-      </>
+          </section>
+        )}
+      </div>
     </StudentLayout>
   );
 };

@@ -1,6 +1,10 @@
+import "dotenv/config";
 import dotenv from "dotenv";
+import dns from "dns";
 import app from "./app.js";
 import connectDB from "./config/db.js";
+
+dns.setDefaultResultOrder('ipv4first');
 
 dotenv.config();
 

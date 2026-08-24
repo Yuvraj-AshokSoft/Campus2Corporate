@@ -1,15 +1,8 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
 import StudentLayout from "../../components/student/StudentLayout";
+import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
 import {
   getApiErrorMessage,
   studentApi,
@@ -26,6 +19,7 @@ type IconName =
   | "bell"
   | "briefcase"
   | "building"
+  | "broadcast"
   | "calendar"
   | "chart"
   | "check"
@@ -66,10 +60,12 @@ type IconName =
   | "upload"
   | "eye"
   | "message"
+  | "megaphone"
   | "chevron-down"
   | "lightbulb"
   | "clipboard"
-  | "logout";
+  | "logout"
+  | "map";
 
 const Icon = ({
   name,
@@ -401,6 +397,30 @@ const Icon = ({
         <path d="M21 12H9" />
       </>
     ),
+    // AI Hiring
+    megaphone: (
+      <>
+        <path d="m3 11 18-5v12L3 14v-3Z" />
+        <path d="M11 15v5" />
+        <path d="M7 16.2a4 4 0 0 0 4 3.8" />
+      </>
+    ),
+    map: (
+      <>
+        <path d="m4 6 6-3 4 3 6-3v15l-6 3-4-3-6 3V6Z" />
+        <path d="M10 3v15" />
+        <path d="M14 6v15" />
+      </>
+    ),
+    broadcast: (
+      <>
+        <circle cx="12" cy="12" r="2" />
+        <path d="M8.5 16.5a6 6 0 0 1 0-9" />
+        <path d="M15.5 7.5a6 6 0 0 1 0 9" />
+        <path d="M5.5 19.5a10 10 0 0 1 0-15" />
+        <path d="M18.5 4.5a10 10 0 0 1 0 15" />
+      </>
+    ),
   };
   return (
     <svg
@@ -418,27 +438,7 @@ const Icon = ({
   );
 };
 
-// ─── Helpers: Anthropic API calls ────────────────────────────────────────────
-const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 
-const callClaude = async (body: object): Promise<string> => {
-  const res = await fetch(ANTHROPIC_API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const json = await res.json();
-  return (json.content ?? [])
-    .map((b: { type: string; text?: string }) =>
-      b.type === "text" ? b.text : ""
-    )
-    .join("");
-};
-
-const parseJSON = <T,>(raw: string): T => {
-  const cleaned = raw.replace(/json|/g, "").trim();
-  return JSON.parse(cleaned) as T;
-};
 
 const getInitials = (name: string) =>
   name
@@ -466,17 +466,70 @@ const useStudentProfile = () => {
   return { fullName, firstName, initials, email, phone, context, logout, currentUser };
 };
 
-const sidebarItems: Array<{ label: string; icon: IconName; route: string; badge?: number }> = [
-  { label: "Dashboard", icon: "dashboard", route: "/student-dashboard" },
-  { label: "My Profile", icon: "user-check", route: "/student/profile" },
-  { label: "Project List", icon: "briefcase", route: "/student/projects" },
-  { label: "Applied Projects", icon: "clipboard", route: "/student/applied-projects", badge: 2 },
-  { label: "Notifications", icon: "bell", route: "/student/notifications", badge: 3 },
-  { label: "Certificates", icon: "award", route: "/student/certificates" },
-  { label: "Settings", icon: "settings", route: "/student/settings" },
-  { label: "AI Resume Builder", icon: "resume" , route: "/student/ai-resume" },
+const sidebarItems: Array<{
+  label: string;
+  icon: StudentSidebarIconName;
+  route: string;
+  badge?: number;
+}> = [
+  {
+    label: "Dashboard",
+    icon: "dashboard",
+    route: "/student-dashboard",
+  },
+  {
+    label: "My Profile",
+    icon: "user-check",
+    route: "/student/profile",
+  },
+  {
+    label: "My Projects",
+    icon: "briefcase",
+    route: "/student/projects",
+  },
+  {
+    label: "Applications",
+    icon: "clipboard",
+    route: "/student/applications",
+    badge: 2,
+  },
+  {
+    label: "Placement Prep",
+    icon: "building",
+    route: "/student/placementprep",
+  },
+  {
+    label: "Notifications",
+    icon: "bell",
+    route: "/student/notifications",
+    badge: 3,
+  },
+  {
+    label: "Certificates",
+    icon: "award",
+    route: "/student/certificates",
+  },
+  {
+    label: "Settings",
+    icon: "settings",
+    route: "/student/settings",
+  },
+  {
+    label: "AI Resume",
+    icon: "resume",
+    route: "/student/ai-resume",
+  },
+  {
+    label: "Career Roadmap",
+    icon: "map",
+    route: "/student/roadmap",
+  },
+  {
+    label: "Career Updates",
+    icon: "megaphone",
+    route: "/student/broadcast",
+  },
 ];
-
 const roadmapSteps = [
   {
     step: "01",
@@ -665,36 +718,19 @@ export const AIStudyPlanner = () => {
     setError("");
     setPlan(null);
     try {
-      const text = await callClaude({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        messages: [
-          {
-            role: "user",
-            content: `You are an AI study planner. Based on this student's data, generate a 5-day study plan (Mon–Fri) for this week. Respond ONLY with valid JSON — no preamble, no markdown, no backticks. Format:[{"day":"Monday","tasks":["task 1","task 2","task 3"]},...]
+      const response = await studentApi.generateStudyPlan(context);
 
-Student context:${context}
+      const plan = unwrapData<StudyDay[]>(response);
 
-Rules:
-
-Focus on weaker areas (Python 45%, DSA 60%)
-
-Include aptitude prep (assessment Jun 28)
-
-Keep tasks short (max 10 words each)
-
-`,
-          },
-        ],
-      });
-      setPlan(parseJSON<StudyDay[]>(text));
+      setPlan(plan);
       setGenerated(true);
-    } catch {
-      setError("Failed to generate plan. Please try again.");
+    } catch (error) {
+      setError(getApiErrorMessage(error));
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -789,38 +825,19 @@ export const AIProfileAnalyzer = () => {
     setError("");
     setResult(null);
     try {
-      const text = await callClaude({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        messages: [
-          {
-            role: "user",
-            content: `You are a placement readiness analyzer. Analyze this student profile and return ONLY valid JSON — no markdown, no backticks, no extra text.
+      const response = await studentApi.placementAnalysis(context);
 
-Format: {"score":75,"strengths":["strength 1","strength 2","strength 3"],"gaps":["gap 1","gap 2"],"tip":"One actionable tip under 20 words."}
+      const result = unwrapData<ProfileResult>(response);
 
-Rules:
-
-score: 0-100 integer (placement readiness)
-
-strengths: exactly 3 items, each under 8 words
-
-gaps: exactly 2 items, each under 8 words
-
-tip: single most impactful next step
-
-Student data:${context}`,
-          },
-        ],
-      });
-      setResult(parseJSON<ProfileResult>(text));
+      setResult(result);
       setAnalyzed(true);
-    } catch {
-      setError("Analysis failed. Please try again.");
+    } catch (error) {
+      setError(getApiErrorMessage(error));
     } finally {
       setLoading(false);
-    }
+    } 
   };
+
 
   const scoreColor = result
     ? result.score >= 75
@@ -1002,39 +1019,13 @@ export const AIATSScorer = () => {
       ? fileContent.slice(0, 3000)
       : `No extractable text — filename: ${fileName}`;
     try {
-      const text = await callClaude({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        messages: [
-          {
-            role: "user",
-            content: `You are an expert ATS (Applicant Tracking System) resume analyzer. Analyze this resume and return ONLY valid JSON — no markdown, no backticks, no extra text.
+      const response = await studentApi.atsScore(resumeText);
 
-Format exactly:{"score":72,"title":"Good ATS Match","description":"Your resume passes most ATS filters with minor gaps.","breakdown":[{"label":"Keyword density","score":80},{"label":"Format & structure","score":75},{"label":"Contact info","score":90},{"label":"Work experience","score":70},{"label":"Skills section","score":65},{"label":"Quantified results","score":55}],"keywords_found":["Python","JavaScript","SQL","React","Problem-solving"],"keywords_missing":["CI/CD","Docker","Agile","REST APIs"],"tip":"Add quantified impact metrics (e.g., 'Reduced load time by 30%') to boost recruiter attention."}
+      const result = unwrapData<ATSResult>(response);
 
-Rules:
-
-score: 0-100 integer
-
-title: 3-5 words
-
-description: 1 sentence under 20 words
-
-breakdown: exactly 6 items, label (2-3 words) and score (0-100 int)
-
-keywords_found: 4-6 items
-
-keywords_missing: 3-5 items
-
-tip: 1 sentence under 25 words
-
-Resume content:${resumeText}`,
-          },
-        ],
-      });
-      setResult(parseJSON<ATSResult>(text));
-    } catch {
-      setError("Analysis failed. Please try again.");
+      setResult(result);
+    } catch (error) {
+      setError(getApiErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -1300,41 +1291,16 @@ export const AISkillGapAnalyzer = () => {
     setError("");
     setResult(null);
     try {
-      const text = await callClaude({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        messages: [
-          {
-            role: "user",
-            content: `You are a job skill-gap analyzer. Compare this student's current skills against what is typically required for the target job role. Return ONLY valid JSON — no markdown, no backticks, no extra text.
+      const response = await studentApi.skillGap(
+        context,
+        roleToUse
+      );
 
-Format exactly:{"match_score":68,"role":"Frontend Developer","summary":"You meet most core requirements but lack testing and deployment experience.","matched_skills":["React","JavaScript","HTML/CSS"],"missing_skills":[{"skill":"TypeScript","priority":"High"},{"skill":"Unit Testing","priority":"Medium"}],"suggested_modules":["TypeScript Fundamentals","Testing with Jest"],"tip":"Focus on TypeScript next — it's required in 80% of frontend job postings."}
+      const result = unwrapData<SkillGapResult>(response);
 
-Rules:
-
-match_score: 0-100 integer
-
-role: echo back the target role name, cleaned up
-
-summary: 1 sentence, under 22 words
-
-matched_skills: 3-6 items the student already has, based on their registered modules and progress
-
-missing_skills: 3-5 items, each with a "skill" (1-3 words) and "priority" of "High", "Medium", or "Low"
-
-suggested_modules: 2-4 short course/module names to close the gap
-
-tip: 1 sentence, under 25 words, most impactful next step
-
-Target job role: ${roleToUse}
-
-Student data:${context}`,
-          },
-        ],
-      });
-      setResult(parseJSON<SkillGapResult>(text));
-    } catch {
-      setError("Analysis failed. Please try again.");
+      setResult(result);
+    } catch (error) {
+      setError(getApiErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -1724,22 +1690,18 @@ const AICareerCoachPanel = ({ onClose }: { onClose: () => void }) => {
     setMessages(history);
     setLoading(true);
     try {
-      const reply = await callClaude({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        system: `You are an expert AI Career Coach for engineering students. You have access to this student's data:
-${context}
-Be concise, warm, and actionable. Keep responses under 100 words. Use bullet points for lists. Never make up information.`,
-        messages: history.map((m) => ({ role: m.role, content: m.text })),
-      });
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", text: reply || "Sorry, I couldn't get a response." },
-      ]);
-    } catch {
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", text: "Connection error. Please try again." },
+      const response = await studentApi.careerCoach(
+        userText,
+        context
+      );
+      const result = unwrapData<{ answer?: string } | string>(response);
+      const answer = typeof result === "string" ? result : result.answer || "I couldn't generate a response right now.";
+
+      setMessages((current) => [...current, { role: "assistant", text: answer }]);
+    } catch (error) {
+      setMessages((current) => [
+        ...current,
+        { role: "assistant", text: getApiErrorMessage(error) },
       ]);
     } finally {
       setLoading(false);
@@ -1850,7 +1812,8 @@ Be concise, warm, and actionable. Keep responses under 100 words. Use bullet poi
 // MAIN DASHBOARD
 // ═══════════════════════════════════════════════════════════════════════════
 export const StudentDashboard = () => {
-  const { fullName, firstName, initials, email, phone, currentUser } = useStudentProfile();
+  const navigate = useNavigate();
+  const { fullName, firstName, currentUser } = useStudentProfile();
   const [aiOpen, setAiOpen] = useState(false);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [dashboardLoading, setDashboardLoading] = useState(true);
@@ -1893,16 +1856,16 @@ export const StudentDashboard = () => {
   const roleLine = [branchLabel, semesterLabel].filter(Boolean).join(" · ");
   const learningScore = dashboard?.stats.learningScore ?? 0;
   const modules = dashboard?.modules ?? [];
-  const performanceData = dashboard?.performanceData ?? [];
   const upcomingActivities = dashboard?.upcomingActivities ?? [];
-  const stats = [
+
+  const _stats = [
     {
       label: "Registered courses",
       value: String(dashboard?.stats.registeredCourses ?? 0),
       change: String(dashboard?.stats.registeredCourses ?? 0),
       up: true,
       icon: "book" as IconName,
-      bg: "#eff6ff",
+      bg: "#EEF2FF",
     },
     {
       label: "Completed",
@@ -1910,7 +1873,7 @@ export const StudentDashboard = () => {
       change: String(dashboard?.stats.completed ?? 0),
       up: true,
       icon: "check" as IconName,
-      bg: "#ecfdf5",
+      bg: "#ECFDF5",
     },
     {
       label: "Pending",
@@ -1918,7 +1881,7 @@ export const StudentDashboard = () => {
       change: String(dashboard?.stats.pending ?? 0),
       up: false,
       icon: "clock" as IconName,
-      bg: "#fffbeb",
+      bg: "#FFF7ED",
     },
     {
       label: "Certificates",
@@ -1926,7 +1889,49 @@ export const StudentDashboard = () => {
       change: String(dashboard?.stats.certificates ?? 0),
       up: true,
       icon: "award" as IconName,
-      bg: "#f5f3ff",
+      bg: "#F0FDFA",
+    },
+  ];
+  void _stats;
+
+  const recommendedItems = [
+    {
+      title: modules[0]?.title || "Modern UI Fundamentals",
+      category: modules[0]?.category || "DESIGN",
+      progress: modules[0]?.progress ?? 42,
+      description: "Build stronger frontend skills with practical, placement-focused learning.",
+      icon: "wand" as IconName,
+    },
+    {
+      title: modules[1]?.title || "Distributed Systems 101",
+      category: modules[1]?.category || "BACKEND",
+      progress: modules[1]?.progress ?? 25,
+      description: "Understand scalable systems, APIs, databases, and backend architecture.",
+      icon: "database" as IconName,
+    },
+  ];
+
+  const dashboardNotifications = [
+    {
+      title: "AI Review is ready!",
+      description: "Your AI profile review is available to check.",
+      tone: "purple",
+      icon: "sparkles" as IconName,
+      time: "2h ago",
+    },
+    {
+      title: "New Badge Unlocked",
+      description: "You completed a new learning milestone.",
+      tone: "blue",
+      icon: "award" as IconName,
+      time: "1 hour ago",
+    },
+    {
+      title: "Community Invite",
+      description: "You were invited to join a student community.",
+      tone: "slate",
+      icon: "users" as IconName,
+      time: "Yesterday",
     },
   ];
 
@@ -1948,384 +1953,505 @@ export const StudentDashboard = () => {
       showAiButton
       onAiButtonClick={() => setAiOpen(true)}
     >
-      <>
-        {dashboardError && (
-          <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-            {dashboardError}
-          </div>
-        )}
+      <div className="min-h-full bg-[#faf9fb]">
+        <div className="mx-auto max-w-[1450px] space-y-5 px-4 py-5 sm:px-6 lg:px-8">
 
-        {dashboardLoading && (
-          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-500 shadow-sm">
-            Loading dashboard data...
-          </div>
-        )}
-
-        {/* Hero banner */}
-        <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#e0e7ff_1px,transparent_1px)] opacity-60 [background-size:18px_18px]" />
-          <div className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full bg-blue-100/60 blur-3xl" />
-          <div className="relative grid gap-6 lg:grid-cols-[1fr_300px] lg:items-center">
-            <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-700">
-                <Icon name="sparkles" className="h-3 w-3" />
-                AI-powered career workspace
-              </span>
-              <h1 className="mt-3 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-                Welcome back, {firstName}
-              </h1>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-                Track your courses, placement readiness, and AI-powered career tools — all in one place.
-              </p>
-              <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/60 p-4">
-                <div className="flex items-center gap-2">
-                  <Icon name="lightbulb" className="h-4 w-4 text-blue-600" />
-                  <h3 className="text-sm font-bold text-slate-900">
-                    AI Career Suggestions
-                  </h3>
-                </div>
-                <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                  <li>• Update your resume after completing every new project.</li>
-                  <li>• Apply to at least 3 internships every week to improve your chances.</li>
-                  <li>• Keep your GitHub active with regular commits and deployments.</li>
-                </ul>
-              </div>
+          {dashboardError && (
+            <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">
+              <Icon name="alert" className="h-4 w-4 flex-shrink-0" />
+              {dashboardError}
             </div>
+          )}
 
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                  Today at a glance
-                </p>
-                <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-100">
-                  <PulseDot color="#10b981" />
-                  Live
-                </span>
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                {[
-                  { label: "Registered", value: String(dashboard?.stats.registeredCourses ?? 0) },
-                  { label: "Completed", value: String(dashboard?.stats.completed ?? 0) },
-                  { label: "Pending", value: String(dashboard?.stats.pending ?? 0) },
-                  { label: "Certificates", value: String(dashboard?.stats.certificates ?? 0) },
-                ].map((m) => (
-                  <div
-                    key={m.label}
-                    className="rounded-xl bg-white px-3 py-2.5 ring-1 ring-slate-200"
-                  >
-                    <p className="text-[10px] font-semibold text-slate-400">
-                      {m.label}
-                    </p>
-                    <p className="mt-0.5 text-xl font-black text-slate-900">
-                      {m.value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 rounded-xl bg-white px-3 py-2.5 ring-1 ring-slate-200">
-                <div className="flex items-center justify-between text-[11px] font-semibold">
-                  <span className="text-slate-500">Learning score</span>
-                  <span className="text-blue-700">{learningScore}%</span>
-                </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600"
-                    style={{ width: `${learningScore}%` }}
-                  />
-                </div>
-              </div>
+          {dashboardLoading && (
+            <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-500 shadow-sm">
+              <Icon name="refresh" className="h-4 w-4 animate-spin text-purple-600" />
+              Loading dashboard data...
             </div>
-          </div>
-        </div>
+          )}
 
-        {/* Stats row */}
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {stats.map((s) => (
-            <article
-              key={s.label}
-              className="group cursor-default rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-            >
-              <div className="flex items-start justify-between">
-                <div
-                  className="flex h-10 w-10 items-center justify-center rounded-xl"
-                  style={{ background: s.bg }}
-                >
-                  <Icon name={s.icon} className="h-4.5 w-4.5 text-slate-700" />
-                </div>
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                    s.up
-                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
-                      : "bg-rose-50 text-rose-700 ring-1 ring-rose-100"
-                  }`}
-                >
-                  <Icon name={s.up ? "arrow-up" : "arrow-down"} className="h-3 w-3" />
-                  {s.change}
-                </span>
-              </div>
-              <p className="mt-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                {s.label}
-              </p>
-              <p className="mt-0.5 text-3xl font-black tracking-tight text-slate-900">
-                {s.value}
-              </p>
-            </article>
-          ))}
-        </div>
-
-        {/* Profile card + Performance chart */}
-        <div className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-900 text-lg font-black text-white shadow-inner">
-                {initials}
-              </div>
+          <section className="rounded-2xl border border-purple-100 bg-white px-5 py-5 shadow-sm sm:px-7">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-black leading-tight text-slate-900">
-                    {fullName}
-                  </h2>
-                  <span className="rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
-                    {profile?.id ? String(profile.id).slice(-6).toUpperCase() : "STUDENT"}
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-[28px]">
+                    Hey {firstName}, ready to level up today?
+                  </h1>
+
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-2.5 py-1 text-[9px] font-bold text-purple-700 ring-1 ring-purple-100">
+                    <Icon name="zap" className="h-3 w-3" />
+                    12 Day Streak
                   </span>
                 </div>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  {roleLine}
+
+                <p className="mt-1 text-[11px] text-slate-400">
+                  You're on the top 5% of active learners this week.
                 </p>
               </div>
-            </div>
-            <div className="mt-5 space-y-3.5 border-t border-slate-100 pt-4">
-              {[
-                { icon: "mail" as IconName, label: "Email", value: email },
-                { icon: "phone" as IconName, label: "Phone", value: phone },
-                {
-                  icon: "graduation" as IconName,
-                  label: "College",
-                  value: String(profile?.college || "Not added"),
-                },
-                { icon: "calendar" as IconName, label: "Semester", value: semesterLabel },
-              ].map((f) => (
-                <div key={f.label} className="flex items-center gap-3 text-xs">
-                  <Icon name={f.icon} className="h-4 w-4 flex-shrink-0 text-slate-400" />
-                  <div>
-                    <p className="text-slate-400">{f.label}</p>
-                    <p className="font-semibold text-slate-700">{f.value}</p>
-                  </div>
-                </div>
-              ))}
+
+              <button
+                type="button"
+                onClick={() => setAiOpen(true)}
+                className="inline-flex h-10 items-center justify-center gap-2 self-start rounded-lg bg-purple-700 px-5 text-[11px] font-bold text-white shadow-lg shadow-purple-200 transition hover:bg-purple-800 hover:shadow-purple-300 lg:self-center"
+              >
+                <Icon name="sparkles" className="h-3.5 w-3.5" />
+                Start Quick Action
+              </button>
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  Learning Analytics
-                </p>
-                <h2 className="mt-0.5 text-lg font-black text-slate-900">
-                  Performance overview
-                </h2>
-              </div>
-              <Icon name="chart" className="h-4 w-4 text-slate-300" />
-            </div>
-            <div className="mt-4 w-full" style={{ height: 220 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={performanceData}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="scoreColor" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="#f1f5f9"
-                  />
-                  <XAxis
-                    dataKey="month"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#94a3b8", fontSize: 11 }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#94a3b8", fontSize: 11 }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#0f172a",
-                      borderRadius: "8px",
-                      border: "none",
-                      color: "#f8fafc",
-                      fontSize: "12px",
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="score"
-                    stroke="#2563eb"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#scoreColor)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </section>
-        </div>
-
-        {/* Daily streak */}
-        <DailyStreak />
-        {/* Global Rank */}
-        <BadgesSection />
-        {/* AI feature grid */}
-        <div className="grid gap-5 xl:grid-cols-2">
-          {/* <AIStudyPlanner /> */}
-          {/* <AIProfileAnalyzer /> */}
-        </div>
-        <div className="grid gap-5 xl:grid-cols-2">
-          {/* <AIATSScorer /> */}
-          {/* <AISkillGapAnalyzer /> */}
-        </div>
-
-        {/* Modules & progress */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                Course Tracking
-              </p>
-              <h2 className="mt-0.5 text-lg font-black text-slate-900">
-                Modules & learning progress
-              </h2>
-            </div>
-            <Icon name="book" className="h-4 w-4 text-slate-300" />
-          </div>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {modules.length === 0 && !dashboardLoading ? (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm font-semibold text-slate-500 sm:col-span-2">
-                No learning modules found yet.
-              </div>
-            ) : modules.map((mod, i) => (
-              <div
-                key={i}
-                className="rounded-xl border border-slate-100 bg-slate-50 p-4 transition hover:border-slate-200"
+          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              {
+                label: "Roadmaps completed",
+                value: `${learningScore}%`,
+                icon: "map" as IconName,
+                badge: "+4.2%",
+                badgeClass: "bg-emerald-50 text-emerald-600",
+              },
+              {
+                label: "Projects uploaded",
+                value: String(dashboard?.stats.registeredCourses ?? 0),
+                icon: "briefcase" as IconName,
+                badge: "Milestone",
+                badgeClass: "bg-purple-50 text-purple-600",
+              },
+              {
+                label: "Applications sent",
+                value: String(dashboard?.stats.appliedProjects ?? 0),
+                icon: "send" as IconName,
+                badge: `Pending ${dashboard?.stats.pending ?? 0}`,
+                badgeClass: "bg-slate-100 text-slate-500",
+              },
+              {
+                label: "AI reviews received",
+                value: String(dashboard?.stats.certificates ?? 0),
+                icon: "sparkles" as IconName,
+                badge: `↗ ${learningScore}`,
+                badgeClass: "bg-purple-50 text-purple-600",
+              },
+            ].map((item) => (
+              <article
+                key={item.label}
+                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-purple-100 hover:shadow-md"
               >
                 <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-[13px] font-bold text-slate-900">
-                      {mod.title}
-                    </h3>
-                    <p className="mt-0.5 text-[10px] text-slate-400">
-                      {mod.category}
-                    </p>
-                  </div>
-                  <span className="text-xs font-black text-slate-700">
-                    {mod.progress}%
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+                    <Icon name={item.icon} className="h-4 w-4" />
+                  </span>
+
+                  <span className={`rounded-full px-2 py-1 text-[8px] font-bold ${item.badgeClass}`}>
+                    {item.badge}
                   </span>
                 </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+
+                <p className="mt-3 text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                  {item.label}
+                </p>
+
+                <p className="mt-0.5 text-2xl font-black text-slate-950">
+                  {item.value}
+                </p>
+
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
                   <div
-                    className="h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${mod.progress}%`, background: mod.color }}
+                    className="h-full rounded-full bg-purple-600"
+                    style={{ width: `${Math.min(100, Math.max(8, learningScore))}%` }}
                   />
                 </div>
-              </div>
+              </article>
             ))}
-          </div>
-        </section>
-
-        {/* Roadmap + Upcoming activities */}
-        <div className="grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
-          <section className="rounded-2xl bg-gradient-to-br from-slate-950 to-slate-900 p-5 text-white shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-blue-300">
-                  Career Path
-                </p>
-                <h2 className="mt-0.5 text-lg font-black">Roadmap to placement</h2>
-              </div>
-              <Icon name="target" className="h-5 w-5 text-blue-400" />
-            </div>
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {roadmapSteps.map((s) => (
-                <div key={s.step} className="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <div className="flex items-center justify-between">
-                    <Icon name={s.icon} className="h-4 w-4 text-blue-300" />
-                    <span className="text-[9px] font-mono font-bold text-slate-500">
-                      {s.step}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-[11px] font-bold text-white">{s.title}</p>
-                  <p className="mt-0.5 text-[10px] leading-4 text-slate-400">
-                    {s.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  Schedule
-                </p>
-                <h2 className="mt-0.5 text-lg font-black text-slate-900">
-                  Upcoming activities
-                </h2>
-              </div>
-              <Icon name="clock" className="h-4 w-4 text-slate-300" />
-            </div>
-            <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
-              {upcomingActivities.length === 0 && !dashboardLoading ? (
-                <div className="p-6 text-center text-sm font-semibold text-slate-500">
-                  No upcoming activities yet.
-                </div>
-              ) : upcomingActivities.map((a, i) => {
-                const toneCls: Record<string, string> = {
-                  High: "bg-rose-50 text-rose-600",
-                  Medium: "bg-amber-50 text-amber-600",
-                  Normal: "bg-blue-50 text-blue-600",
-                  Low: "bg-emerald-50 text-emerald-600",
-                };
-                return (
-                  <div
-                    key={a.title}
-                    className={`flex items-start gap-3 p-3.5 ${
-                      i < upcomingActivities.length - 1
-                        ? "border-b border-slate-100"
-                        : ""
-                    } transition hover:bg-slate-50/60`}
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_270px]">
+
+            <div className="min-w-0 space-y-5">
+
+              <section>
+                <div className="mb-3 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-black text-slate-950">
+                      Continue Where You Left Off
+                    </h2>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate("/student/roadmap")}
+                    className="flex items-center gap-1 text-[10px] font-bold text-purple-600 hover:text-purple-800"
                   >
-                    <div
-                      className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${toneCls[a.tone]}`}
+                    View all learning
+                    <Icon name="chevron-right" className="h-3 w-3" />
+                  </button>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {(modules.length > 0 ? modules.slice(0, 2) : [
+                    {
+                      title: "Full Stack Developer",
+                      category: "Next: Mastering Web Development",
+                      progress: 72,
+                      color: "#7c3aed",
+                    },
+                    {
+                      title: "DSA Mastery",
+                      category: "Next: Big O Notation and Array Manipulation",
+                      progress: 38,
+                      color: "#64748b",
+                    },
+                  ]).map((mod, index) => (
+                    <article
+                      key={`${mod.title}-${index}`}
+                      className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
                     >
-                      <Icon name="calendar" className="h-3.5 w-3.5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[12px] font-bold text-slate-900">
-                        {a.title}
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+                          <Icon
+                            name={index === 0 ? "cpu" : "database"}
+                            className="h-4 w-4"
+                          />
+                        </span>
+
+                        <div className="text-right">
+                          <p className="text-[9px] font-bold text-slate-400">
+                            {mod.progress}% PROGRESS
+                          </p>
+                          <div className="mt-1 flex gap-1">
+                            {[0, 1, 2, 3].map((bar) => (
+                              <span
+                                key={bar}
+                                className={`h-1.5 w-5 rounded-full ${
+                                  bar < Math.ceil(mod.progress / 25)
+                                    ? "bg-purple-600"
+                                    : "bg-slate-200"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <h3 className="mt-4 text-sm font-black text-slate-950">
+                        {mod.title}
+                      </h3>
+
+                      <p className="mt-1 truncate text-[10px] text-slate-400">
+                        {mod.category}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-slate-400">{a.desc}</p>
+
+                      <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${mod.progress}%`,
+                            background: mod.color || "#7c3aed",
+                          }}
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => navigate("/student/roadmap")}
+                        className="mt-4 flex w-full items-center justify-between rounded-lg bg-purple-50 px-3 py-2 text-[10px] font-bold text-purple-700 transition hover:bg-purple-100"
+                      >
+                        Continue learning
+                        <Icon name="chevron-right" className="h-3 w-3" />
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <section>
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-base font-black text-slate-950">
+                    Recommended For You
+                  </h2>
+
+                  <div className="flex gap-1.5">
+                    {["Engineering", "Design", "Business"].map((tag) => (
+                      <span
+                        key={tag}
+                        className="hidden rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[8px] font-semibold text-slate-500 sm:inline-flex"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {recommendedItems.map((item) => (
+                    <article
+                      key={item.title}
+                      className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                    >
+                      <div className="relative h-28 overflow-hidden bg-gradient-to-br from-purple-100 via-indigo-50 to-teal-50">
+                        <div className="absolute -right-5 -top-7 h-28 w-28 rounded-full bg-purple-300/30 blur-xl" />
+                        <div className="absolute -bottom-8 left-6 h-24 w-24 rounded-full bg-indigo-300/30 blur-xl" />
+
+                        <div className="relative flex h-full items-center justify-center">
+                          <div className="rounded-2xl border border-white/70 bg-white/70 p-4 shadow-sm backdrop-blur">
+                            <Icon name={item.icon} className="h-8 w-8 text-purple-600" />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-4">
+                        <div className="flex items-center justify-between">
+                          <span className="rounded-md bg-purple-50 px-2 py-1 text-[8px] font-bold text-purple-600">
+                            {item.category}
+                          </span>
+
+                          <span className="text-[8px] font-semibold text-slate-400">
+                            {item.progress} Lessons
+                          </span>
+                        </div>
+
+                        <h3 className="mt-2 text-sm font-black text-slate-950">
+                          {item.title}
+                        </h3>
+
+                        <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-slate-400">
+                          {item.description}
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={() => navigate("/student/roadmap")}
+                          className="mt-3 flex w-full items-center justify-between text-[10px] font-bold text-purple-600"
+                        >
+                          Explore course
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-50">
+                            <Icon name="chevron-right" className="h-3 w-3" />
+                          </span>
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <DailyStreak />
+
+              <BadgesSection />
+
+              <section className="grid gap-5 xl:grid-cols-2">
+                {/* Existing AI components remain available without changing their implementation. */}
+                <div className="rounded-2xl border border-purple-100 bg-purple-50/40 p-5">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+                      <Icon name="sparkles" className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-purple-400">
+                        AI Career Tools
+                      </p>
+                      <h3 className="text-sm font-black text-slate-950">
+                        Ready to improve your placement profile?
+                      </h3>
                     </div>
-                    <span className="flex-shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
-                      {a.date}
+                  </div>
+
+                  <p className="mt-3 text-[10px] leading-4 text-slate-500">
+                    Use the AI tools already connected to this dashboard to plan your learning, analyze your profile, score your resume, and identify skill gaps.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => setAiOpen(true)}
+                    className="mt-4 rounded-lg bg-purple-700 px-4 py-2 text-[10px] font-bold text-white transition hover:bg-purple-800"
+                  >
+                    Open AI Career Coach
+                  </button>
+                </div>
+
+                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                        Career Path
+                      </p>
+                      <h3 className="mt-1 text-sm font-black text-slate-950">
+                        Roadmap to placement
+                      </h3>
+                    </div>
+
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-50 text-purple-600">
+                      <Icon name="target" className="h-4 w-4" />
                     </span>
                   </div>
-                );
-              })}
-            </div>
-          </section>
-        </div>
-      </>
 
-      {/* ── AI Chat Drawer ── */}
+                  <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-1">
+                    {roadmapSteps.slice(0, 5).map((step) => (
+                      <div
+                        key={step.step}
+                        className="min-w-[105px] rounded-xl border border-slate-100 bg-slate-50 p-2.5"
+                      >
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+                          <Icon name={step.icon} className="h-3.5 w-3.5" />
+                        </span>
+
+                        <p className="mt-2 text-[9px] font-bold text-slate-800">
+                          {step.title}
+                        </p>
+
+                        <p className="mt-0.5 text-[8px] text-slate-400">
+                          {step.step}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </section>
+            </div>
+
+            <aside className="space-y-5">
+
+              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-black text-slate-950">
+                    Upcoming
+                  </h2>
+
+                  <Icon name="calendar" className="h-4 w-4 text-slate-400" />
+                </div>
+
+                <div className="mt-3 divide-y divide-slate-100">
+                  {upcomingActivities.length > 0 ? (
+                    upcomingActivities.slice(0, 4).map((activity, index) => (
+                      <div
+                        key={`${activity.title}-${index}`}
+                        className="flex gap-2.5 py-3 first:pt-0 last:pb-0"
+                      >
+                        <div className="flex h-9 w-8 flex-shrink-0 flex-col items-center justify-center rounded-lg bg-purple-50 text-purple-700">
+                          <span className="text-[7px] font-bold uppercase">
+                            {activity.date?.split(" ")[0] || "UP"}
+                          </span>
+                          <Icon name="calendar" className="mt-0.5 h-3 w-3" />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold leading-4 text-slate-900">
+                            {activity.title}
+                          </p>
+                          <p className="mt-0.5 line-clamp-2 text-[8px] leading-3.5 text-slate-400">
+                            {activity.desc}
+                          </p>
+                          <p className="mt-1 text-[8px] font-semibold text-purple-600">
+                            {activity.date}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-5 text-center text-[10px] font-semibold text-slate-400">
+                      No upcoming activities yet.
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/student/notifications")}
+                  className="mt-3 flex w-full items-center justify-center rounded-lg border border-slate-200 py-2 text-[9px] font-bold text-slate-500 transition hover:border-purple-200 hover:text-purple-600"
+                >
+                  See Calendar
+                </button>
+              </section>
+
+              <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-black text-slate-950">
+                    Notifications
+                  </h2>
+
+                  <span className="rounded-full bg-purple-50 px-2 py-1 text-[8px] font-bold text-purple-600">
+                    {dashboard?.stats.unreadNotifications ?? 0} new
+                  </span>
+                </div>
+
+                <div className="mt-3 space-y-2">
+                  {dashboardNotifications.map((notification) => (
+                    <button
+                      type="button"
+                      key={notification.title}
+                      onClick={() => navigate("/student/notifications")}
+                      className="flex w-full items-start gap-2.5 rounded-xl p-2 text-left transition hover:bg-slate-50"
+                    >
+                      <span
+                        className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full ${
+                          notification.tone === "purple"
+                            ? "bg-purple-100 text-purple-600"
+                            : notification.tone === "blue"
+                              ? "bg-indigo-50 text-indigo-600"
+                              : "bg-slate-100 text-slate-500"
+                        }`}
+                      >
+                        <Icon name={notification.icon} className="h-3 w-3" />
+                      </span>
+
+                      <span className="min-w-0">
+                        <span className="block truncate text-[9px] font-bold text-slate-800">
+                          {notification.title}
+                        </span>
+
+                        <span className="mt-0.5 block line-clamp-2 text-[8px] leading-3.5 text-slate-400">
+                          {notification.description}
+                        </span>
+
+                        <span className="mt-1 block text-[7px] font-semibold uppercase text-slate-400">
+                          {notification.time}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/student/notifications")}
+                  className="mt-2 w-full text-[9px] font-bold text-purple-600 hover:text-purple-800"
+                >
+                  View all notifications
+                </button>
+              </section>
+
+              <section className="rounded-2xl border border-purple-100 bg-purple-50/60 p-4">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+                    <Icon name="sparkles" className="h-4 w-4" />
+                  </span>
+
+                  <div>
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-purple-500">
+                      Quick Insight
+                    </p>
+                    <p className="text-[11px] font-black text-slate-900">
+                      Keep your momentum going
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-3 text-[9px] leading-4 text-slate-500">
+                  Complete one learning module and keep your profile updated before applying to your next opportunity.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/student/profile")}
+                  className="mt-3 text-[9px] font-bold text-purple-700"
+                >
+                  Improve profile →
+                </button>
+              </section>
+            </aside>
+          </div>
+
+          
+        </div>
+      </div>
+
       {aiOpen && (
         <div className="pointer-events-none fixed inset-0 z-50 flex items-end justify-end p-4 sm:items-start sm:pr-6 sm:pt-[72px]">
           <div className="pointer-events-auto flex h-[560px] w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-950 shadow-2xl shadow-slate-900/50">
@@ -2334,17 +2460,9 @@ export const StudentDashboard = () => {
         </div>
       )}
 
-      {/* ── Floating AI button (mobile) ── */}
-      {!aiOpen && (
-        <button
-          onClick={() => setAiOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-xl shadow-blue-500/30 transition hover:from-blue-700 hover:to-blue-800 sm:hidden"
-        >
-          <Icon name="sparkles" className="h-6 w-6 text-white" />
-        </button>
-      )}
+      
     </StudentLayout>
   );
-};
+}
 
 export default StudentDashboard;

@@ -1,192 +1,309 @@
 import express from "express";
+
 import studentAuthMiddleware from "../middleware/studentAuthMiddleware.js";
+import { uploadResume } from "../middleware/uploadMiddleware.js";
 
 import {
-  applyToProject,
-  deleteStudentNotification,
-  getAvailableProjects,
-  getHiringDrives,
-  getResumeBuilder,
-  getStudentApplications,
-  getStudentCertificates,
-  getStudentDashboard,
-  getStudentNotifications,
-  getStudentProfile,
-  getStudentSettings,
-  markNotificationRead,
-  saveResumeBuilder,
-  updateStudentSettings,
-  updateStudentProfile,
-
-  getStudentSkills,
   addStudentSkill,
-  updateStudentSkill,
+  calculateAndStoreSkillScore,
   deleteStudentSkill,
-
+  getAssignments,
   getLearningModules,
   getLearningProgressHistory,
-  updateLearningProgress,
-  markModuleComplete,
-
-  getAssignments,
-  submitAssignment,
-
   getQuizzes,
-  submitQuiz,
-
   getSkillScore,
-  calculateAndStoreSkillScore,
+  getStudentDashboard,
+  getStudentProfile,
+  getStudentSkills,
+  loginStudent,
+  logoutStudent,
+  markModuleComplete,
+  registerStudent,
+  startHiringDrive,
+  submitAssignment,
+  submitQuiz,
+  updateLearningProgress,
+  updateStudentProfile,
+  updateStudentSkill,
 } from "../controllers/studentController.js";
 
 const router = express.Router();
 
-// ==========================
-// Profile
-// ==========================
-router.get("/dashboard", studentAuthMiddleware, getStudentDashboard);
+/*
+ * =========================================================
+ * STUDENT AUTHENTICATION
+ * =========================================================
+ */
 
-router.get("/profile", studentAuthMiddleware, getStudentProfile);
-router.put("/profile", studentAuthMiddleware, updateStudentProfile);
-router.patch("/profile", studentAuthMiddleware, updateStudentProfile);
+router.post("/register", registerStudent);
 
-router.put("/profile/details", studentAuthMiddleware, updateStudentProfile);
-router.patch("/profile/details", studentAuthMiddleware, updateStudentProfile);
+router.post("/login", loginStudent);
 
-router.put("/profile/education", studentAuthMiddleware, updateStudentProfile);
-router.patch("/profile/education", studentAuthMiddleware, updateStudentProfile);
+router.post(
+  "/logout",
+  studentAuthMiddleware,
+  logoutStudent,
+);
 
-// ==========================
-// Skills
-// ==========================
-router.get("/skills", studentAuthMiddleware, getStudentSkills);
-router.post("/skills", studentAuthMiddleware, addStudentSkill);
-router.put("/skills/:skillId", studentAuthMiddleware, updateStudentSkill);
-router.patch("/skills/:skillId", studentAuthMiddleware, updateStudentSkill);
-router.delete("/skills/:skillId", studentAuthMiddleware, deleteStudentSkill);
+router.post(
+  "/auth/register",
+  registerStudent,
+);
 
-// ==========================
-// Projects & Applications
-// ==========================
-router.get("/projects", studentAuthMiddleware, getAvailableProjects);
-router.post("/projects/:projectId/apply", studentAuthMiddleware, applyToProject);
-router.get("/applications", studentAuthMiddleware, getStudentApplications);
+router.post(
+  "/auth/login",
+  loginStudent,
+);
 
-// ==========================
-// Notifications
-// ==========================
-router.get("/notifications", studentAuthMiddleware, getStudentNotifications);
+router.post(
+  "/auth/logout",
+  studentAuthMiddleware,
+  logoutStudent,
+);
+
+/*
+ * =========================================================
+ * STUDENT DASHBOARD
+ * =========================================================
+ */
+
+router.get(
+  "/dashboard",
+  studentAuthMiddleware,
+  getStudentDashboard,
+);
+
+/*
+ * =========================================================
+ * STUDENT PROFILE
+ * =========================================================
+ */
+
+router.get(
+  "/auth/me",
+  studentAuthMiddleware,
+  getStudentProfile,
+);
+
+router.get(
+  "/me",
+  studentAuthMiddleware,
+  getStudentProfile,
+);
+
+router.get(
+  "/profile",
+  studentAuthMiddleware,
+  getStudentProfile,
+);
+
+router.put(
+  "/profile",
+  studentAuthMiddleware,
+  updateStudentProfile,
+);
+
 router.patch(
-  "/notifications/:notificationId/read",
+  "/profile",
   studentAuthMiddleware,
-  markNotificationRead
+  updateStudentProfile,
 );
+
+router.put(
+  "/profile/details",
+  studentAuthMiddleware,
+  updateStudentProfile,
+);
+
+router.patch(
+  "/profile/details",
+  studentAuthMiddleware,
+  updateStudentProfile,
+);
+
+router.put(
+  "/profile/education",
+  studentAuthMiddleware,
+  updateStudentProfile,
+);
+
+router.patch(
+  "/profile/education",
+  studentAuthMiddleware,
+  updateStudentProfile,
+);
+
+/*
+ * =========================================================
+ * STUDENT SKILLS
+ * =========================================================
+ */
+
+router.get(
+  "/skills",
+  studentAuthMiddleware,
+  getStudentSkills,
+);
+
+router.post(
+  "/skills",
+  studentAuthMiddleware,
+  addStudentSkill,
+);
+
+router.put(
+  "/skills/:skillId",
+  studentAuthMiddleware,
+  updateStudentSkill,
+);
+
+router.patch(
+  "/skills/:skillId",
+  studentAuthMiddleware,
+  updateStudentSkill,
+);
+
 router.delete(
-  "/notifications/:notificationId",
+  "/skills/:skillId",
   studentAuthMiddleware,
-  deleteStudentNotification
+  deleteStudentSkill,
 );
 
-// ==========================
-// Certificates, Settings, Resume & Hiring
-// ==========================
-router.get("/certificates", studentAuthMiddleware, getStudentCertificates);
-router.get("/settings", studentAuthMiddleware, getStudentSettings);
-router.put("/settings", studentAuthMiddleware, updateStudentSettings);
-router.patch("/settings", studentAuthMiddleware, updateStudentSettings);
-router.get("/resume-builder", studentAuthMiddleware, getResumeBuilder);
-router.put("/resume-builder", studentAuthMiddleware, saveResumeBuilder);
-router.patch("/resume-builder", studentAuthMiddleware, saveResumeBuilder);
-router.get("/hiring/drives", studentAuthMiddleware, getHiringDrives);
-router.post("/hiring/drives/:projectId/start", studentAuthMiddleware, (req, res) => {
-  req.params.projectId = req.params.projectId;
-  return applyToProject(req, res);
-});
+/*
+ * =========================================================
+ * LEARNING
+ * =========================================================
+ */
 
-// ==========================
-// Learning Progress
-// ==========================
-router.get("/learning/modules", studentAuthMiddleware, getLearningModules);
+router.get(
+  "/learning/modules",
+  studentAuthMiddleware,
+  getLearningModules,
+);
 
 router.get(
   "/learning/progress/history",
   studentAuthMiddleware,
-  getLearningProgressHistory
+  getLearningProgressHistory,
 );
 
 router.get(
   "/learning/modules/:moduleId/history",
   studentAuthMiddleware,
-  getLearningProgressHistory
+  getLearningProgressHistory,
 );
 
 router.put(
   "/learning/modules/:moduleId/progress",
   studentAuthMiddleware,
-  updateLearningProgress
+  updateLearningProgress,
 );
 
 router.patch(
   "/learning/modules/:moduleId/progress",
   studentAuthMiddleware,
-  updateLearningProgress
+  updateLearningProgress,
 );
 
 router.post(
   "/learning/progress",
   studentAuthMiddleware,
-  updateLearningProgress
+  updateLearningProgress,
 );
 
 router.post(
   "/learning/modules/:moduleId/complete",
   studentAuthMiddleware,
-  markModuleComplete
+  markModuleComplete,
 );
 
-// ==========================
-// Assignments
-// ==========================
-router.get("/assignments", studentAuthMiddleware, getAssignments);
+/*
+ * =========================================================
+ * ASSIGNMENTS
+ * =========================================================
+ */
+
+router.get(
+  "/assignments",
+  studentAuthMiddleware,
+  getAssignments,
+);
 
 router.post(
   "/assignments/submit",
   studentAuthMiddleware,
-  submitAssignment
+  submitAssignment,
 );
 
 router.post(
   "/assignments/:assignmentId/submit",
   studentAuthMiddleware,
-  submitAssignment
+  submitAssignment,
 );
 
-// ==========================
-// Quizzes
-// ==========================
-router.get("/quizzes", studentAuthMiddleware, getQuizzes);
+/*
+ * =========================================================
+ * QUIZZES
+ * =========================================================
+ */
+
+router.get(
+  "/quizzes",
+  studentAuthMiddleware,
+  getQuizzes,
+);
 
 router.post(
   "/quizzes/submit",
   studentAuthMiddleware,
-  submitQuiz
+  submitQuiz,
 );
 
 router.post(
   "/quizzes/:quizId/submit",
   studentAuthMiddleware,
-  submitQuiz
+  submitQuiz,
 );
 
-// ==========================
-// Skill Score
-// ==========================
-router.get("/skill-score", studentAuthMiddleware, getSkillScore);
-router.get("/score", studentAuthMiddleware, getSkillScore);
+/*
+ * =========================================================
+ * SKILL SCORE
+ * =========================================================
+ */
+
+router.get(
+  "/skill-score",
+  studentAuthMiddleware,
+  getSkillScore,
+);
+
+router.get(
+  "/score",
+  studentAuthMiddleware,
+  getSkillScore,
+);
 
 router.post(
   "/skill-score/calculate",
   studentAuthMiddleware,
-  calculateAndStoreSkillScore
+  calculateAndStoreSkillScore,
+);
+
+/*
+ * =========================================================
+ * HIRING PROCESS
+ * =========================================================
+ *
+ * POST /api/student/hiring/drives/:driveId/start
+ *
+ * Student uploads resume and starts the application process.
+ */
+
+router.post(
+  "/hiring/drives/:driveId/start",
+  studentAuthMiddleware,
+  uploadResume,
+  startHiringDrive,
 );
 
 export default router;

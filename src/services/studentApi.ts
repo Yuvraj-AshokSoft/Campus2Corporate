@@ -13,12 +13,27 @@ const api = axios.create({
   timeout: 15000,
 });
 
+const persistStudentToken = (response?: { data?: any }) => {
+  const token = response?.data?.token || response?.data?.data?.token;
+
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.removeItem("token");
+    localStorage.removeItem("studentToken");
+    localStorage.removeItem("accessToken");
+  }
+};
+
 // =======================
 // Request Interceptor
 // =======================
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem(TOKEN_KEY);
+
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -38,6 +53,12 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem("c2c_student_user");
+      localStorage.removeItem("c2c_local_session");
+      
+      // We can also trigger a custom event that AuthContext can listen to, or just reload the page.
+      if (window.location.pathname !== '/student/login' && window.location.pathname !== '/') {
+         window.location.href = '/student/login';
+      }
     }
 
     return Promise.reject(error);
@@ -101,7 +122,11 @@ export const unwrapData = <T>(
 const auth = {
   register: (data: any) => api.post("/auth/register", data),
 
-  login: (data: any) => api.post("/auth/login", data),
+  login: async (data: any) => {
+    const response = await api.post("/auth/login", data);
+    persistStudentToken(response);
+    return response;
+  },
 
   logout: () => api.post("/auth/logout"),
 
@@ -116,6 +141,9 @@ const profile = {
   get: () => api.get("/student/profile"),
 
   update: (data: any) =>
+    api.put("/student/profile", data),
+
+  uploadImage: (data: any) =>
     api.put("/student/profile", data),
 };
 
@@ -149,13 +177,19 @@ const skills = {
 // =======================
 
 const projects = {
-  get: () => api.get("/student/projects"),
+  get: (params?: Record<string, any>) => api.get("/student/projects", { params }),
 
   apply: (projectId: string, data: any = {}) =>
     api.post(`/student/projects/${projectId}/apply`, data),
 
   applications: () =>
     api.get("/student/applications"),
+
+  applicationDetails: (applicationId: string) =>
+    api.get(`/student/applications/${applicationId}`),
+
+  withdrawApplication: (applicationId: string) =>
+    api.delete(`/student/applications/${applicationId}`),
 };
 
 // =======================
@@ -182,6 +216,15 @@ const notifications = {
 const certificates = {
   get: () =>
     api.get("/student/certificates"),
+
+  upload: (data: any) =>
+    api.post("/student/certificates", data),
+
+  update: (id: string, data: any) =>
+    api.put(`/student/certificates/${id}`, data),
+
+  delete: (id: string) =>
+    api.delete(`/student/certificates/${id}`),
 };
 
 // =======================
@@ -216,11 +259,67 @@ const hiring = {
   get: () =>
     api.get("/student/hiring/drives"),
 
-  start: (projectId: string, data: any = {}) =>
+  start: (projectId: string, data: FormData) =>
     api.post(
       `/student/hiring/drives/${projectId}/start`,
       data
     ),
+};
+
+// =======================
+// AI
+// =======================
+
+const ai = {
+  generateStudyPlan: (studentContext: string) =>
+    api.post("/ai/smart-study-planner", {
+      studentContext,
+    }),
+
+  placementAnalysis: (studentContext: string) =>
+    api.post("/ai/placement-readiness", {
+      studentContext,
+    }),
+
+  atsScore: (resumeText: string) =>
+    api.post("/ai/resume-score", {
+      resumeText,
+    }),
+
+  skillGap: (studentContext: string, role: string) =>
+    api.post("/ai/job-gap-analysis", {
+      studentContext,
+      role,
+    }),
+
+  careerCoach: (question: string, studentContext: string) =>
+    api.post("/ai/career-coach", {
+      question,
+      studentContext,
+    }),
+
+  resumeSummary: (data: any) =>
+    api.post("/ai/resume-summary", data),
+
+  resumeExperience: (data: any) =>
+    api.post("/ai/resume-experience", data),
+  resumeNote: (data: any) =>
+    api.post("/ai/resume-note", data),
+
+  generateRoadmap: (studentContext: any) =>
+    api.post("/ai/generate-roadmap", { studentContext }),
+
+  hiringInterview: (data: any) =>
+    api.post("/ai/hiring-interview", data),
+
+  hiringQuestions: (data: any) =>
+    api.post("/ai/hiring-questions", data),
+
+  hiringEvaluate: (data: any) =>
+    api.post("/ai/hiring-evaluate", data),
+
+  hiringFeedback: (data: any) =>
+    api.post("/ai/hiring-feedback", data),
 };
 
 // =======================
@@ -232,6 +331,7 @@ export const studentApi = {
 
   getProfile: profile.get,
   updateProfile: profile.update,
+  uploadProfileImage: profile.uploadImage,
 
   getDashboard: dashboard.get,
 
@@ -243,6 +343,8 @@ export const studentApi = {
   getProjects: projects.get,
   applyToProject: projects.apply,
   getApplications: projects.applications,
+  getApplicationDetails: projects.applicationDetails,
+  withdrawApplication: projects.withdrawApplication,
 
   getNotifications: notifications.get,
   markNotificationRead: notifications.markRead,
@@ -250,6 +352,9 @@ export const studentApi = {
   deleteNotification: notifications.delete,
 
   getCertificates: certificates.get,
+  uploadCertificate: certificates.upload,
+  updateCertificate: certificates.update,
+  deleteCertificate: certificates.delete,
 
   getSettings: settings.get,
   updateSettings: settings.update,
@@ -259,7 +364,21 @@ export const studentApi = {
 
   getHiringDrives: hiring.get,
   startHiringDrive: hiring.start,
+  generateStudyPlan: ai.generateStudyPlan,
+  placementAnalysis: ai.placementAnalysis,
+  atsScore: ai.atsScore,
+  skillGap: ai.skillGap,
+  careerCoach: ai.careerCoach,
+  generateResumeSummary: ai.resumeSummary,
+  enhanceResumeExperience: ai.resumeExperience,
+  classifyResumeNote: ai.resumeNote,
+  generateHiringInterview: ai.hiringInterview,
+  generateHiringQuestions: ai.hiringQuestions,
+  evaluateHiringAnswer: ai.hiringEvaluate,
+  generateHiringFeedback: ai.hiringFeedback,
+  generateRoadmap: ai.generateRoadmap,
 };
+
 
 // =======================
 // Error Helper
