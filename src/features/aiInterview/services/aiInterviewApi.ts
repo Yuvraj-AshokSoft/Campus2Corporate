@@ -1,5 +1,6 @@
 import type {
   AIInterviewSession,
+  AIInterviewType,
   InterviewResult,
 } from "../types/interview";
 
@@ -23,6 +24,7 @@ interface RespondInterviewResponse {
   evaluation?: {
     score: number;
     technicalScore?: number;
+    hrScore?: number;
     communicationScore?: number;
     feedback: string;
     strengths?: string[];
@@ -38,6 +40,20 @@ interface RespondInterviewResponse {
 
 interface FinishInterviewResponse {
   result: InterviewResult;
+}
+
+export interface DriveScorecardData {
+  driveId: string;
+  overallScore: number;
+  aptitudeScore?: number;
+  technicalScore?: number;
+  hrScore?: number;
+  communicationScore?: number;
+  problemSolvingScore?: number;
+  strengths?: string[];
+  improvements?: string[];
+  feedback?: string;
+  recommendation?: string;
 }
 
 const getAuthHeaders = (): HeadersInit => {
@@ -79,12 +95,18 @@ const handleResponse = async <T>(
 };
 
 /*
- * Start a new AI interview
+ * Start a new AI interview (technical or hr)
  */
 export const startAIInterview = async ({
   driveId,
+  role = "Software Engineer",
+  totalQuestions = 5,
+  interviewType = "technical",
 }: {
   driveId: string;
+  role?: string;
+  totalQuestions?: number;
+  interviewType?: AIInterviewType;
 }): Promise<StartInterviewResponse> => {
   const response = await fetch(
     `${API_BASE_URL}/ai-interview/start`,
@@ -96,6 +118,9 @@ export const startAIInterview = async ({
       },
       body: JSON.stringify({
         driveId,
+        role,
+        totalQuestions,
+        interviewType,
       }),
     },
   );
@@ -246,6 +271,27 @@ export const getAIInterviewResult = async (
   );
 
   return handleResponse<FinishInterviewResponse>(
+    response,
+  );
+};
+
+/*
+ * Fetch combined scorecard for drive
+ */
+export const getDriveScorecard = async (
+  driveId: string,
+): Promise<{ success: boolean; scorecard: DriveScorecardData }> => {
+  const response = await fetch(
+    `${API_BASE_URL}/ai-interview/drive/${driveId}/scorecard`,
+    {
+      method: "GET",
+      headers: {
+        ...getAuthHeaders(),
+      },
+    },
+  );
+
+  return handleResponse<{ success: boolean; scorecard: DriveScorecardData }>(
     response,
   );
 };

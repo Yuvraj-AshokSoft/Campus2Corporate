@@ -193,8 +193,8 @@ const INITIAL_ROUND_OVERVIEW: RoundOverviewData[] = [
     status: 'ready',
   },
   { id: 'tech1', name: 'Technical Round 1', tag: 'Coding Assessment', status: 'pending' },
-  { id: 'hr', name: 'HR Round', tag: 'Interview', status: 'pending' },
-  { id: 'scorecard', name: 'Final Score & Feedback', tag: 'Performance Review', status: 'pending' },
+  { id: 'hr', name: 'HR Interview', tag: 'Behavioral & Culture Fit', status: 'pending' },
+  { id: 'scorecard', name: 'Final Score & Feedback', tag: 'Comprehensive Scorecard', status: 'pending' },
 ];
 
 const COMPANY_INFO = {
@@ -573,9 +573,56 @@ export default function HiringProcess() {
 
   // Hiring progress state (updated once the aptitude round is passed)
   const [aptitudePassed, setAptitudePassed] = useState(false);
+  const [techPassed, setTechPassed] = useState(false);
+  const [hrPassed, setHrPassed] = useState(false);
   const [currentRoundIndex, setCurrentRoundIndex] = useState(DRIVE.currentRoundIndex);
   const [timelineSteps, setTimelineSteps] = useState<TimelineStep[]>(INITIAL_TIMELINE_STEPS);
   const [roundOverview, setRoundOverview] = useState<RoundOverviewData[]>(INITIAL_ROUND_OVERVIEW);
+
+  // Sync state with local interview records for this drive
+  useEffect(() => {
+    if (!driveId || typeof window === 'undefined') return;
+
+    const techDone = window.localStorage.getItem(`c2c_interview_result_${driveId}_technical`);
+    const hrDone = window.localStorage.getItem(`c2c_interview_result_${driveId}_hr`);
+
+    if (hrDone) {
+      setAptitudePassed(true);
+      setTechPassed(true);
+      setHrPassed(true);
+      setCurrentRoundIndex(3);
+      setTimelineSteps([
+        { id: 'applied', label: 'Application Submitted', status: 'completed' },
+        { id: 'aptitude', label: 'Aptitude Test', status: 'completed' },
+        { id: 'tech1', label: 'Technical Round 1', status: 'completed' },
+        { id: 'hr', label: 'HR Interview', status: 'completed' },
+        { id: 'scorecard', label: 'Final Score & Feedback', status: 'current' },
+      ]);
+      setRoundOverview([
+        { id: 'aptitude', name: 'Aptitude', tag: 'Online Test', duration: '45 mins', metric: 'Passed', passingPercent: 70, status: 'completed' },
+        { id: 'tech1', name: 'Technical Round 1', tag: 'Coding Assessment', metric: 'Completed', status: 'completed' },
+        { id: 'hr', name: 'HR Interview', tag: 'Behavioral & Culture Fit', metric: 'Completed', status: 'completed' },
+        { id: 'scorecard', name: 'Final Score & Feedback', tag: 'Comprehensive Scorecard', metric: 'Ready', status: 'ready' },
+      ]);
+    } else if (techDone) {
+      setAptitudePassed(true);
+      setTechPassed(true);
+      setCurrentRoundIndex(2);
+      setTimelineSteps([
+        { id: 'applied', label: 'Application Submitted', status: 'completed' },
+        { id: 'aptitude', label: 'Aptitude Test', status: 'completed' },
+        { id: 'tech1', label: 'Technical Round 1', status: 'completed' },
+        { id: 'hr', label: 'HR Interview', status: 'current' },
+        { id: 'scorecard', label: 'Final Score & Feedback', status: 'upcoming' },
+      ]);
+      setRoundOverview([
+        { id: 'aptitude', name: 'Aptitude', tag: 'Online Test', duration: '45 mins', metric: 'Passed', passingPercent: 70, status: 'completed' },
+        { id: 'tech1', name: 'Technical Round 1', tag: 'Coding Assessment', metric: 'Completed', status: 'completed' },
+        { id: 'hr', name: 'HR Interview', tag: 'Behavioral & Culture Fit', duration: '15 mins', metric: '5 Questions', status: 'ready' },
+        { id: 'scorecard', name: 'Final Score & Feedback', tag: 'Comprehensive Scorecard', status: 'pending' },
+      ]);
+    }
+  }, [driveId]);
 
 
   // ---------------------------------------------------------------------
@@ -934,12 +981,23 @@ export default function HiringProcess() {
   };
 
   const handlePrimaryCta = () => {
-    if (aptitudePassed) {
-      if (driveId) {
-        navigate(`/student/ai-interview/${driveId}`);
-      }
+    if (!driveId) return;
+
+    if (hrPassed) {
+      navigate(`/student/final-scorecard/${driveId}`);
       return;
     }
+
+    if (techPassed) {
+      navigate(`/student/ai-interview/${driveId}?round=hr`);
+      return;
+    }
+
+    if (aptitudePassed) {
+      navigate(`/student/ai-interview/${driveId}?round=technical`);
+      return;
+    }
+
     console.debug('Starting assessment for drive', driveId);
     setStage('permissions');
   };
@@ -1611,7 +1669,13 @@ export default function HiringProcess() {
               whileTap={{ scale: 0.98 }}
               className="flex-1 rounded-xl bg-[#5400D6] px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-[#5400D6]/25 transition-colors hover:bg-[#4500AD] sm:flex-none sm:px-8"
             >
-              {aptitudePassed ? 'Continue to Technical Round 1' : 'Start Assessment'}
+              {hrPassed
+                ? 'View Final Scorecard & Feedback'
+                : techPassed
+                  ? 'Continue to HR Interview'
+                  : aptitudePassed
+                    ? 'Continue to Technical Round 1'
+                    : 'Start Assessment'}
             </motion.button>
           </div>
         </div>

@@ -10,6 +10,7 @@ import {
   getAIInterviewResult,
   uploadAIInterviewRecording,
   transcribeInterviewAudio,
+  getDriveScorecardController,
 } from "../controllers/aiInterviewController.js";
 
 import {
@@ -40,6 +41,17 @@ router.post(
   studentAuthMiddleware,
   uploadInterviewAudio,
   transcribeInterviewAudio,
+);
+
+/*
+ * Get aggregated drive scorecard (Aptitude + Technical + HR)
+ *
+ * GET /api/ai-interview/drive/:driveId/scorecard
+ */
+router.get(
+  "/drive/:driveId/scorecard",
+  studentAuthMiddleware,
+  getDriveScorecardController,
 );
 
 /*

@@ -8,6 +8,7 @@ import {
   completeInterview,
   getInterviewResult,
   saveInterviewVideo,
+  getDriveScorecard,
 } from "../services/aiInterviewService.js";
 
 import {
@@ -58,6 +59,7 @@ const formatSession = (interview) => ({
   candidateId: interview.candidateId.toString(),
   driveId: interview.driveId?.toString?.() || interview.driveId,
   role: interview.role,
+  interviewType: interview.interviewType || "technical",
   difficulty: interview.difficulty,
   topicsCovered: interview.topicsCovered,
   totalQuestions: interview.totalQuestions,
@@ -110,7 +112,7 @@ const getStatusCode = (error) =>
  */
 const startAIInterview = async (req, res) => {
   try {
-    const { driveId, role, totalQuestions } = req.body;
+    const { driveId, role, totalQuestions, interviewType, round } = req.body;
 
     const candidateId = getCandidateId(req);
 
@@ -126,6 +128,8 @@ const startAIInterview = async (req, res) => {
       });
     }
 
+    const effectiveType = interviewType || round || (req.query?.round === "hr" ? "hr" : "technical");
+
     const application = mongoose.Types.ObjectId.isValid(driveId)
       ? await Application.findOne({
           student: candidateId,
@@ -139,12 +143,12 @@ const startAIInterview = async (req, res) => {
       role,
       totalQuestions,
       candidateContext: buildCandidateContext(req.student, application),
+      interviewType: effectiveType,
     });
 
     return res.status(201).json({
       success: true,
-      message:
-        "AI interview started successfully.",
+      message: `${effectiveType === "hr" ? "HR" : "AI technical"} interview started successfully.`,
 
       session: formatSession(result.interview),
 
@@ -325,11 +329,17 @@ const completeAIInterview = async (
         sessionId:
           completedInterview._id.toString(),
 
+        interviewType:
+          completedInterview.interviewType || "technical",
+
         overallScore:
           completedInterview.overallScore,
 
         technicalScore:
           completedInterview.technicalScore,
+
+        hrScore:
+          completedInterview.hrScore,
 
         communicationScore:
           completedInterview.communicationScore,
@@ -650,6 +660,50 @@ const getAIInterview = async (
   }
 };
 
+/*
+ * ---------------------------------------------------------
+ * GET DRIVE SCORECARD
+ * GET /api/ai-interview/drive/:driveId/scorecard
+ * ---------------------------------------------------------
+ */
+const getDriveScorecardController = async (req, res) => {
+  try {
+    const { driveId } = req.params;
+    const candidateId = getCandidateId(req);
+
+    if (!candidateId) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required.",
+      });
+    }
+
+    if (!driveId) {
+      return res.status(400).json({
+        success: false,
+        message: "driveId is required.",
+      });
+    }
+
+    const scorecard = await getDriveScorecard({
+      candidateId,
+      driveId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      scorecard,
+    });
+  } catch (error) {
+    console.error("Get Drive Scorecard Error:", error);
+
+    return res.status(getStatusCode(error)).json({
+      success: false,
+      message: error.message || "Unable to retrieve scorecard.",
+    });
+  }
+};
+
 export {
   startAIInterview,
   submitAIInterviewAnswer,
@@ -658,4 +712,5 @@ export {
   uploadAIInterviewRecording,
   getAIInterview,
   transcribeInterviewAudio,
+  getDriveScorecardController,
 };

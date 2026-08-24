@@ -27,7 +27,7 @@ import StudentRoadmap from "../pages/student/StudentRoadmap";
 import StudentBroadcast from "../pages/student/StudentBroadcast";
 import StudentHiring from "../pages/student/HiringProcess";
 import AIInterview from "../pages/student/AIInterview";
-import FinalScoreCard from "../pages/student/FinalScore";
+import FinalScoreCard from "../pages/student/FinalScoreCard";
 
 // Admin pages
 import { AdminDashboard } from "../pages/AdminDashboard";
@@ -434,6 +434,17 @@ export const AppRoutes: React.FC = () => {
 
             <Route
               path="/student/final-scorecard"
+              element={
+                <ProtectedRoute
+                  allowedRoles={["student"]}
+                >
+                  <FinalScoreCard />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/final-scorecard/:driveId"
               element={
                 <ProtectedRoute
                   allowedRoles={["student"]}
