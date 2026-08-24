@@ -451,6 +451,17 @@ export const AppRoutes: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+
+            <Route
+              path="/student/final-scorecard/:driveId"
+              element={
+                <ProtectedRoute
+                  allowedRoles={["student"]}
+                >
+                  <FinalScoreCard />
+                </ProtectedRoute>
+              }
+            />
             {/* =====================================================
                 COLLEGE ROUTES
             ===================================================== */}

@@ -16,11 +16,14 @@ export type AIInterviewStatus =
   | "completed"
   | "cancelled";
 
+export type AIInterviewType = "technical" | "hr";
+
 export interface AIInterviewSession {
   sessionId: string;
   candidateId: string;
   driveId: string;
   role?: string;
+  interviewType?: AIInterviewType;
 
   totalQuestions: number;
   currentQuestion: number;
@@ -33,6 +36,9 @@ export interface AIInterviewSession {
 
 export interface InterviewEvaluation {
   score: number;
+  technicalScore?: number;
+  hrScore?: number;
+  communicationScore?: number;
   feedback: string;
 }
 
@@ -41,15 +47,21 @@ export interface InterviewAnswer {
   question: string;
   answer: string;
   score?: number;
+  technicalScore?: number;
+  hrScore?: number;
+  communicationScore?: number;
+  overallScore?: number;
   feedback?: string;
   createdAt?: string;
 }
 
 export interface InterviewResult {
   sessionId: string;
+  interviewType?: AIInterviewType;
 
   overallScore: number;
   technicalScore: number;
+  hrScore?: number;
   communicationScore: number;
 
   strengths: string[];
@@ -64,6 +76,9 @@ export interface InterviewResult {
 
 export interface StartInterviewRequest {
   driveId: string;
+  role?: string;
+  totalQuestions?: number;
+  interviewType?: AIInterviewType;
 }
 
 export interface StartInterviewResponse {

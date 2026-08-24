@@ -68,14 +68,55 @@ export const generateResponse = async ({ systemInstruction, prompt, responseMime
       const response = await client.models.generateContent({ model: MODEL, contents: prompt, config });
       return extractText(response);
     } catch (error) {
+      let parsedMessageObj = null;
+      try {
+        if (typeof error?.message === "string" && error.message.trim().startsWith("{")) {
+          parsedMessageObj = JSON.parse(error.message);
+        }
+      } catch {
+        // keep null
+      }
+
+      const innerError = parsedMessageObj?.error || null;
+      const details = error?.details || innerError?.details || null;
+      const retryInfo = error?.retryDelay || details?.find?.((d) => d["@type"]?.includes("RetryInfo"))?.retryDelay || null;
+      const rawMessage = innerError?.message || error?.message;
+
+      console.error("========== GEMINI PROVIDER ERROR ==========");
+      console.error("Model:", MODEL);
+      console.error("Name:", error?.name);
+      console.error("Status:", error?.status || innerError?.code);
+      console.error("Code:", error?.code || innerError?.status);
+      console.error("Message:", rawMessage);
+      console.error("Status Text:", error?.statusText);
+      console.error("Details:", details ? JSON.stringify(details, null, 2) : undefined);
+      console.error("Response:", error?.response);
+      console.error("Error:", error?.error || innerError);
+      console.error("Retry Info:", retryInfo);
+      console.error("============================================");
+
       if (attempt < MAX_RETRIES && isTransient(error)) {
         await sleep(250 * 2 ** attempt);
         continue;
       }
       if (error?.code === "AI_EMPTY_RESPONSE" || error?.code === "AI_INVALID_RESPONSE") throw error;
-      if (error?.status === 429) throw aiError("AI_RATE_LIMIT", "AI service is busy. Please try again shortly.");
-      console.error("Gemini provider error:", error?.message || "Unknown provider error");
-      throw aiError(isTransient(error) ? "AI_PROVIDER_TIMEOUT" : "AI_PROVIDER_ERROR", "AI service temporarily unavailable. Please try again.");
+
+      const errorMessage = String(rawMessage || "").toLowerCase();
+      const status = error?.status || innerError?.code;
+
+      if (status === 429 || errorMessage.includes("quota") || errorMessage.includes("rate limit") || errorMessage.includes("resource_exhausted")) {
+        throw aiError("AI_RATE_LIMIT", "AI service is busy or quota limit reached. Please try again shortly.");
+      }
+
+      if (status === 400 || status === 401 || status === 403 || status === 404 || errorMessage.includes("api key") || errorMessage.includes("not found") || errorMessage.includes("permission_denied") || errorMessage.includes("invalid_argument")) {
+        throw aiError("AI_CONFIGURATION_ERROR", rawMessage || "Gemini configuration or authentication error.");
+      }
+
+      if (isTransient(error) || errorMessage.includes("timeout") || errorMessage.includes("deadline")) {
+        throw aiError("AI_PROVIDER_TIMEOUT", "AI service timed out. Please try again.");
+      }
+
+      throw aiError("AI_PROVIDER_ERROR", rawMessage || "AI service temporarily unavailable. Please try again.");
     }
   }
   throw aiError("AI_PROVIDER_ERROR", "AI service temporarily unavailable. Please try again.");

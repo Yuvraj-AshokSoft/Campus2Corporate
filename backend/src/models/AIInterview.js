@@ -84,6 +84,13 @@ const aiInterviewSchema = new mongoose.Schema(
       default: "Software Engineer",
     },
 
+    interviewType: {
+      type: String,
+      enum: ["technical", "hr"],
+      default: "technical",
+      index: true,
+    },
+
     candidateContext: {
       type: String,
       default: "",
@@ -158,6 +165,13 @@ const aiInterviewSchema = new mongoose.Schema(
     },
 
     technicalScore: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+
+    hrScore: {
       type: Number,
       default: 0,
       min: 0,
