@@ -1,5 +1,15 @@
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 dotenv.config();
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = "campus2corporate_admin_secret_2026";
+}
 
 import express from "express";
 import http from "http";
@@ -11,6 +21,7 @@ import College from "../src/models/college.js";
 import Student from "../src/models/student.js";
 import Company from "../src/models/company.js";
 import Recruiter from "../src/models/recruiter.js";
+import Project from "../src/models/project.js";
 import Application from "../src/models/application.js";
 import ApplicationStatusHistory from "../src/models/applicationStatusHistory.js";
 
@@ -18,6 +29,21 @@ const PORT = 5055;
 const BASE_URL = `http://localhost:${PORT}`;
 
 let server;
+let passCount = 0;
+let failCount = 0;
+
+// Override console.assert to guarantee throwing on failure and non-zero exit code
+const originalAssert = console.assert;
+console.assert = function (condition, ...args) {
+  const message = args.join(" ");
+  if (!condition) {
+    failCount++;
+    const err = new Error(`Assertion failed: ${message}`);
+    console.error(`❌ ${err.message}`);
+    throw err;
+  }
+  passCount++;
+};
 
 async function runTests() {
   console.log("=== STARTING COLLEGE BACKEND TEST SUITE ===");
@@ -1253,7 +1279,543 @@ async function runTests() {
     );
     console.log("✔ Cascade cleanup of status history on application deletion verified");
 
-    console.log("\n=== ALL COLLEGE BACKEND TESTS PASSED SUCCESSFULLY! ===");
+    // ==========================================
+    // --- PHASE 8: ADVANCED APPLICATION FILTERING TESTS ---
+    // ==========================================
+    console.log("\n--- PHASE 8: ADVANCED APPLICATION FILTERING TESTS ---");
+
+    // Clean up applications for a fresh filtering test dataset
+    await Application.deleteMany({});
+    await ApplicationStatusHistory.deleteMany({});
+
+    // Create a project for project filtering tests
+    const filterProj = await Project.create({
+      title: "Full Stack Engineer Project",
+      description: "Node & React Project description that is at least 20 characters long",
+      company: companyId,
+      recruiter: recruiterId,
+      requiredSkills: ["Node.js", "React"],
+      duration: "3 months",
+      stipend: 25000,
+      location: "Remote",
+      openings: 5,
+      applicationDeadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    });
+    const filterProjectId = filterProj._id.toString();
+
+    // Create a fresh Student 3 for College A (as student 3 was deleted in earlier deletion test)
+    const freshStudent3 = await Student.create({
+      name: "Fresh Student 3",
+      email: "fresh3@teststudent.com",
+      college: collegeA_Id,
+      branch: "CSE",
+      semester: 8,
+      status: "Active",
+    });
+    student3_Id = freshStudent3._id.toString();
+    await College.findByIdAndUpdate(collegeA_Id, { $addToSet: { students: freshStudent3._id } });
+
+    // Create dates: 2 days ago, 1 day ago, today
+    const now = new Date();
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    const oneDayAgo = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000);
+
+    const pad = (n) => String(n).padStart(2, "0");
+    const formatDate = (d) =>
+      `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+
+    const dateTwoDaysAgo = formatDate(twoDaysAgo);
+    const dateOneDayAgo = formatDate(oneDayAgo);
+    const dateToday = formatDate(now);
+
+    // Create 4 applications for College A
+    // App 1: Student 1, Company, Project, "Applied", 2 days ago
+    const app1Doc = await Application.create({
+      student: student1_Id,
+      recruiter: recruiterId,
+      company: companyId,
+      project: filterProjectId,
+      status: "Applied",
+      createdAt: twoDaysAgo,
+      updatedAt: twoDaysAgo,
+    });
+    const filterApp1Id = app1Doc._id.toString();
+
+    // App 2: Student 2, Company, null Project, "Under Review", 1 day ago
+    const app2Doc = await Application.create({
+      student: student2_Id,
+      recruiter: recruiterId,
+      company: companyId,
+      status: "Under Review",
+      createdAt: oneDayAgo,
+      updatedAt: oneDayAgo,
+    });
+    const filterApp2Id = app2Doc._id.toString();
+
+    // App 3: Student 3, Company, Project, "Selected", today
+    const app3Doc = await Application.create({
+      student: student3_Id,
+      recruiter: recruiterId,
+      company: companyId,
+      project: filterProjectId,
+      status: "Selected",
+      createdAt: now,
+      updatedAt: now,
+    });
+    const filterApp3Id = app3Doc._id.toString();
+
+    // App 4: Student 1, Company, Project, "Interview", today
+    const app4Doc = await Application.create({
+      student: student1_Id,
+      recruiter: recruiterId,
+      company: companyId,
+      project: filterProjectId,
+      status: "Interview",
+      createdAt: now,
+      updatedAt: now,
+    });
+    const filterApp4Id = app4Doc._id.toString();
+
+    // Create 1 application for College B (Student B)
+    const appBDoc = await Application.create({
+      student: studentB_Id,
+      recruiter: recruiterId,
+      company: companyId,
+      project: filterProjectId,
+      status: "Selected",
+      createdAt: now,
+      updatedAt: now,
+    });
+    const filterAppBId = appBDoc._id.toString();
+
+    // Test 41: Filter by Valid Status
+    const statusFilterRes = await request("/api/college/applications?status=Selected", {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      statusFilterRes.status === 200,
+      `Expected 200 on status filter, got ${statusFilterRes.status}`
+    );
+    console.assert(
+      Array.isArray(statusFilterRes.body.data) &&
+        statusFilterRes.body.data.length === 1 &&
+        statusFilterRes.body.data[0]._id === filterApp3Id &&
+        statusFilterRes.body.data[0].status === "Selected",
+      "Status filter Selected should return only Application 3"
+    );
+    console.log("✔ Application filter by status (Selected) returns exact matching application");
+
+    // Test 42: Filter by Invalid Status -> 400
+    const invalidStatusRes = await request("/api/college/applications?status=NonExistentStatus", {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      invalidStatusRes.status === 400,
+      `Expected 400 for invalid status, got ${invalidStatusRes.status}`
+    );
+    console.log("✔ Application filter by invalid status rejected with 400 Bad Request");
+
+    // Test 43: Filter by Valid Company ID
+    const compFilterRes = await request(`/api/college/applications?companyId=${companyId}`, {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      compFilterRes.status === 200 &&
+        Array.isArray(compFilterRes.body.data) &&
+        compFilterRes.body.data.length === 4,
+      `Expected 4 applications for companyId, got ${compFilterRes.body.data?.length}`
+    );
+    console.log("✔ Application filter by valid companyId returns all scoped applications");
+
+    // Test 44: Filter by Invalid Company ObjectId -> 400
+    const invalidCompRes = await request("/api/college/applications?companyId=bad-company-id", {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      invalidCompRes.status === 400,
+      `Expected 400 for malformed companyId, got ${invalidCompRes.status}`
+    );
+    console.log("✔ Application filter by invalid companyId rejected with 400 Bad Request");
+
+    // Test 45: Filter by Valid Project ID
+    const projFilterRes = await request(`/api/college/applications?projectId=${filterProjectId}`, {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      projFilterRes.status === 200 &&
+        Array.isArray(projFilterRes.body.data) &&
+        projFilterRes.body.data.length === 3,
+      `Expected 3 applications linked to project, got ${projFilterRes.body.data?.length}`
+    );
+    console.log("✔ Application filter by valid projectId returns matching applications");
+
+    // Test 46: Filter by Invalid Project ObjectId -> 400
+    const invalidProjRes = await request("/api/college/applications?projectId=bad-project-id", {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      invalidProjRes.status === 400,
+      `Expected 400 for malformed projectId, got ${invalidProjRes.status}`
+    );
+    console.log("✔ Application filter by invalid projectId rejected with 400 Bad Request");
+
+    // Test 47: Filter by Valid Student ID
+    const studentFilterRes = await request(`/api/college/applications?studentId=${student1_Id}`, {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      studentFilterRes.status === 200 &&
+        Array.isArray(studentFilterRes.body.data) &&
+        studentFilterRes.body.data.length === 2,
+      `Expected 2 applications for student 1, got ${studentFilterRes.body.data?.length}`
+    );
+    console.log("✔ Application filter by valid studentId returns only that student's applications");
+
+    // Test 48: Filter by Invalid Student ObjectId -> 400
+    const invalidStudentRes = await request("/api/college/applications?studentId=invalid-student-id", {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      invalidStudentRes.status === 400,
+      `Expected 400 for malformed studentId, got ${invalidStudentRes.status}`
+    );
+    console.log("✔ Application filter by invalid studentId rejected with 400 Bad Request");
+
+    // Test 49: Filter by Cross-College Student ID -> 404
+    const crossStudentFilterRes = await request(`/api/college/applications?studentId=${studentB_Id}`, {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      crossStudentFilterRes.status === 404,
+      `Expected 404 when querying applications for another college's student, got ${crossStudentFilterRes.status}`
+    );
+    console.log("✔ Cross-college studentId filter rejected with 404 Not Found");
+
+    // Test 50: Date Filtering - startDate only
+    const startDateRes = await request(`/api/college/applications?startDate=${dateOneDayAgo}`, {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      startDateRes.status === 200 &&
+        Array.isArray(startDateRes.body.data) &&
+        startDateRes.body.data.length === 3,
+      `Expected 3 applications from yesterday onwards, got ${startDateRes.body.data?.length}`
+    );
+    console.log("✔ Application date filtering with startDate returns expected records");
+
+    // Test 51: Date Filtering - endDate only
+    const endDateRes = await request(`/api/college/applications?endDate=${dateOneDayAgo}`, {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      endDateRes.status === 200 &&
+        Array.isArray(endDateRes.body.data) &&
+        endDateRes.body.data.length === 2,
+      `Expected 2 applications up to yesterday, got ${endDateRes.body.data?.length}`
+    );
+    console.log("✔ Application date filtering with endDate returns expected records");
+
+    // Test 52: Date Filtering - startDate + endDate range
+    const rangeDateRes = await request(
+      `/api/college/applications?startDate=${dateTwoDaysAgo}&endDate=${dateOneDayAgo}`,
+      { headers: { Authorization: `Bearer ${tokenCollegeA}` } }
+    );
+    console.assert(
+      rangeDateRes.status === 200 &&
+        Array.isArray(rangeDateRes.body.data) &&
+        rangeDateRes.body.data.length === 2,
+      `Expected 2 applications within date range, got ${rangeDateRes.body.data?.length}`
+    );
+    console.log("✔ Application date filtering with startDate and endDate range works");
+
+    // Test 53: Invalid Date Format -> 400
+    const badDateFormatRes = await request("/api/college/applications?startDate=2026/08/25", {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      badDateFormatRes.status === 400,
+      `Expected 400 for invalid date format, got ${badDateFormatRes.status}`
+    );
+    console.log("✔ Invalid date format rejected with 400 Bad Request");
+
+    // Test 54: Invalid Date Range (startDate > endDate) -> 400
+    const badRangeRes = await request(
+      `/api/college/applications?startDate=${dateToday}&endDate=${dateTwoDaysAgo}`,
+      { headers: { Authorization: `Bearer ${tokenCollegeA}` } }
+    );
+    console.assert(
+      badRangeRes.status === 400,
+      `Expected 400 when startDate > endDate, got ${badRangeRes.status}`
+    );
+    console.log("✔ Invalid date range (startDate > endDate) rejected with 400 Bad Request");
+
+    // Test 55: Pagination (page, limit, total, totalPages)
+    const page1Res = await request("/api/college/applications?page=1&limit=2", {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      page1Res.status === 200 &&
+        page1Res.body.data.applications.length === 2 &&
+        page1Res.body.data.pagination.total === 4 &&
+        page1Res.body.data.pagination.page === 1 &&
+        page1Res.body.data.pagination.limit === 2 &&
+        page1Res.body.data.pagination.totalPages === 2,
+      "Page 1 pagination metadata and item count match"
+    );
+
+    const page2Res = await request("/api/college/applications?page=2&limit=2", {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      page2Res.status === 200 &&
+        page2Res.body.data.applications.length === 2 &&
+        page2Res.body.data.pagination.page === 2,
+      "Page 2 pagination succeeds with remaining items"
+    );
+    console.log("✔ Pagination controls (page, limit, total, totalPages) verified");
+
+    // Test 56: Pagination max limit enforcement
+    const maxLimitRes = await request("/api/college/applications?page=1&limit=500", {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      maxLimitRes.status === 200 &&
+        maxLimitRes.body.data.pagination.limit === 100,
+      `Expected limit capped at 100, got ${maxLimitRes.body.data.pagination.limit}`
+    );
+    console.log("✔ Pagination max limit capped at 100 safely");
+
+    // Test 57: Combined Multi-Filter Query
+    const multiFilterRes = await request(
+      `/api/college/applications?status=Interview&companyId=${companyId}&studentId=${student1_Id}&page=1&limit=10`,
+      { headers: { Authorization: `Bearer ${tokenCollegeA}` } }
+    );
+    console.assert(
+      multiFilterRes.status === 200 &&
+        multiFilterRes.body.data.applications.length === 1 &&
+        multiFilterRes.body.data.applications[0]._id === filterApp4Id,
+      "Multi-filter query should return only Application 4"
+    );
+    console.log("✔ Multi-filter query (status + company + student + pagination) verified");
+
+    // Test 58: Cross-College Scoping through Filters
+    const crossCollegeAppListRes = await request("/api/college/applications", {
+      headers: { Authorization: `Bearer ${tokenCollegeB}` },
+    });
+    console.assert(
+      crossCollegeAppListRes.status === 200 &&
+        Array.isArray(crossCollegeAppListRes.body.data) &&
+        crossCollegeAppListRes.body.data.length === 1 &&
+        crossCollegeAppListRes.body.data[0]._id === filterAppBId,
+      "College B should only receive its own single application"
+    );
+
+    const crossCollegeStatusFilter = await request("/api/college/applications?status=Applied", {
+      headers: { Authorization: `Bearer ${tokenCollegeB}` },
+    });
+    console.assert(
+      crossCollegeStatusFilter.status === 200 &&
+        crossCollegeStatusFilter.body.data.length === 0,
+      "College B filtering for Applied status should return 0 (no leakage from College A)"
+    );
+    console.log("✔ Cross-college application isolation strictly maintained across all filters");
+
+    // ==========================================
+    // --- PHASE 9: APPLICATION SUMMARY TESTS ---
+    // ==========================================
+    console.log("\n--- PHASE 9: APPLICATION SUMMARY TESTS ---");
+
+    // Test 59: Application Summary for College A
+    const summaryResA = await request("/api/college/applications/summary", {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      summaryResA.status === 200,
+      `Expected 200 on application summary, got ${summaryResA.status}`
+    );
+    console.assert(
+      summaryResA.body.success === true,
+      "Summary response success should be true"
+    );
+
+    const summaryDataA = summaryResA.body.data;
+    console.assert(
+      summaryDataA.totalApplications === 4,
+      `Expected totalApplications 4, got ${summaryDataA.totalApplications}`
+    );
+    console.assert(
+      summaryDataA.uniqueStudentsApplied === 3,
+      `Expected uniqueStudentsApplied 3, got ${summaryDataA.uniqueStudentsApplied}`
+    );
+    console.assert(
+      summaryDataA.placedCount === 1,
+      `Expected placedCount 1, got ${summaryDataA.placedCount}`
+    );
+    console.assert(
+      summaryDataA.placementRate === 33.33,
+      `Expected placementRate 33.33, got ${summaryDataA.placementRate}`
+    );
+
+    // Verify all 6 status keys exist
+    console.assert(
+      summaryDataA.statusCounts["Applied"] === 1 &&
+        summaryDataA.statusCounts["Under Review"] === 1 &&
+        summaryDataA.statusCounts["Shortlisted"] === 0 &&
+        summaryDataA.statusCounts["Interview"] === 1 &&
+        summaryDataA.statusCounts["Selected"] === 1 &&
+        summaryDataA.statusCounts["Rejected"] === 0,
+      "Status counts must match expected counts for each status enum"
+    );
+    console.log("✔ Application summary metrics (totalApplications, statusCounts, uniqueStudentsApplied, placedCount, placementRate) verified");
+
+    // Test 60: Summary for Zero-Application College (College C)
+    const regResC = await request("/api/college/register", {
+      method: "POST",
+      body: {
+        name: "Test College C",
+        email: "collegec@testcollege.edu",
+        phone: "9876543233",
+        password: "Password123",
+        university: "Zero Univ",
+      },
+    });
+    const tokenCollegeC = regResC.body.data.token;
+
+    const summaryResC = await request("/api/college/applications/summary", {
+      headers: { Authorization: `Bearer ${tokenCollegeC}` },
+    });
+    console.assert(
+      summaryResC.status === 200,
+      `Expected 200 for zero-application summary, got ${summaryResC.status}`
+    );
+    const summaryDataC = summaryResC.body.data;
+    console.assert(
+      summaryDataC.totalApplications === 0 &&
+        summaryDataC.uniqueStudentsApplied === 0 &&
+        summaryDataC.placedCount === 0 &&
+        summaryDataC.placementRate === 0,
+      "Zero applications must return 0 counts and 0 placementRate without division errors"
+    );
+    console.assert(
+      summaryDataC.statusCounts["Applied"] === 0 &&
+        summaryDataC.statusCounts["Under Review"] === 0 &&
+        summaryDataC.statusCounts["Shortlisted"] === 0 &&
+        summaryDataC.statusCounts["Interview"] === 0 &&
+        summaryDataC.statusCounts["Selected"] === 0 &&
+        summaryDataC.statusCounts["Rejected"] === 0,
+      "All status counts must be 0 for zero-application college"
+    );
+    console.log("✔ Zero-application college summary returns clean zeros without division-by-zero errors");
+
+    // Test 61: Cross-College Summary Isolation (College B)
+    const summaryResB = await request("/api/college/applications/summary", {
+      headers: { Authorization: `Bearer ${tokenCollegeB}` },
+    });
+    console.assert(
+      summaryResB.status === 200,
+      `Expected 200 on College B summary, got ${summaryResB.status}`
+    );
+    const summaryDataB = summaryResB.body.data;
+    console.assert(
+      summaryDataB.totalApplications === 1 &&
+        summaryDataB.uniqueStudentsApplied === 1 &&
+        summaryDataB.placedCount === 1 &&
+        summaryDataB.placementRate === 100 &&
+        summaryDataB.statusCounts["Selected"] === 1 &&
+        summaryDataB.statusCounts["Applied"] === 0,
+      "College B summary must only reflect College B application data"
+    );
+    console.log("✔ Cross-college summary isolation verified (College B only counts College B applications)");
+
+    // Test 62: Route Precedence Verification (GET /applications/summary is not captured by /applications/:id)
+    const routePrecedenceCheck = await request("/api/college/applications/summary", {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      routePrecedenceCheck.status === 200 &&
+        routePrecedenceCheck.body.data.totalApplications !== undefined,
+      "Route /applications/summary must return summary object, not application by ID"
+    );
+    console.log("✔ Route precedence verified (/applications/summary resolved before /applications/:id)");
+
+    // ==========================================
+    // --- PHASE 10: REGRESSION & CRUD INTEGRITY CHECKS ---
+    // ==========================================
+    console.log("\n--- PHASE 10: REGRESSION & CRUD INTEGRITY CHECKS ---");
+
+    // Test 63: Application Creation Still Works
+    const regCreateAppRes = await request("/api/college/applications", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      body: {
+        student: student2_Id,
+        recruiter: recruiterId,
+        company: companyId,
+        status: "Applied",
+        remarks: "Regression create application",
+      },
+    });
+    console.assert(
+      regCreateAppRes.status === 201 && regCreateAppRes.body.data._id,
+      "Regression create application must succeed with 201"
+    );
+    const regAppId = regCreateAppRes.body.data._id;
+    console.log("✔ Regression: Application creation still works with 201");
+
+    // Test 64: Application Get By ID Still Works
+    const regGetAppRes = await request(`/api/college/applications/${regAppId}`, {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      regGetAppRes.status === 200 && regGetAppRes.body.data._id === regAppId,
+      "Regression get application by ID must succeed with 200"
+    );
+    console.log("✔ Regression: Application get by ID still works with 200");
+
+    // Test 65: Application Update & Status History Still Works
+    const regUpdateAppRes = await request(`/api/college/applications/${regAppId}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+      body: {
+        status: "Interview",
+        remarks: "Regression interview scheduled",
+      },
+    });
+    console.assert(
+      regUpdateAppRes.status === 200 && regUpdateAppRes.body.data.status === "Interview",
+      "Regression update application status must succeed"
+    );
+
+    const regHistoryRes = await request(`/api/college/applications/${regAppId}/history`, {
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      regHistoryRes.status === 200 &&
+        regHistoryRes.body.data.length === 2 &&
+        regHistoryRes.body.data[0].newStatus === "Interview" &&
+        regHistoryRes.body.data[0].oldStatus === "Applied",
+      "Regression status history tracking verified"
+    );
+    console.log("✔ Regression: Application update & status history tracking verified");
+
+    // Test 66: Application Delete & Cascade Still Works
+    const regDelAppRes = await request(`/api/college/applications/${regAppId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${tokenCollegeA}` },
+    });
+    console.assert(
+      regDelAppRes.status === 200,
+      "Regression delete application must succeed with 200"
+    );
+
+    const regHistoryAfterDel = await ApplicationStatusHistory.find({ application: regAppId });
+    console.assert(
+      regHistoryAfterDel.length === 0,
+      "Regression status history cascade cleanup on delete verified"
+    );
+    console.log("✔ Regression: Application delete and status history cascade verified");
+
+    console.log(`\n=== ALL COLLEGE BACKEND TESTS PASSED SUCCESSFULLY! (${passCount} assertions passed, ${failCount} failed) ===`);
   } catch (error) {
     console.error("\n❌ TEST SUITE FAILED WITH ERROR:", error);
     process.exitCode = 1;
@@ -1264,6 +1826,7 @@ async function runTests() {
       await Student.deleteMany({ email: /@teststudent\.com/ });
       await Company.deleteMany({ name: "TestCorp" });
       await Recruiter.deleteMany({ email: "recruiter@testcorp.com" });
+      await Project.deleteMany({ title: "Full Stack Engineer Project" });
       await Application.deleteMany({});
       await ApplicationStatusHistory.deleteMany({});
       await mongoose.disconnect();

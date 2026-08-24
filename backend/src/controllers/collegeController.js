@@ -1133,9 +1133,136 @@ export const getApplicationStatusHistory = async (req, res) => {
   }
 };
 
+const VALID_APPLICATION_STATUSES = [
+  "Applied",
+  "Under Review",
+  "Shortlisted",
+  "Interview",
+  "Selected",
+  "Rejected",
+];
+
+const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+// ================= Application Summary =================
+
+export const getApplicationSummary = async (req, res) => {
+  try {
+    const studentIds = await Student.find({
+      college: req.college._id,
+    }).distinct("_id");
+
+    const initialStatusCounts = {
+      "Applied": 0,
+      "Under Review": 0,
+      "Shortlisted": 0,
+      "Interview": 0,
+      "Selected": 0,
+      "Rejected": 0,
+    };
+
+    if (studentIds.length === 0) {
+      return successResponse(
+        res,
+        "Application summary fetched successfully",
+        {
+          totalApplications: 0,
+          statusCounts: initialStatusCounts,
+          uniqueStudentsApplied: 0,
+          placedCount: 0,
+          placementRate: 0,
+        },
+        200
+      );
+    }
+
+    const aggregationResult = await Application.aggregate([
+      {
+        $match: {
+          student: { $in: studentIds },
+        },
+      },
+      {
+        $facet: {
+          total: [{ $count: "count" }],
+          statusCounts: [
+            {
+              $group: {
+                _id: "$status",
+                count: { $sum: 1 },
+              },
+            },
+          ],
+          uniqueStudents: [
+            {
+              $group: {
+                _id: "$student",
+              },
+            },
+            {
+              $count: "count",
+            },
+          ],
+          placed: [
+            {
+              $match: { status: "Selected" },
+            },
+            {
+              $count: "count",
+            },
+          ],
+        },
+      },
+    ]);
+
+    const result = aggregationResult[0] || {};
+    const totalApplications = result.total?.[0]?.count || 0;
+    const uniqueStudentsApplied = result.uniqueStudents?.[0]?.count || 0;
+    const placedCount = result.placed?.[0]?.count || 0;
+
+    const statusCounts = { ...initialStatusCounts };
+    if (Array.isArray(result.statusCounts)) {
+      result.statusCounts.forEach((item) => {
+        if (item._id && statusCounts.hasOwnProperty(item._id)) {
+          statusCounts[item._id] = item.count;
+        }
+      });
+    }
+
+    const placementRate =
+      uniqueStudentsApplied > 0
+        ? Number(((placedCount / uniqueStudentsApplied) * 100).toFixed(2))
+        : 0;
+
+    return successResponse(
+      res,
+      "Application summary fetched successfully",
+      {
+        totalApplications,
+        statusCounts,
+        uniqueStudentsApplied,
+        placedCount,
+        placementRate,
+      },
+      200
+    );
+  } catch (error) {
+    return handleControllerError(res, error);
+  }
+};
+
 export const getAllApplications = async (req, res) => {
   try {
-    const { status, page, limit } = req.query;
+    const {
+      status,
+      companyId,
+      projectId,
+      studentId,
+      startDate,
+      endDate,
+      page,
+      limit,
+    } = req.query;
 
     const studentIds = await Student.find({
       college: req.college._id,
@@ -1145,19 +1272,100 @@ export const getAllApplications = async (req, res) => {
       student: { $in: studentIds },
     };
 
+    // 1. Status Filter & Validation
     if (status) {
+      if (!VALID_APPLICATION_STATUSES.includes(status)) {
+        return errorResponse(res, "Invalid application status", 400);
+      }
       query.status = status;
     }
 
-    if (page || limit) {
+    // 2. Company Filter & Validation
+    if (companyId) {
+      if (!isValidObjectId(companyId)) {
+        return errorResponse(res, "Invalid company ID format", 400);
+      }
+      query.company = companyId;
+    }
+
+    // 3. Project Filter & Validation
+    if (projectId) {
+      if (!isValidObjectId(projectId)) {
+        return errorResponse(res, "Invalid project ID format", 400);
+      }
+      query.project = projectId;
+    }
+
+    // 4. Student Filter & Validation (with strict College Scoping)
+    if (studentId) {
+      if (!isValidObjectId(studentId)) {
+        return errorResponse(res, "Invalid student ID format", 400);
+      }
+      const studentBelongsToCollege = studentIds.some(
+        (id) => id.toString() === studentId.toString()
+      );
+      if (!studentBelongsToCollege) {
+        return errorResponse(
+          res,
+          "Student not found or does not belong to your college",
+          404
+        );
+      }
+      query.student = studentId;
+    }
+
+    // 5. Date Filtering (createdAt) & Validation
+    if (startDate) {
+      if (!DATE_REGEX.test(startDate) || isNaN(Date.parse(startDate))) {
+        return errorResponse(
+          res,
+          "Invalid startDate format. Expected YYYY-MM-DD",
+          400
+        );
+      }
+    }
+    if (endDate) {
+      if (!DATE_REGEX.test(endDate) || isNaN(Date.parse(endDate))) {
+        return errorResponse(
+          res,
+          "Invalid endDate format. Expected YYYY-MM-DD",
+          400
+        );
+      }
+    }
+    if (startDate && endDate) {
+      if (new Date(startDate) > new Date(endDate)) {
+        return errorResponse(
+          res,
+          "Invalid date range: startDate cannot be after endDate",
+          400
+        );
+      }
+      query.createdAt = {
+        $gte: new Date(`${startDate}T00:00:00.000Z`),
+        $lte: new Date(`${endDate}T23:59:59.999Z`),
+      };
+    } else if (startDate) {
+      query.createdAt = {
+        $gte: new Date(`${startDate}T00:00:00.000Z`),
+      };
+    } else if (endDate) {
+      query.createdAt = {
+        $lte: new Date(`${endDate}T23:59:59.999Z`),
+      };
+    }
+
+    // 6. Pagination & Query Execution
+    if (page !== undefined || limit !== undefined) {
       const pageNum = Math.max(1, parseInt(page) || 1);
-      const limitNum = Math.max(1, parseInt(limit) || 10);
+      const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
       const total = await Application.countDocuments(query);
       const applications = await Application.find(query)
         .populate("student", "-password")
         .populate("recruiter")
         .populate("company")
         .populate("project")
+        .sort({ createdAt: -1 })
         .skip((pageNum - 1) * limitNum)
         .limit(limitNum);
 
@@ -1181,7 +1389,8 @@ export const getAllApplications = async (req, res) => {
       .populate("student", "-password")
       .populate("recruiter")
       .populate("company")
-      .populate("project");
+      .populate("project")
+      .sort({ createdAt: -1 });
 
     return successResponse(
       res,
