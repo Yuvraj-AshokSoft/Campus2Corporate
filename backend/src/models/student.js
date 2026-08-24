@@ -106,6 +106,55 @@ const scoreHistorySchema = new mongoose.Schema(
   { _id: false }
 );
 
+const certificateSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    issuer: { type: String, required: true, trim: true },
+    issueDate: { type: String, trim: true },
+    credentialId: { type: String, trim: true },
+    credentialUrl: { type: String, trim: true },
+    fileUrl: { type: String, trim: true },
+  },
+  { timestamps: true }
+);
+
+const notificationSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    message: { type: String, required: true, trim: true },
+    type: { type: String, default: "info", trim: true },
+    read: { type: Boolean, default: false },
+    link: { type: String, trim: true },
+  },
+  { timestamps: true }
+);
+
+const settingsSchema = new mongoose.Schema(
+  {
+    emailNotifications: { type: Boolean, default: true },
+    jobAlerts: { type: Boolean, default: true },
+    interviewReminders: { type: Boolean, default: true },
+    profileVisibility: { type: String, default: "public" },
+    theme: { type: String, default: "light" },
+  },
+  { _id: false }
+);
+
+const resumeBuilderSchema = new mongoose.Schema(
+  {
+    personalInfo: { type: mongoose.Schema.Types.Mixed, default: {} },
+    education: { type: Array, default: [] },
+    experience: { type: Array, default: [] },
+    skills: { type: Array, default: [] },
+    projects: { type: Array, default: [] },
+    certifications: { type: Array, default: [] },
+    summary: { type: String, default: "" },
+    templateId: { type: String, default: "modern" },
+    lastSaved: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 const studentSchema = new mongoose.Schema(
   {
     name: {
@@ -193,6 +242,10 @@ const studentSchema = new mongoose.Schema(
     assignmentSubmissions: [assignmentSubmissionSchema],
     quizSubmissions: [quizSubmissionSchema],
     scoreHistory: [scoreHistorySchema],
+    certificates: [certificateSchema],
+    notifications: [notificationSchema],
+    settings: { type: settingsSchema, default: () => ({}) },
+    resumeBuilder: { type: resumeBuilderSchema, default: () => ({}) },
   },
   {
     timestamps: true,

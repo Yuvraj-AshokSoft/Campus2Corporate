@@ -1825,3 +1825,722 @@ export const startHiringDrive = async (req, res) => {
     );
   }
 };
+
+/*
+ * =========================================================
+ * PROJECTS & APPLICATIONS
+ * =========================================================
+ */
+
+export const getStudentProjects = async (req, res) => {
+  try {
+    const { search, mode, location } = req.query;
+    const query = { status: "Open" };
+
+    if (mode && mode !== "All") {
+      query.mode = mode;
+    }
+    if (location) {
+      query.location = { $regex: location, $options: "i" };
+    }
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { requiredSkills: { $in: [new RegExp(search, "i")] } },
+      ];
+    }
+
+    let projects = await Project.find(query)
+      .populate("company", "name logo website location")
+      .populate("recruiter", "name email")
+      .sort({ createdAt: -1 });
+
+    if (!projects || projects.length === 0) {
+      projects = [
+        {
+          _id: "google-sde-drive",
+          id: "google-sde-drive",
+          title: "Software Engineer - Campus Placement",
+          description: "Build scalable cloud infrastructure, full-stack microservices, and AI-driven platforms.",
+          company: { name: "Google", location: "Bangalore / Hybrid" },
+          requiredSkills: ["React", "TypeScript", "Node.js", "Distributed Systems"],
+          duration: "Full-Time",
+          stipend: 266000,
+          location: "Bangalore / Hybrid",
+          mode: "Hybrid",
+          openings: 15,
+          status: "Open",
+        },
+        {
+          _id: "microsoft-swe-drive",
+          id: "microsoft-swe-drive",
+          title: "Full Stack Engineer - Early Career",
+          description: "Develop rich interactive user interfaces and cloud services on Azure.",
+          company: { name: "Microsoft", location: "Hyderabad" },
+          requiredSkills: ["JavaScript", "React", "C#", "SQL"],
+          duration: "Full-Time",
+          stipend: 233000,
+          location: "Hyderabad",
+          mode: "Remote",
+          openings: 20,
+          status: "Open",
+        },
+      ];
+    }
+
+    return successResponse(res, "Projects retrieved successfully", {
+      projects,
+      count: projects.length,
+    });
+  } catch (error) {
+    console.error("getStudentProjects error:", error);
+    return errorResponse(res, "Failed to retrieve projects", 500);
+  }
+};
+
+export const applyToProject = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    const { projectId } = req.params;
+    const { coverLetter, resumeUrl } = req.body;
+
+    let project = null;
+    let recruiterId = null;
+    let companyId = null;
+
+    if (isValidObjectId(projectId)) {
+      project = await Project.findById(projectId);
+      if (project) {
+        recruiterId = project.recruiter;
+        companyId = project.company;
+      }
+    }
+
+    if (project) {
+      const existing = await Application.findOne({
+        student: student._id,
+        project: project._id,
+      });
+      if (existing) {
+        return errorResponse(res, "You have already applied for this project", 400);
+      }
+    }
+
+    const newApp = await Application.create({
+      student: student._id,
+      project: project ? project._id : undefined,
+      recruiter: recruiterId || new mongoose.Types.ObjectId(),
+      company: companyId || new mongoose.Types.ObjectId(),
+      resume: resumeUrl || student.resumeUrl || student.resume || "",
+      coverLetter: coverLetter || "",
+      status: "Applied",
+    });
+
+    return successResponse(res, "Applied successfully", {
+      application: newApp,
+    }, 201);
+  } catch (error) {
+    console.error("applyToProject error:", error);
+    return errorResponse(res, error.message || "Failed to apply to project", 500);
+  }
+};
+
+export const getStudentApplications = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    const applications = await Application.find({ student: student._id })
+      .populate("project")
+      .populate("company", "name logo location")
+      .populate("recruiter", "name email")
+      .sort({ createdAt: -1 });
+
+    const formatted = applications.map((app) => {
+      const p = app.project || {};
+      const c = app.company || {};
+      return {
+        id: app._id.toString(),
+        _id: app._id.toString(),
+        title: p.title || "Software Engineer",
+        company: c.name || "Enterprise Partner",
+        location: p.location || "Bangalore / Hybrid",
+        appliedOn: app.createdAt ? new Date(app.createdAt).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }) : "Recent",
+        status: app.status || "Applied",
+        stipend: p.stipend ? `₹${p.stipend.toLocaleString()}/mo` : "₹32 LPA",
+        skills: p.requiredSkills && p.requiredSkills.length > 0 ? p.requiredSkills : ["JavaScript", "React", "Node.js"],
+        resume: app.resume || student.resumeUrl || student.resume || "",
+        coverLetter: app.coverLetter || "",
+      };
+    });
+
+    return successResponse(res, "Applications retrieved successfully", {
+      applications: formatted,
+      count: formatted.length,
+    });
+  } catch (error) {
+    console.error("getStudentApplications error:", error);
+    return errorResponse(res, "Failed to retrieve applications", 500);
+  }
+};
+
+export const getStudentApplicationById = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    const { applicationId } = req.params;
+    if (!isValidObjectId(applicationId)) {
+      return errorResponse(res, "Invalid application ID", 400);
+    }
+
+    const app = await Application.findOne({
+      _id: applicationId,
+      student: student._id,
+    })
+      .populate("project")
+      .populate("company", "name logo location")
+      .populate("recruiter", "name email");
+
+    if (!app) {
+      return errorResponse(res, "Application not found", 404);
+    }
+
+    const p = app.project || {};
+    const c = app.company || {};
+
+    return successResponse(res, "Application details retrieved successfully", {
+      application: {
+        id: app._id.toString(),
+        _id: app._id.toString(),
+        title: p.title || "Software Engineer",
+        company: c.name || "Enterprise Partner",
+        location: p.location || "Bangalore / Hybrid",
+        appliedOn: app.createdAt ? new Date(app.createdAt).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }) : "Recent",
+        status: app.status || "Applied",
+        stipend: p.stipend ? `₹${p.stipend.toLocaleString()}/mo` : "₹32 LPA",
+        skills: p.requiredSkills || ["JavaScript", "React"],
+        resume: app.resume || student.resumeUrl || student.resume || "",
+        coverLetter: app.coverLetter || "",
+      },
+    });
+  } catch (error) {
+    console.error("getStudentApplicationById error:", error);
+    return errorResponse(res, "Failed to retrieve application details", 500);
+  }
+};
+
+export const withdrawStudentApplication = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    const { applicationId } = req.params;
+    if (!isValidObjectId(applicationId)) {
+      return errorResponse(res, "Invalid application ID", 400);
+    }
+
+    const app = await Application.findOneAndDelete({
+      _id: applicationId,
+      student: student._id,
+    });
+
+    if (!app) {
+      return errorResponse(res, "Application not found", 404);
+    }
+
+    return successResponse(res, "Application withdrawn successfully", {
+      applicationId,
+    });
+  } catch (error) {
+    console.error("withdrawStudentApplication error:", error);
+    return errorResponse(res, "Failed to withdraw application", 500);
+  }
+};
+
+/*
+ * =========================================================
+ * NOTIFICATIONS
+ * =========================================================
+ */
+
+export const getStudentNotifications = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    let notifications = student.notifications || [];
+    if (notifications.length === 0) {
+      notifications = [
+        {
+          _id: new mongoose.Types.ObjectId(),
+          title: "Welcome to Campus2Corporate",
+          message: "Complete your profile and upload your resume to unlock AI interview prep and corporate drives.",
+          type: "info",
+          read: false,
+          createdAt: new Date(),
+        },
+        {
+          _id: new mongoose.Types.ObjectId(),
+          title: "Technical Round 1 Ready",
+          message: "Your AI technical round is ready. Click Placement Prep to begin.",
+          type: "drive",
+          read: false,
+          createdAt: new Date(),
+        },
+      ];
+    }
+
+    return successResponse(res, "Notifications retrieved successfully", {
+      notifications,
+      unreadCount: notifications.filter((n) => !n.read).length,
+    });
+  } catch (error) {
+    console.error("getStudentNotifications error:", error);
+    return errorResponse(res, "Failed to retrieve notifications", 500);
+  }
+};
+
+export const markNotificationRead = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    const { id } = req.params;
+    const notif = student.notifications?.id(id);
+    if (notif) {
+      notif.read = true;
+      await student.save();
+    }
+
+    return successResponse(res, "Notification marked as read", {
+      id,
+      notifications: student.notifications || [],
+      unreadCount: (student.notifications || []).filter((n) => !n.read).length,
+    });
+  } catch (error) {
+    console.error("markNotificationRead error:", error);
+    return errorResponse(res, "Failed to update notification", 500);
+  }
+};
+
+export const markAllNotificationsRead = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    if (student.notifications) {
+      student.notifications.forEach((n) => {
+        n.read = true;
+      });
+      await student.save();
+    }
+
+    return successResponse(res, "All notifications marked as read", {
+      success: true,
+      notifications: student.notifications || [],
+      unreadCount: 0,
+    });
+  } catch (error) {
+    console.error("markAllNotificationsRead error:", error);
+    return errorResponse(res, "Failed to update notifications", 500);
+  }
+};
+
+export const deleteStudentNotification = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    const { id } = req.params;
+    if (student.notifications) {
+      student.notifications.pull({ _id: id });
+      await student.save();
+    }
+
+    return successResponse(res, "Notification deleted successfully", {
+      id,
+      notifications: student.notifications || [],
+      unreadCount: (student.notifications || []).filter((n) => !n.read).length,
+    });
+  } catch (error) {
+    console.error("deleteStudentNotification error:", error);
+    return errorResponse(res, "Failed to delete notification", 500);
+  }
+};
+
+/*
+ * =========================================================
+ * CERTIFICATES
+ * =========================================================
+ */
+
+const CERT_ICON_MAP = [
+  { keywords: ["react", "javascript", "web", "frontend"], icon: "cpu" },
+  { keywords: ["python", "ml", "ai", "data"], icon: "ai-brain" },
+  { keywords: ["aws", "cloud", "azure", "gcp"], icon: "database" },
+  { keywords: ["security", "cyber"], icon: "shield" },
+  { keywords: ["project", "management", "pmp", "agile"], icon: "briefcase" },
+];
+const certIcon = (title = "") => {
+  const lower = title.toLowerCase();
+  for (const entry of CERT_ICON_MAP) {
+    if (entry.keywords.some((k) => lower.includes(k))) return entry.icon;
+  }
+  return "award";
+};
+
+export const getStudentCertificates = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    const all = student.certificates || [];
+    // The frontend expects { earned: [...], inProgress: [...] }
+    // We treat all stored certs as earned. inProgress can be populated later.
+    const earned = all.map((cert) => ({
+      id: cert._id?.toString() || cert.id,
+      _id: cert._id?.toString() || cert.id,
+      title: cert.title,
+      issuer: cert.issuer,
+      issueDate: cert.issueDate || "",
+      credentialId: cert.credentialId || "",
+      credentialUrl: cert.credentialUrl || "",
+      fileUrl: cert.fileUrl || "",
+      icon: certIcon(cert.title),
+      tags: [],
+      verified: true,
+    }));
+
+    return successResponse(res, "Certificates retrieved successfully", {
+      earned,
+      inProgress: [],
+      certificates: all,
+    });
+  } catch (error) {
+    console.error("getStudentCertificates error:", error);
+    return errorResponse(res, "Failed to retrieve certificates", 500);
+  }
+};
+
+export const addStudentCertificate = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    const { title, issuer, issueDate, credentialId, credentialUrl, fileUrl } = req.body;
+    if (!title || !issuer) {
+      return errorResponse(res, "Certificate title and issuer are required", 400);
+    }
+
+    const newCert = {
+      _id: new mongoose.Types.ObjectId(),
+      title: title.trim(),
+      issuer: issuer.trim(),
+      issueDate: issueDate || new Date().toISOString().split("T")[0],
+      credentialId: credentialId || "",
+      credentialUrl: credentialUrl || "",
+      fileUrl: fileUrl || "",
+    };
+
+    if (!student.certificates) student.certificates = [];
+    student.certificates.push(newCert);
+    await student.save();
+
+    return successResponse(res, "Certificate added successfully", {
+      certificate: newCert,
+    }, 201);
+  } catch (error) {
+    console.error("addStudentCertificate error:", error);
+    return errorResponse(res, error.message || "Failed to add certificate", 500);
+  }
+};
+
+export const updateStudentCertificate = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    const { id } = req.params;
+    const cert = student.certificates?.id(id);
+    if (!cert) {
+      return errorResponse(res, "Certificate not found", 404);
+    }
+
+    const { title, issuer, issueDate, credentialId, credentialUrl, fileUrl } = req.body;
+    if (title) cert.title = title.trim();
+    if (issuer) cert.issuer = issuer.trim();
+    if (issueDate) cert.issueDate = issueDate;
+    if (credentialId !== undefined) cert.credentialId = credentialId;
+    if (credentialUrl !== undefined) cert.credentialUrl = credentialUrl;
+    if (fileUrl !== undefined) cert.fileUrl = fileUrl;
+
+    await student.save();
+
+    return successResponse(res, "Certificate updated successfully", {
+      certificate: cert,
+    });
+  } catch (error) {
+    console.error("updateStudentCertificate error:", error);
+    return errorResponse(res, "Failed to update certificate", 500);
+  }
+};
+
+export const deleteStudentCertificate = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    const { id } = req.params;
+    if (student.certificates) {
+      student.certificates.pull({ _id: id });
+      await student.save();
+    }
+
+    return successResponse(res, "Certificate deleted successfully", {
+      id,
+    });
+  } catch (error) {
+    console.error("deleteStudentCertificate error:", error);
+    return errorResponse(res, "Failed to delete certificate", 500);
+  }
+};
+
+/*
+ * =========================================================
+ * SETTINGS
+ * =========================================================
+ */
+
+/**
+ * Build the nested settings response shape that the frontend expects:
+ * { email, settings: { notifications: {key:bool}, privacy: {key:bool}, theme, connectedAccounts } }
+ */
+const buildSettingsResponse = (student) => {
+  const s = student.settings || {};
+  // Flat flags -> nested notifications keys
+  const notifications = {
+    email: s.emailNotifications !== undefined ? Boolean(s.emailNotifications) : true,
+    sms: s.smsAlerts !== undefined ? Boolean(s.smsAlerts) : false,
+    assignments: s.interviewReminders !== undefined ? Boolean(s.interviewReminders) : true,
+    mentorSessions: s.mentorSessions !== undefined ? Boolean(s.mentorSessions) : true,
+    marketing: s.jobAlerts !== undefined ? Boolean(s.jobAlerts) : true,
+  };
+  const privacy = {
+    recruiterVisible: s.profileVisibility === "public",
+    leaderboard: s.leaderboard !== undefined ? Boolean(s.leaderboard) : true,
+    twoFactor: s.twoFactor !== undefined ? Boolean(s.twoFactor) : false,
+  };
+  return {
+    email: student.email,
+    settings: {
+      notifications,
+      privacy,
+      theme: s.theme || "light",
+      connectedAccounts: {
+        github: Boolean(student.github),
+        linkedIn: Boolean(student.linkedIn),
+      },
+    },
+  };
+};
+
+export const getStudentSettings = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    return successResponse(res, "Settings retrieved successfully", buildSettingsResponse(student));
+  } catch (error) {
+    console.error("getStudentSettings error:", error);
+    return errorResponse(res, "Failed to retrieve settings", 500);
+  }
+};
+
+export const updateStudentSettings = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    // Accept both flat and nested shapes from the frontend
+    const body = req.body;
+    if (!student.settings) student.settings = {};
+
+    // Flat top-level fields
+    if (body.emailNotifications !== undefined) student.settings.emailNotifications = Boolean(body.emailNotifications);
+    if (body.jobAlerts !== undefined) student.settings.jobAlerts = Boolean(body.jobAlerts);
+    if (body.interviewReminders !== undefined) student.settings.interviewReminders = Boolean(body.interviewReminders);
+    if (body.profileVisibility !== undefined) student.settings.profileVisibility = body.profileVisibility;
+    if (body.theme !== undefined) student.settings.theme = body.theme;
+
+    // Nested settings object { settings: { notifications: {...}, privacy: {...}, theme } }
+    const nested = body.settings || {};
+    if (nested.theme !== undefined) student.settings.theme = nested.theme;
+    if (nested.notifications) {
+      const n = nested.notifications;
+      if (n.email !== undefined) student.settings.emailNotifications = Boolean(n.email);
+      if (n.sms !== undefined) student.settings.smsAlerts = Boolean(n.sms);
+      if (n.assignments !== undefined) student.settings.interviewReminders = Boolean(n.assignments);
+      if (n.mentorSessions !== undefined) student.settings.mentorSessions = Boolean(n.mentorSessions);
+      if (n.marketing !== undefined) student.settings.jobAlerts = Boolean(n.marketing);
+    }
+    if (nested.privacy) {
+      const p = nested.privacy;
+      if (p.recruiterVisible !== undefined) student.settings.profileVisibility = p.recruiterVisible ? "public" : "private";
+      if (p.leaderboard !== undefined) student.settings.leaderboard = Boolean(p.leaderboard);
+      if (p.twoFactor !== undefined) student.settings.twoFactor = Boolean(p.twoFactor);
+    }
+
+    // Update profile fields if sent
+    if (body.email && body.email !== student.email) {
+      student.email = body.email;
+    }
+
+    await student.save();
+
+    return successResponse(res, "Settings updated successfully", buildSettingsResponse(student));
+  } catch (error) {
+    console.error("updateStudentSettings error:", error);
+    return errorResponse(res, "Failed to update settings", 500);
+  }
+};
+
+/*
+ * =========================================================
+ * RESUME BUILDER
+ * =========================================================
+ */
+
+export const getStudentResumeBuilder = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    const resumeBuilder = student.resumeBuilder || {
+      personalInfo: {
+        name: student.name,
+        email: student.email,
+        phone: student.phone || "",
+        location: student.location || "",
+        linkedIn: student.linkedIn || "",
+        github: student.github || "",
+        bio: student.bio || "",
+      },
+      education: student.education || [],
+      skills: student.skills || [],
+      experience: [],
+      projects: [],
+      certifications: student.certificates || [],
+      summary: student.bio || "",
+      templateId: "modern",
+    };
+
+    return successResponse(res, "Resume builder draft retrieved successfully", {
+      resumeBuilder,
+      data: resumeBuilder,
+    });
+  } catch (error) {
+    console.error("getStudentResumeBuilder error:", error);
+    return errorResponse(res, "Failed to retrieve resume builder", 500);
+  }
+};
+
+export const saveStudentResumeBuilder = async (req, res) => {
+  try {
+    const student = await getAuthenticatedStudent(req, res);
+    if (!student) return;
+
+    student.resumeBuilder = {
+      ...student.resumeBuilder,
+      ...req.body,
+      lastSaved: new Date(),
+    };
+
+    await student.save();
+
+    return successResponse(res, "Resume builder draft saved successfully", {
+      resumeBuilder: student.resumeBuilder,
+    });
+  } catch (error) {
+    console.error("saveStudentResumeBuilder error:", error);
+    return errorResponse(res, "Failed to save resume builder draft", 500);
+  }
+};
+
+/*
+ * =========================================================
+ * HIRING DRIVES LIST
+ * =========================================================
+ */
+
+export const getHiringDrives = async (req, res) => {
+  try {
+    const drives = [
+      {
+        id: "google-sde-drive",
+        _id: "google-sde-drive",
+        company: "Google",
+        title: "Software Engineer - Campus Placement",
+        role: "Software Engineer",
+        location: "Bangalore / Hybrid",
+        packageLabel: "₹32 LPA",
+        deadline: "30 Aug 2026",
+        eligibility: "B.Tech / M.Tech (CS, IT, ECE) with >= 70%",
+        skills: ["Data Structures", "Algorithms", "React", "Node.js", "System Design"],
+        rounds: [
+          { name: "Aptitude Assessment", duration: "45 Mins", type: "aptitude" },
+          { name: "Technical Round 1", duration: "30 Mins", type: "technical" },
+          { name: "HR & Cultural Round", duration: "25 Mins", type: "hr" },
+        ],
+        status: "Open",
+      },
+      {
+        id: "microsoft-swe-drive",
+        _id: "microsoft-swe-drive",
+        company: "Microsoft",
+        title: "Full Stack Engineer - Early Career",
+        role: "Full Stack Engineer",
+        location: "Hyderabad / Remote",
+        packageLabel: "₹28 LPA",
+        deadline: "15 Sep 2026",
+        eligibility: "B.Tech (All Branches) with >= 65%",
+        skills: ["TypeScript", "React", "Cloud Architecture", "SQL"],
+        rounds: [
+          { name: "Aptitude Assessment", duration: "45 Mins", type: "aptitude" },
+          { name: "Technical Round 1", duration: "30 Mins", type: "technical" },
+          { name: "HR & Cultural Round", duration: "25 Mins", type: "hr" },
+        ],
+        status: "Open",
+      },
+      {
+        id: "amazon-sde-drive",
+        _id: "amazon-sde-drive",
+        company: "Amazon",
+        title: "SDE-1 - Cloud & Distributed Systems",
+        role: "Software Development Engineer",
+        location: "Bangalore",
+        packageLabel: "₹34 LPA",
+        deadline: "20 Sep 2026",
+        eligibility: "B.Tech / M.Tech CS with >= 70%",
+        skills: ["Java", "Distributed Systems", "AWS", "Databases"],
+        rounds: [
+          { name: "Aptitude Assessment", duration: "45 Mins", type: "aptitude" },
+          { name: "Technical Round 1", duration: "30 Mins", type: "technical" },
+          { name: "HR & Cultural Round", duration: "25 Mins", type: "hr" },
+        ],
+        status: "Open",
+      },
+    ];
+
+    return successResponse(res, "Hiring drives retrieved successfully", {
+      drives,
+      count: drives.length,
+    });
+  } catch (error) {
+    console.error("getHiringDrives error:", error);
+    return errorResponse(res, "Failed to retrieve hiring drives", 500);
+  }
+};
