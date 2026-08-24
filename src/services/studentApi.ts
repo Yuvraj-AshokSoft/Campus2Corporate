@@ -53,6 +53,12 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem("c2c_student_user");
+      localStorage.removeItem("c2c_local_session");
+      
+      // We can also trigger a custom event that AuthContext can listen to, or just reload the page.
+      if (window.location.pathname !== '/student/login' && window.location.pathname !== '/') {
+         window.location.href = '/student/login';
+      }
     }
 
     return Promise.reject(error);

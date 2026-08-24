@@ -16,7 +16,7 @@ import { StudentDashboard } from "../pages/student/StudentDashboard";
 import Profile from "../pages/student/Profile";
 import ProjectList from "../pages/student/ProjectList";
 import AppliedProjects from "../pages/student/AppliedProjects";
-import StudentApplication from "../pages/student/Applications";
+import { StudentApplication } from "../pages/student/Applications";
 import ApplicationSubmission from "../pages/student/ApplicationSubmission";
 import Notifications from "../pages/student/Notifications";
 import StudentSettings from "../pages/student/Settings";
@@ -27,7 +27,7 @@ import StudentRoadmap from "../pages/student/StudentRoadmap";
 import StudentBroadcast from "../pages/student/StudentBroadcast";
 import StudentHiring from "../pages/student/HiringProcess";
 import AIInterview from "../pages/student/AIInterview";
-import FinalScoreCard from "../pages/student/FinalScore";
+import FinalScoreCard from "../pages/student/FinalScoreCard";
 
 // Admin pages
 import { AdminDashboard } from "../pages/AdminDashboard";
@@ -264,6 +264,15 @@ export const AppRoutes: React.FC = () => {
                   allowedRoles={["student"]}
                 >
                   <ProjectList />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/applications"
+              element={
+                <ProtectedRoute allowedRoles={["student"]}>
+                  <StudentApplication />
                 </ProtectedRoute>
               }
             />

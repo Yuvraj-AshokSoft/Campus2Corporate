@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
 import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
+import { studentApi, unwrapData } from "../../services/studentApi";
 
 type IconName =
   | "dashboard" | "user-check" | "briefcase" | "clipboard" | "building"
@@ -56,12 +57,6 @@ type Job = {
   requiredSkills: string[];
   description: string;
 };
-
-const projects: Project[] = [
-  { id: "p1", title: "AI Fraud Detection System", description: "Machine learning system for detecting fraudulent transactions with an analytics dashboard.", techStack: ["Python", "Machine Learning", "SQL", "Power BI"], category: "AI / ML", status: "Completed" },
-  { id: "p2", title: "Verbalystic", description: "Real-time AI speech analysis application for speech and transcript analysis.", techStack: ["React", "Next.js", "FastAPI", "Python", "AI"], category: "AI / Full Stack", status: "Completed" },
-  { id: "p3", title: "RegLens AI", description: "AI compliance assistant that retrieves regulatory clauses and generates compliance analysis.", techStack: ["FastAPI", "Groq", "Python", "Qdrant"], category: "AI / ML", status: "In Progress" },
-];
 
 const jobs: Job[] = [
   { id: "j1", company: "TechNova", role: "AI / ML Engineer", requiredSkills: ["Python", "Machine Learning", "SQL", "FastAPI", "React", "LLM"], description: "Build and deploy machine learning systems, AI APIs and data-driven products." },
@@ -135,7 +130,8 @@ const sidebarItems: Array<{
   },
 ];
 
-const analyze = (project: Project, job: Job) => {
+const analyze = (project: Project | null, job: Job) => {
+  if (!project) return { matched: [], missing: job.requiredSkills, score: 0 };
   const normalized = project.techStack.map((s) => s.toLowerCase());
   const matched = job.requiredSkills.filter((s) => normalized.includes(s.toLowerCase()));
   const missing = job.requiredSkills.filter((s) => !normalized.includes(s.toLowerCase()));
@@ -145,13 +141,45 @@ const analyze = (project: Project, job: Job) => {
 const StudentProjects = () => {
   const { currentUser } = useAuth();
   const fullName = currentUser?.fullName || currentUser?.name || "Student";
-  const [selectedProjectId, setSelectedProjectId] = useState(projects[0].id);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedJobId, setSelectedJobId] = useState(jobs[0].id);
   const [query, setQuery] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [toast, setToast] = useState("");
 
-  const selectedProject = projects.find((p) => p.id === selectedProjectId) || projects[0];
+  useEffect(() => {
+    let mounted = true;
+    const fetchProjects = async () => {
+      try {
+        const res = await studentApi.getProjects();
+        const data = unwrapData<any[]>(res);
+        if (mounted) {
+          const mapped = data.map(p => ({
+            id: p._id || p.id,
+            title: p.title || 'Untitled',
+            description: p.description || '',
+            techStack: p.techStack || [],
+            category: p.category || 'General',
+            status: p.status || 'In Progress'
+          }));
+          setProjects(mapped);
+          if (mapped.length > 0) {
+            setSelectedProjectId(mapped[0].id);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    fetchProjects();
+    return () => { mounted = false; };
+  }, []);
+
+  const selectedProject = projects.find((p) => p.id === selectedProjectId) || projects[0] || null;
   const selectedJob = jobs.find((j) => j.id === selectedJobId) || jobs[0];
   const analysis = useMemo(() => analyze(selectedProject, selectedJob), [selectedProject, selectedJob]);
 
@@ -224,7 +252,7 @@ const StudentProjects = () => {
 
             <div className="space-y-3 p-4 sm:p-5">
               {filteredProjects.map((project) => {
-                const active = project.id === selectedProject.id;
+                const active = selectedProject ? project.id === selectedProject.id : false;
                 return (
                   <button key={project.id} type="button" onClick={() => setSelectedProjectId(project.id)} className={`w-full rounded-2xl border p-4 text-left transition ${active ? "border-[#5400D6]/30 bg-[#5400D6]/5" : "border-slate-200 hover:border-[#5400D6]/20 hover:bg-slate-50"}`}>
                     <div className="flex items-start gap-3">
@@ -335,7 +363,7 @@ const StudentProjects = () => {
                 </div>
               </div>
 
-              <button type="button" onClick={() => notify(`AI analysis generated for ${selectedProject.title}.`)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#5400D6] py-3 text-sm font-bold text-white hover:bg-[#4500ad]">
+              <button type="button" onClick={() => notify(`AI analysis generated for ${selectedProject ? selectedProject.title : 'project'}.`)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#5400D6] py-3 text-sm font-bold text-white hover:bg-[#4500ad]">
                 <Icon name="sparkles" className="h-4 w-4" />
                 Run AI Analysis
               </button>

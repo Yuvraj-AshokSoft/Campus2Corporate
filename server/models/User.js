@@ -38,6 +38,41 @@ const userSchema = new mongoose.Schema(
         message: '{VALUE} is not a valid role',
       },
     },
+    college: { type: String, trim: true },
+    branch: { type: String, trim: true },
+    semester: { type: String, trim: true },
+    location: { type: String, trim: true },
+    bio: { type: String },
+    github: { type: String, trim: true },
+    linkedIn: { type: String, trim: true },
+    portfolio: { type: String, trim: true },
+    resume: { type: String },
+    resumeUrl: { type: String },
+    status: { type: String, default: 'Placement track active' },
+    skills: [{ type: String }],
+    education: [
+      {
+        institution: String,
+        degree: String,
+        year: String,
+        score: String,
+      }
+    ],
+    settings: {
+      notifications: {
+        email: { type: Boolean, default: true },
+        sms: { type: Boolean, default: false },
+        assignments: { type: Boolean, default: true },
+        mentorSessions: { type: Boolean, default: true },
+        marketing: { type: Boolean, default: false },
+      },
+      privacy: {
+        recruiterVisible: { type: Boolean, default: true },
+        leaderboard: { type: Boolean, default: true },
+        twoFactor: { type: Boolean, default: false },
+      },
+      theme: { type: String, enum: ['light', 'dark', 'system'], default: 'light' },
+    },
     isVerified: {
       type: Boolean,
       default: false,

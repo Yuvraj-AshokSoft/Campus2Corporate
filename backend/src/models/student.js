@@ -143,11 +143,10 @@ const studentSchema = new mongoose.Schema(
       max: 12,
     },
     percentage: {
-  type: Number,
-  required: true,
-  min: 0,
-  max: 100,
-},
+      type: Number,
+      min: 0,
+      max: 100,
+    },
     skills: [
       {
         type: String,

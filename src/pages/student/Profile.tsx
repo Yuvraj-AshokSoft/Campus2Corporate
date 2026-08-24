@@ -752,9 +752,16 @@ export const StudentProfile = () => {
                   detail: resumeName ? "Resume connected" : "Resume missing",
                 },
               ].map((item) => (
-                <div
+                <button
                   key={item.label}
-                  className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3"
+                  type="button"
+                  onClick={() => {
+                    if (!item.complete) {
+                      setEditing(true);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }
+                  }}
+                  className="flex w-full text-left items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 transition hover:border-[#5400D6]/30 hover:bg-[#5400D6]/5 cursor-pointer"
                 >
                   <div
                     className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${
@@ -785,7 +792,7 @@ export const StudentProfile = () => {
                   >
                     {item.complete ? "READY" : "ADD"}
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           </div>

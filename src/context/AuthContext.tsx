@@ -166,10 +166,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { success: true };
         }
       } catch (error: any) {
-        backendStudentLoginError =
-          error?.response?.data?.message ||
-          error?.message ||
-          'Student login failed';
+        return {
+          success: false,
+          message:
+            error?.response?.data?.message ||
+            error?.message ||
+            'Student login failed',
+        };
       }
     }
 
@@ -266,6 +269,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     role: string;
   }) => {
     const cleanEmail = userData.email.trim().toLowerCase();
+
+    if (userData.role.toLowerCase() === 'student') {
+      try {
+        await studentApi.register(userData);
+        return { success: true, message: 'Account created successfully! You can now log in.' };
+      } catch (error: any) {
+        return {
+          success: false,
+          message:
+            error?.response?.data?.message ||
+            error?.message ||
+            'Student registration failed',
+        };
+      }
+    }
 
     // Store in local registered accounts
     const registeredListStr = localStorage.getItem('c2c_registered_users') || '[]';
@@ -430,7 +448,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         currentUser,
         isAuthenticated: (isSignedIn || localUser !== null || currentUser !== null),
-        loading: !isAuthLoaded || !isUserLoaded,
+        loading: (localUser === null) && (!isAuthLoaded || !isUserLoaded),
         login,
         register,
         verifyOtp,

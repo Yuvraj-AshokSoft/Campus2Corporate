@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Student from "../models/student.js";
 import Application from "../models/application.js";
 import Project from "../models/project.js";
+import AIInterview from "../models/AIInterview.js";
 import generateToken from "../utils/generateToken.js";
 import {
   successResponse,
@@ -544,59 +545,54 @@ export const getStudentDashboard = async (req, res) => {
     }
 
     const [
-      skills,
-      learningModules,
-      assignments,
-      quizzes,
-      skillScore,
+      applicationsCount,
+      aiInterviewsCount,
     ] = await Promise.all([
-      StudentSkill.find({
-        student: student._id,
-      }).lean(),
-
-      LearningModule.find({
-        isActive: true,
-      }).lean(),
-
-      Assignment.find({
-        student: student._id,
-      }).lean(),
-
-      Quiz.find({
-        student: student._id,
-      }).lean(),
-
-      SkillScore.findOne({
-        student: student._id,
-      }).lean(),
+      Application ? Application.countDocuments({ student: student._id }) : Promise.resolve(0),
+      AIInterview ? AIInterview.countDocuments({ candidateId: student._id }) : Promise.resolve(0),
     ]);
 
+    const learningScore = student.learningProgress?.length 
+      ? average(student.learningProgress.map(m => clampPercentage(m.progressPercentage))) 
+      : 0;
+
+    const streak = 0; // TODO: Calculate from login history
+
+    // Structure matching DashboardData frontend interface
     return successResponse(
       res,
       "Student dashboard fetched successfully",
       {
-        student: {
+        profile: {
           id: student._id,
           name: student.name,
           email: student.email,
           phone: student.phone,
           profile: student.profile,
+          branch: student.branch,
+          semester: student.semester,
         },
-
-        skills: skills || [],
-
-        learningModules:
-          learningModules || [],
-
-        assignments:
-          assignments || [],
-
-        quizzes:
-          quizzes || [],
-
-        skillScore:
-          skillScore || null,
-      },
+        stats: {
+          registeredCourses: student.assignmentSubmissions?.length || 0, // Fallback for Projects
+          completed: student.learningProgress?.filter(l => l.progressPercentage === 100).length || 0,
+          pending: 0,
+          certificates: aiInterviewsCount,
+          appliedProjects: applicationsCount,
+          unreadNotifications: 0,
+          closingThisWeek: 0,
+          learningScore: learningScore,
+          currentStreak: streak
+        },
+        modules: (student.learningProgress || []).map(m => ({
+          id: m.moduleId,
+          title: m.moduleName || "Learning Module",
+          category: "Course",
+          progress: clampPercentage(m.progressPercentage) || 0,
+          color: "#7c3aed"
+        })),
+        performanceData: [],
+        upcomingActivities: []
+      }
     );
   } catch (error) {
     console.error(

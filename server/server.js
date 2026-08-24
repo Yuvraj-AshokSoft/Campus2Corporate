@@ -10,6 +10,7 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import adminAuthRoutes from './routes/adminAuthRoutes.js';
 import aiInterviewRoutes from './routes/aiInterviewRoutes.js';
+import studentRoutes from './routes/studentRoutes.js';
 
 import { seedAdmin } from './utils/seedAdmin.js';
 
@@ -55,6 +56,12 @@ app.use(
 app.use(
   '/api/auth',
   authRoutes,
+);
+
+// Student API routes
+app.use(
+  '/api/student',
+  studentRoutes,
 );
 
 // Admin authentication
