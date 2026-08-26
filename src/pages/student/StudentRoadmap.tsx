@@ -616,7 +616,7 @@ const StudentRoadmap: React.FC = () => {
   const completedLessons = useMemo(
     () =>
       phases.reduce(
-        (total, phase) =>
+        (total: number, phase: any) =>
           total + (phase.lessons.length > 0 ? 1 : 0),
         0
       ),
@@ -869,7 +869,7 @@ const StudentRoadmap: React.FC = () => {
 
               {phases.length > 0 ? (
                 <div className="space-y-5">
-                  {phases.map((section, index) => (
+                  {phases.map((section: any, index: number) => (
                     <RoadmapSectionCard
                       key={section.id}
                       section={{

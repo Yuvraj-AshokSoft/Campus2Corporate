@@ -716,6 +716,14 @@ export const StudentNotifications = () => {
     (item) => !item.read
   ).length;
 
+  // Update sidebar items with actual unread count
+  const sidebarItemsWithBadge = sidebarItems.map((item) => {
+    if (item.label === "Notifications") {
+      return { ...item, badge: unreadCount || undefined };
+    }
+    return item;
+  });
+
   const filteredItems = items.filter((item) => {
     if (activeFilter === "all") return true;
 
@@ -888,6 +896,7 @@ export const StudentNotifications = () => {
     <StudentLayout
       sidebarItems={sidebarItems}
       sidebarHighlight="Notifications"
+        sidebarItems={sidebarItemsWithBadge}
       userSummary={{
         fullName,
         role: "Student",

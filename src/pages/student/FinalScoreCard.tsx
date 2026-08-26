@@ -48,7 +48,20 @@ const getScoreLabel = (score: number) => {
   if (score >= 50) return "Average";
   return "Needs Improvement";
 };
-
+const getStatus = (status: string) => {
+  switch (status?.toLowerCase()) {
+    case "completed":
+      return "COMPLETED";
+    case "passed":
+      return "PASSED";
+    case "selected":
+      return "SELECTED";
+    case "rejected":
+      return "REVIEW";
+    default:
+      return "COMPLETED";
+  }
+};
 const ScoreBar = ({
   label,
   score,
@@ -98,49 +111,128 @@ export default function FinalScoreCard({
   const [searchParams] = useSearchParams();
   const driveId = paramDriveId || searchParams.get("driveId") || "google-sde-drive";
 
-  const [scorecard, setScorecard] = useState<ScorecardData>(() => {
-    if (propData) return propData;
-
-    return {
-      overallScore: 0,
-      strengths: [],
-      improvements: [],
-      feedback: "Loading your latest scorecard from the backend interview results...",
-      recommendation: "Waiting for the final AI evaluation to finish.",
-    };
-  });
-
-  const [candidateName] = useState(propCandidateName || "Student");
+  const [scorecard, setScorecard] = useState<ScorecardData | null>(null);
+  const [candidateName] = useState(propCandidateName || "");
+  const [isLoading, setIsLoading] = useState(!propData);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // If propData is provided, use it directly (for embedded usage)
     if (propData) {
       setScorecard(propData);
+      setIsLoading(false);
       return;
     }
 
-    // Attempt to load from backend scorecard API if available
+    // Otherwise, always fetch from backend API
+    if (!driveId) {
+      setError("Invalid hiring drive ID");
+      setIsLoading(false);
+      return;
+    }
+
     const fetchScorecard = async () => {
-      if (!driveId) return;
+      setIsLoading(true);
+      setError(null);
       try {
         const res = await fetch(`${API}/ai-interview/drive/${driveId}/scorecard`, {
           headers: { Authorization: auth() },
         });
-        if (res.ok) {
-          const data = await res.json();
-          if (data?.scorecard) {
-            setScorecard((prev) => ({
-              ...prev,
-              ...data.scorecard,
-            }));
+        
+        if (!res.ok) {
+          if (res.status === 401) {
+            throw new Error("Authentication failed. Please log in again.");
           }
+          if (res.status === 404) {
+            throw new Error("Hiring drive or interview results not found.");
+          }
+          throw new Error(`Server error: ${res.statusText}`);
         }
-      } catch {
-        // fallback to local data
+
+        const data = await res.json();
+        if (!data?.scorecard) {
+          throw new Error("No scorecard data received from server");
+        }
+
+        setScorecard(data.scorecard);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to load scorecard";
+        setError(message);
+        console.error("Scorecard fetch error:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     void fetchScorecard();
   }, [driveId, propData]);
+
+  // Show error state
+  if (error && !propData) {
+    return (
+      <div className="min-h-screen bg-[#f8f7fb] px-4 py-8 sm:px-6 lg:px-10">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <button
+            type="button"
+            onClick={() => navigate(`/student/hiring-process/${driveId}`)}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 transition hover:text-[#5400D6]"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Hiring Process
+          </button>
+          
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h2 className="font-bold text-red-900">Unable to Load Scorecard</h2>
+                <p className="mt-1 text-sm text-red-800">{error}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#f8f7fb] px-4 py-8 sm:px-6 lg:px-10 flex items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#F4EFFF]">
+            <Sparkles className="h-6 w-6 text-[#5400D6] animate-spin" />
+          </div>
+          <p className="text-slate-600 font-medium">Loading your scorecard...</p>
+          <p className="text-xs text-slate-400 mt-1">This may take a moment as we retrieve your interview evaluation.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no scorecard
+  if (!scorecard) {
+    return (
+      <div className="min-h-screen bg-[#f8f7fb] px-4 py-8 sm:px-6 lg:px-10">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <button
+            type="button"
+            onClick={() => navigate(`/student/hiring-process/${driveId}`)}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 transition hover:text-[#5400D6]"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Hiring Process
+          </button>
+          
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+            <p className="text-slate-600">No scorecard available for this hiring drive.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Always use backend data, never any fallback or defaults
 
   const overall = clampScore(scorecard.overallScore);
 

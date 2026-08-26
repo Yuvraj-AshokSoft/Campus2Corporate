@@ -57,7 +57,8 @@ type Job = {
   requiredSkills: string[];
   description: string;
 };
-
+// TODO: Replace with backend API call to /api/student/opportunities (not yet implemented)
+// Once available, fetch jobs via studentApi.getOpportunities() instead of using hardcoded array
 const jobs: Job[] = [
   { id: "j1", company: "TechNova", role: "AI / ML Engineer", requiredSkills: ["Python", "Machine Learning", "SQL", "FastAPI", "React", "LLM"], description: "Build and deploy machine learning systems, AI APIs and data-driven products." },
   { id: "j2", company: "DataSphere", role: "Data Analyst", requiredSkills: ["Python", "SQL", "Power BI", "Excel", "Statistics"], description: "Analyze business data, create dashboards and communicate actionable insights." },
