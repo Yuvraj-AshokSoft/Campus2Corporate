@@ -101,77 +101,16 @@ export default function FinalScoreCard({
   const [scorecard, setScorecard] = useState<ScorecardData>(() => {
     if (propData) return propData;
 
-    // Check local storage for recorded round results
-    const techRaw = typeof window !== "undefined" ? localStorage.getItem(`c2c_interview_result_${driveId}_technical`) : null;
-    const hrRaw = typeof window !== "undefined" ? localStorage.getItem(`c2c_interview_result_${driveId}_hr`) : null;
-
-    let techScore = 88;
-    let hrScore = 86;
-    let commScore = 84;
-    let techStrengths: string[] = [];
-    let hrStrengths: string[] = [];
-    let techWeaknesses: string[] = [];
-    let hrWeaknesses: string[] = [];
-
-    if (techRaw) {
-      try {
-        const parsed = JSON.parse(techRaw);
-        techScore = parsed.technicalScore || parsed.overallScore || techScore;
-        commScore = parsed.communicationScore || commScore;
-        if (Array.isArray(parsed.strengths)) techStrengths = parsed.strengths;
-        if (Array.isArray(parsed.weaknesses)) techWeaknesses = parsed.weaknesses;
-      } catch {
-        // use defaults
-      }
-    }
-
-    if (hrRaw) {
-      try {
-        const parsed = JSON.parse(hrRaw);
-        hrScore = parsed.hrScore || parsed.overallScore || hrScore;
-        if (parsed.communicationScore) {
-          commScore = Math.round((commScore + parsed.communicationScore) / 2);
-        }
-        if (Array.isArray(parsed.strengths)) hrStrengths = parsed.strengths;
-        if (Array.isArray(parsed.weaknesses)) hrWeaknesses = parsed.weaknesses;
-      } catch {
-        // use defaults
-      }
-    }
-
-    const aptitudeScore = 90;
-    const problemSolvingScore = Math.round((techScore * 0.9) + 8);
-    const overallScore = Math.round(
-      (aptitudeScore * 0.2) + (techScore * 0.35) + (hrScore * 0.3) + (commScore * 0.15)
-    );
-
-    const strengths = Array.from(new Set([...techStrengths, ...hrStrengths]));
-    const improvements = Array.from(new Set([...techWeaknesses, ...hrWeaknesses]));
-
     return {
-      overallScore,
-      aptitudeScore,
-      technicalScore: techScore,
-      communicationScore: commScore,
-      hrScore,
-      problemSolvingScore,
-      strengths: strengths.length > 0 ? strengths : [
-        "Strong understanding of core CS fundamentals, algorithms, and clean architecture",
-        "Articulate communication using structured STAR behavioral storytelling",
-        "High cultural alignment, team empathy, and proactive problem resolution mindset",
-      ],
-      improvements: improvements.length > 0 ? improvements : [
-        "Provide more depth into edge-case optimizations when discussing system scalability",
-        "Include concrete performance metrics and measurable impact in project summaries",
-      ],
-      feedback: "Candidate demonstrated well-rounded excellence across the proctored Aptitude assessment, Technical Coding Round 1, and the HR Behavioral Interview. Technical concepts were explained with clarity and the candidate displayed strong interpersonal and problem-solving maturity.",
-      recommendation: overallScore >= 80
-        ? "Strong Hire - Recommended for Software Engineer Role. Candidate exceeded benchmarks across technical competencies, behavioral maturity, and problem-solving agility."
-        : "Hire - Recommended for placement. Candidate met all mandatory performance rubrics.",
+      overallScore: 0,
+      strengths: [],
+      improvements: [],
+      feedback: "Loading your latest scorecard from the backend interview results...",
+      recommendation: "Waiting for the final AI evaluation to finish.",
     };
   });
 
-  const [candidateName] = useState(propCandidateName || "Aarav Mehta");
+  const [candidateName] = useState(propCandidateName || "Student");
 
   useEffect(() => {
     if (propData) {

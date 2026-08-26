@@ -1,6 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import StudentLayout from "../../components/student/StudentLayout";
 import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
+import { useAuth } from "../../context/AuthContext";
+import { getApiErrorMessage, studentApi, unwrapData } from "../../services/studentApi";
 
 type IconName =
   | "dashboard"
@@ -362,10 +364,14 @@ const RoadmapSectionCard = ({
   section,
   active,
   onSelect,
+  videoLessons,
+  problems,
 }: {
   section: RoadmapSection;
   active: boolean;
   onSelect: () => void;
+  videoLessons?: Array<{ title: string; subtitle: string }>;
+  problems?: Array<{ problem: string; difficulty: string; status: string; action: string }>;
 }) => {
   const isVideo = section.kind === "video";
 
@@ -446,7 +452,7 @@ const RoadmapSectionCard = ({
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {videoLessons.map((video) => (
+              {(videoLessons ?? []).map((video) => (
                 <button
                   key={video.title}
                   type="button"
@@ -479,7 +485,7 @@ const RoadmapSectionCard = ({
               </div>
 
               <div className="divide-y divide-slate-100">
-                {problems.map((problem) => (
+                {(problems ?? []).map((problem) => (
                   <div
                     key={problem.problem}
                     className="grid grid-cols-[2.2fr_0.8fr_1fr_auto] items-center gap-3 px-2 py-4 text-sm text-slate-600"
@@ -521,26 +527,109 @@ const RoadmapSectionCard = ({
 };
 
 const StudentRoadmap: React.FC = () => {
+  const { currentUser } = useAuth();
   const [selectedSection, setSelectedSection] = useState("css");
   const [journal, setJournal] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [roadmap, setRoadmap] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadRoadmap = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const profileResponse = await studentApi.getProfile();
+        const profile = profileResponse.data?.data ?? profileResponse.data?.student ?? profileResponse.data ?? {};
+        const fullName = currentUser?.fullName || currentUser?.name || profile.fullName || profile.name || "Student";
+        const profileSkills = Array.isArray(profile.skills)
+          ? profile.skills.map((skill: any) => (typeof skill === "string" ? skill : skill.name || skill.skill)).filter(Boolean)
+          : [];
+        const profileInterests = Array.isArray(profile.interests)
+          ? profile.interests.map((item: any) => (typeof item === "string" ? item : item.name)).filter(Boolean)
+          : [];
+
+        const context = [
+          `Student: ${fullName}`,
+          profile.branch ? `Branch: ${profile.branch}` : "",
+          profile.semester ? `Semester: ${profile.semester}` : "",
+          profileSkills.length ? `Skills: ${profileSkills.join(", ")}` : "",
+          profileInterests.length ? `Interests: ${profileInterests.join(", ")}` : "",
+          "Goal: Build a career-ready placement roadmap for this student.",
+        ]
+          .filter(Boolean)
+          .join("\n");
+
+        const response = await studentApi.generateRoadmap(context);
+        const payload = unwrapData<any>(response);
+        const roadmapData = payload?.goal ? payload : payload?.roadmap ?? payload?.result ?? payload?.data ?? null;
+
+        if (mounted) {
+          setRoadmap(roadmapData);
+        }
+      } catch (loadError) {
+        if (mounted) {
+          setError(getApiErrorMessage(loadError));
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadRoadmap();
+    return () => {
+      mounted = false;
+    };
+  }, [currentUser?.fullName, currentUser?.email, currentUser?.name]);
+
+  const phases = useMemo(() => {
+    if (!roadmap?.phases || !Array.isArray(roadmap.phases) || roadmap.phases.length === 0) {
+      return [] as Array<{ id: string; number: string; title: string; description: string; kind: "video" | "practice"; lessons: Array<{ title: string; subtitle: string }>; practice: Array<{ problem: string; difficulty: string; status: string; action: string }> }>;
+    }
+
+    return roadmap.phases.map((phase: any, index: number) => ({
+      id: phase.title || `phase-${index}`,
+      number: String(index + 1).padStart(2, "0"),
+      title: phase.title || `Phase ${index + 1}`,
+      description: phase.milestone || phase.duration || phase.actions?.join(" • ") || "Skill milestone",
+      kind: index % 2 === 0 ? "video" : "practice",
+      lessons: Array.isArray(phase.actions)
+        ? phase.actions.slice(0, 2).map((item: string) => ({ title: item, subtitle: phase.duration || "AI-guided action" }))
+        : [{ title: "AI-generated milestone", subtitle: phase.duration || "Personalized path" }],
+      practice: Array.isArray(phase.actions)
+        ? phase.actions.slice(0, 3).map((item: string, actionIndex: number) => ({
+            problem: item,
+            difficulty: ["Easy", "Medium", "Hard"][actionIndex % 3],
+            status: actionIndex === 0 ? "Planned" : actionIndex === 1 ? "In progress" : "Upcoming",
+            action: actionIndex === 0 ? "Focus" : "Review",
+          }))
+        : [],
+    }));
+  }, [roadmap]);
 
   const completedLessons = useMemo(
     () =>
-      modules.reduce(
-        (total, module) =>
-          total + module.items.filter((item) => item.complete).length,
+      phases.reduce(
+        (total, phase) =>
+          total + (phase.lessons.length > 0 ? 1 : 0),
         0
       ),
-    []
+    [phases]
   );
 
-  const totalLessons = useMemo(
-    () => modules.reduce((total, module) => total + module.items.length, 0),
-    []
-  );
+  const totalLessons = useMemo(() => Math.max(phases.length || 1, 1), [phases]);
 
-  const progress = Math.round((completedLessons / totalLessons) * 100);
+  const progress = phases.length > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+  const activeRoadmapTitle = roadmap?.goal || "Career Roadmap";
+  const activeRoadmapSubtitle = roadmap?.timeframe || "AI-generated personal learning path";
+  const activeRoadmapNextAction = roadmap?.nextAction || "Continue learning with your next milestone.";
 
   return (
     <StudentLayout
@@ -568,7 +657,7 @@ const StudentRoadmap: React.FC = () => {
                 Your Learning Roadmap
               </h1>
               <p className="mt-1 text-sm text-slate-500">
-                Follow the path, complete each milestone, and build job-ready skills.
+                {loading ? "Loading your AI-generated roadmap..." : activeRoadmapSubtitle}
               </p>
             </div>
 
@@ -618,13 +707,11 @@ const StudentRoadmap: React.FC = () => {
                   </div>
 
                   <h2 className="mt-4 max-w-2xl text-3xl font-black tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
-                    Web Development
-                    <span className="block text-purple-700">Mastery</span>
+                    {activeRoadmapTitle}
                   </h2>
 
                   <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
-                    A structured path from modern HTML and CSS to JavaScript,
-                    React, and production-ready frontend development.
+                    {activeRoadmapNextAction}
                   </p>
 
                   <div className="mt-7 flex flex-wrap gap-3">
@@ -774,16 +861,36 @@ const StudentRoadmap: React.FC = () => {
                 </span>
               </div>
 
-              <div className="space-y-5">
-                {sections.map((section) => (
-                  <RoadmapSectionCard
-                    key={section.id}
-                    section={section}
-                    active={selectedSection === section.id}
-                    onSelect={() => setSelectedSection(section.id)}
-                  />
-                ))}
-              </div>
+              {error && (
+                <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                  {error}
+                </div>
+              )}
+
+              {phases.length > 0 ? (
+                <div className="space-y-5">
+                  {phases.map((section, index) => (
+                    <RoadmapSectionCard
+                      key={section.id}
+                      section={{
+                        id: section.id,
+                        number: section.number,
+                        title: section.title,
+                        description: section.description,
+                        kind: section.kind,
+                      }}
+                      active={selectedSection === section.id}
+                      onSelect={() => setSelectedSection(section.id)}
+                      videoLessons={section.lessons}
+                      problems={section.practice}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
+                  {loading ? "Generating your AI roadmap..." : "No roadmap data is available yet. Please refresh or try again later."}
+                </div>
+              )}
 
               <section className="mt-6 rounded-2xl border border-purple-100 bg-purple-50/70 p-5 sm:p-6">
                 <div className="flex items-center gap-3">

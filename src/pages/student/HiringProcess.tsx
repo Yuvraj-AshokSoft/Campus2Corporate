@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ComponentType } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { studentApi, unwrapData } from '../../services/studentApi';
 import {
   MapPin,
   Wallet,
@@ -140,8 +142,6 @@ const DRIVE = {
   currentRoundIndex: 0,
   totalRounds: 4,
 };
-
-const CANDIDATE_NAME = 'Aarav Mehta';
 
 const INITIAL_TIMELINE_STEPS: TimelineStep[] = [
   { id: 'applied', label: 'Application Submitted', status: 'completed' },
@@ -531,6 +531,37 @@ function OptionRow({
 export default function HiringProcess() {
   const { driveId } = useParams<{ driveId: string }>();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const CANDIDATE_NAME = currentUser?.fullName || currentUser?.name || 'Student';
+
+  useEffect(() => {
+    if (!driveId) return;
+
+    const loadDrive = async () => {
+      try {
+        const response = await studentApi.getHiringDrives();
+        const drives = unwrapData<any[]>(response, 'drives') || [];
+        const selectedDrive = drives.find((item) => item.id === driveId || item._id === driveId);
+
+        if (!selectedDrive) return;
+
+        Object.assign(DRIVE, {
+          company: selectedDrive.company || DRIVE.company,
+          role: selectedDrive.role || DRIVE.role,
+          location: selectedDrive.location || DRIVE.location,
+          packageLabel: selectedDrive.packageLabel || DRIVE.packageLabel,
+          deadline: selectedDrive.deadline || DRIVE.deadline,
+          status: selectedDrive.status || DRIVE.status,
+          currentRoundIndex: 0,
+          totalRounds: Math.max(selectedDrive.rounds?.length || 4, 4),
+        });
+      } catch {
+        // Keep the page working with the known default drive data if the backend call fails.
+      }
+    };
+
+    void loadDrive();
+  }, [driveId]);
 
   // ---------------------------------------------------------------------
   // Flow / stage state
