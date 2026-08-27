@@ -532,6 +532,7 @@ const StudentRoadmap: React.FC = () => {
   const [journal, setJournal] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [roadmap, setRoadmap] = useState<any>(null);
+  const [curriculumModules, setCurriculumModules] = useState<Module[]>(modules);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -567,6 +568,17 @@ const StudentRoadmap: React.FC = () => {
         const response = await studentApi.generateRoadmap(context);
         const payload = unwrapData<any>(response);
         const roadmapData = payload?.goal ? payload : payload?.roadmap ?? payload?.result ?? payload?.data ?? null;
+
+        // Fetch dynamic learning path (curriculum)
+        try {
+          const dashRes = await studentApi.getDashboard();
+          const dashData = unwrapData<any>(dashRes);
+          if (dashData?.learningPath) {
+            setCurriculumModules(dashData.learningPath);
+          }
+        } catch (e) {
+          console.error("Failed to fetch dashboard learning path", e);
+        }
 
         if (mounted) {
           setRoadmap(roadmapData);
@@ -789,7 +801,7 @@ const StudentRoadmap: React.FC = () => {
                 </div>
 
                 <div className="mt-6 space-y-6">
-                  {modules.map((module) => (
+                  {curriculumModules.map((module) => (
                     <div key={module.title}>
                       <p className="mb-3 text-[10px] font-black tracking-wider text-slate-400">
                         {module.title}

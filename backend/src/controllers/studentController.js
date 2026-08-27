@@ -2079,7 +2079,7 @@ export const getStudentNotifications = async (req, res) => {
           _id: new mongoose.Types.ObjectId(),
           title: "Welcome to Campus2Corporate",
           message: "Complete your profile and upload your resume to unlock AI interview prep and corporate drives.",
-          type: "info",
+          type: "system",
           read: false,
           createdAt: new Date(),
         },
@@ -2087,7 +2087,7 @@ export const getStudentNotifications = async (req, res) => {
           _id: new mongoose.Types.ObjectId(),
           title: "Technical Round 1 Ready",
           message: "Your AI technical round is ready. Click Placement Prep to begin.",
-          type: "drive",
+          type: "assessment",
           read: false,
           createdAt: new Date(),
         },
@@ -2398,6 +2398,29 @@ export const updateStudentSettings = async (req, res) => {
     if (body.email && body.email !== student.email) {
       student.email = body.email;
     }
+    
+    // Update connected accounts
+    if (nested.connectedAccounts) {
+      if (nested.connectedAccounts.github !== undefined) {
+        student.github = nested.connectedAccounts.github ? "connected" : "";
+      }
+      if (nested.connectedAccounts.linkedIn !== undefined) {
+        student.linkedIn = nested.connectedAccounts.linkedIn ? "connected" : "";
+      }
+    }
+
+    // Password update
+    if (body.currentPassword && body.newPassword) {
+      const StudentModel = student.constructor;
+      const studentWithPass = await StudentModel.findById(student._id).select("+password");
+      if (!studentWithPass || !(await studentWithPass.comparePassword(body.currentPassword))) {
+        return errorResponse(res, "Incorrect current password", 400);
+      }
+      if (String(body.newPassword).length < 8) {
+        return errorResponse(res, "Password must be at least 8 characters long", 400);
+      }
+      student.password = body.newPassword;
+    }
 
     await student.save();
 
@@ -2544,3 +2567,15 @@ export const getHiringDrives = async (req, res) => {
     return errorResponse(res, "Failed to retrieve hiring drives", 500);
   }
 };
+export const getOpportunities = async (req, res) => {
+  return successResponse(res, 'Opportunities fetched', []);
+};
+
+export const getHiringDriveDetails = async (req, res) => {
+  return successResponse(res, 'Drive details fetched', {});
+};
+
+export const getDriveAssessment = async (req, res) => {
+  return successResponse(res, 'Drive assessment fetched', {});
+};
+

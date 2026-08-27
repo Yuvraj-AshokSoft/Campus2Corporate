@@ -259,6 +259,12 @@ const hiring = {
   get: () =>
     api.get("/student/hiring/drives"),
 
+  getDetails: (driveId: string) =>
+    api.get(`/student/hiring/drives/${driveId}`),
+
+  getAssessment: (driveId: string) =>
+    api.get(`/student/hiring/drives/${driveId}/assessment`),
+
   start: (projectId: string, data: FormData) =>
     api.post(
       `/student/hiring/drives/${projectId}/start`,
@@ -341,6 +347,7 @@ export const studentApi = {
   deleteSkill: skills.delete,
 
   getProjects: projects.get,
+  getOpportunities: () => api.get("/student/opportunities"),
   applyToProject: projects.apply,
   getApplications: projects.applications,
   getApplicationDetails: projects.applicationDetails,
@@ -363,6 +370,8 @@ export const studentApi = {
   saveResumeBuilder: resume.save,
 
   getHiringDrives: hiring.get,
+  getHiringDriveDetails: hiring.getDetails,
+  getDriveAssessment: hiring.getAssessment,
   startHiringDrive: hiring.start,
   generateStudyPlan: ai.generateStudyPlan,
   placementAnalysis: ai.placementAnalysis,

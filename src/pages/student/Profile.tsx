@@ -194,8 +194,8 @@ interface EditableField {
   key: string; label: string; icon: IconName; value: string; type?: string; disabled?: boolean;
 }
 
-const InputRow = ({ field, editing, onChange }: {
-  field: EditableField; editing: boolean; onChange: (key: string, value: string) => void;
+const InputRow = ({ field, editing, onChange, error }: {
+  field: EditableField; editing: boolean; onChange: (key: string, value: string) => void; error?: string;
 }) => (
   <div>
     <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
@@ -208,11 +208,14 @@ const InputRow = ({ field, editing, onChange }: {
       disabled={!editing || field.disabled}
       onChange={(e) => onChange(field.key, e.target.value)}
       className={`w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition ${
-        editing && !field.disabled
+        error
+          ? "border-rose-300 bg-rose-50 text-rose-800 focus:border-rose-400 focus:ring-2 focus:ring-rose-50"
+          : editing && !field.disabled
           ? "border-slate-200 bg-white text-slate-800 focus:border-purple-300 focus:ring-2 focus:ring-purple-50"
           : "border-slate-100 bg-slate-50 text-slate-500"
         }`}
     />
+    {error && <p className="mt-1 text-[10px] font-semibold text-rose-500">{error}</p>}
   </div>
 );
 
@@ -222,6 +225,10 @@ export const StudentProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [uploadingSaved, setUploadingSaved] = useState(false);
+  const avatarInputRef = useState<HTMLInputElement | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [profile, setProfile] = useState<StudentProfileType | null>(
     currentUser ? (currentUser as unknown as StudentProfileType) : null
   );
@@ -299,8 +306,14 @@ export const StudentProfile = () => {
 
   const addSkill = () => {
     const s = newSkill.trim();
-    if (s && !skills.includes(s)) setSkills([...skills, s]);
+    if (!s) return;
+    if (skills.includes(s)) {
+      setValidationErrors(prev => ({ ...prev, skills: `"${s}" is already added.` }));
+      return;
+    }
+    setSkills([...skills, s]);
     setNewSkill("");
+    setValidationErrors(prev => { const n = { ...prev }; delete n.skills; return n; });
   };
 
   const removeSkill = (s: string) => setSkills(skills.filter((k) => k !== s));
@@ -309,6 +322,26 @@ export const StudentProfile = () => {
     fields.find((field) => field.key === key)?.value || "";
 
   const saveProfile = async () => {
+    setValidationErrors({});
+    // Validation
+    const errs: Record<string, string> = {};
+    const name = fieldValue(personal, "fullName").trim();
+    const phone = fieldValue(personal, "phone").trim();
+    const github = fieldValue(links, "github").trim();
+    const linkedIn = fieldValue(links, "linkedIn").trim();
+    const portfolio = fieldValue(links, "portfolio").trim();
+
+    if (!name) errs.fullName = "Full name is required.";
+    if (phone && !/^[+\d][\d\s\-()]{7,14}$/.test(phone)) errs.phone = "Enter a valid phone number.";
+    if (github && !/^https?:\/\//.test(github)) errs.github = "GitHub URL must start with http:// or https://";
+    if (linkedIn && !/^https?:\/\//.test(linkedIn)) errs.linkedIn = "LinkedIn URL must start with http:// or https://";
+    if (portfolio && !/^https?:\/\//.test(portfolio)) errs.portfolio = "Portfolio URL must start with http:// or https://";
+
+    if (Object.keys(errs).length > 0) {
+      setValidationErrors(errs);
+      return;
+    }
+
     setSaving(true);
     setError("");
 
@@ -402,15 +435,35 @@ export const StudentProfile = () => {
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
 
               <div className="flex min-w-0 items-end gap-4">
-                <div className="relative -mt-11 flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-slate-900 text-2xl font-black text-white shadow-lg">
-                  {initials}
+                <div className="relative -mt-11 flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl border-4 border-white bg-slate-900 text-2xl font-black text-white shadow-lg overflow-hidden">
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <span>{initials}</span>
+                  )}
 
-                  <button
-                    type="button"
-                    className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#5400D6] text-white shadow-md transition hover:bg-[#4500ad]"
+                  {/* Hidden avatar file input */}
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => setAvatarPreview(ev.target?.result as string);
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  <label
+                    htmlFor="avatar-upload"
+                    className="absolute -bottom-2 -right-2 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-[#5400D6] text-white shadow-md transition hover:bg-[#4500ad]"
+                    title="Change profile picture"
                   >
                     <Icon name="camera" className="h-3.5 w-3.5" />
-                  </button>
+                  </label>
                 </div>
 
                 <div className="min-w-0 pb-1">
@@ -519,6 +572,7 @@ export const StudentProfile = () => {
                   key={field.key}
                   field={field}
                   editing={editing}
+                  error={validationErrors[field.key]}
                   onChange={(key, value) =>
                     updateField(personal, setPersonal, key, value)
                   }
@@ -601,23 +655,27 @@ export const StudentProfile = () => {
             </div>
 
             {editing && (
-              <div className="mt-4 flex gap-2">
-                <input
-                  value={newSkill}
-                  onChange={(e) => setNewSkill(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addSkill()}
-                  placeholder="Add a skill..."
-                  className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs outline-none focus:border-[#5400D6]/30 focus:ring-2 focus:ring-[#5400D6]/10"
-                />
-
-                <button
-                  type="button"
-                  onClick={addSkill}
-                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#5400D6] text-white transition hover:bg-[#4500ad]"
-                >
-                  <Icon name="plus" className="h-4 w-4" />
-                </button>
-              </div>
+              <>
+                <div className="mt-4 flex gap-2">
+                  <input
+                    value={newSkill}
+                    onChange={(e) => setNewSkill(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addSkill()}
+                    placeholder="Add a skill..."
+                    className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs outline-none focus:border-[#5400D6]/30 focus:ring-2 focus:ring-[#5400D6]/10"
+                  />
+                  <button
+                    type="button"
+                    onClick={addSkill}
+                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#5400D6] text-white transition hover:bg-[#4500ad]"
+                  >
+                    <Icon name="plus" className="h-4 w-4" />
+                  </button>
+                </div>
+                {validationErrors.skills && (
+                  <p className="mt-2 text-[10px] font-semibold text-rose-500">{validationErrors.skills}</p>
+                )}
+              </>
             )}
           </div>
 
@@ -636,6 +694,7 @@ export const StudentProfile = () => {
                   key={field.key}
                   field={field}
                   editing={editing}
+                  error={validationErrors[field.key]}
                   onChange={(key, value) =>
                     updateField(links, setLinks, key, value)
                   }
@@ -679,6 +738,12 @@ export const StudentProfile = () => {
                 {resumeName && (
                   <button
                     type="button"
+                    onClick={() => {
+                      const url = profile?.resumeUrl || profile?.resume || resumeName;
+                      if (url && url.startsWith('http')) {
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50"
                   >
                     <Icon name="download" className="h-3 w-3" />

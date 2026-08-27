@@ -57,13 +57,7 @@ type Job = {
   requiredSkills: string[];
   description: string;
 };
-// TODO: Replace with backend API call to /api/student/opportunities (not yet implemented)
-// Once available, fetch jobs via studentApi.getOpportunities() instead of using hardcoded array
-const jobs: Job[] = [
-  { id: "j1", company: "TechNova", role: "AI / ML Engineer", requiredSkills: ["Python", "Machine Learning", "SQL", "FastAPI", "React", "LLM"], description: "Build and deploy machine learning systems, AI APIs and data-driven products." },
-  { id: "j2", company: "DataSphere", role: "Data Analyst", requiredSkills: ["Python", "SQL", "Power BI", "Excel", "Statistics"], description: "Analyze business data, create dashboards and communicate actionable insights." },
-  { id: "j3", company: "CloudWorks", role: "Full Stack Developer", requiredSkills: ["React", "TypeScript", "Node.js", "SQL", "REST APIs"], description: "Build responsive web applications and scalable backend services." },
-];
+
 
 
 const sidebarItems: Array<{
@@ -143,31 +137,44 @@ const StudentProjects = () => {
   const { currentUser } = useAuth();
   const fullName = currentUser?.fullName || currentUser?.name || "Student";
   const [projects, setProjects] = useState<Project[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [selectedJobId, setSelectedJobId] = useState(jobs[0].id);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [toast, setToast] = useState("");
 
   useEffect(() => {
     let mounted = true;
-    const fetchProjects = async () => {
+    const fetchData = async () => {
       try {
-        const res = await studentApi.getProjects();
-        const data = unwrapData<any[]>(res);
+        const [profileRes, oppsRes] = await Promise.all([
+          studentApi.getProfile(),
+          studentApi.getOpportunities()
+        ]);
+        
         if (mounted) {
-          const mapped = data.map(p => ({
+          const profileData = unwrapData<any>(profileRes);
+          const studentProjects = profileData?.resumeBuilder?.projects || profileData?.projects || [];
+          
+          const mappedProjects = studentProjects.map((p: any) => ({
             id: p._id || p.id,
             title: p.title || 'Untitled',
             description: p.description || '',
-            techStack: p.techStack || [],
+            techStack: p.techStack || p.technologies || [],
             category: p.category || 'General',
             status: p.status || 'In Progress'
           }));
-          setProjects(mapped);
-          if (mapped.length > 0) {
-            setSelectedProjectId(mapped[0].id);
+          setProjects(mappedProjects);
+          if (mappedProjects.length > 0) {
+            setSelectedProjectId(mappedProjects[0].id);
+          }
+          
+          const oppsData = unwrapData<Job[]>(oppsRes);
+          setJobs(oppsData || []);
+          if (oppsData && oppsData.length > 0) {
+            setSelectedJobId(oppsData[0].id);
           }
         }
       } catch (err) {
@@ -176,13 +183,16 @@ const StudentProjects = () => {
         if (mounted) setLoading(false);
       }
     };
-    fetchProjects();
+    fetchData();
     return () => { mounted = false; };
   }, []);
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId) || projects[0] || null;
-  const selectedJob = jobs.find((j) => j.id === selectedJobId) || jobs[0];
-  const analysis = useMemo(() => analyze(selectedProject, selectedJob), [selectedProject, selectedJob]);
+  const selectedJob = jobs.find((j) => j.id === selectedJobId) || jobs[0] || null;
+  const analysis = useMemo(() => {
+    if (!selectedJob) return { matched: [], missing: [], score: 0 };
+    return analyze(selectedProject, selectedJob);
+  }, [selectedProject, selectedJob]);
 
   const filteredProjects = projects.filter((p) =>
     `${p.title} ${p.category} ${p.techStack.join(" ")}`.toLowerCase().includes(query.toLowerCase()),

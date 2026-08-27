@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import StudentLayout from "../../components/student/StudentLayout";
 import type { StudentSidebarIconName } from "../../components/student/StudentSidebar";
-import { getApiErrorMessage, studentApi } from "../../services/studentApi";
+import { getApiErrorMessage, studentApi, unwrapData } from "../../services/studentApi";
 
 type IconName =
   | "dashboard"
@@ -284,136 +284,7 @@ const statusStyles: Record<DriveStatus, string> = {
   Closed: "bg-slate-100 text-slate-500 ring-slate-200",
 };
 
-const dummyHiringDrives: HiringDrive[] = [
-  {
-    id: "1",
-    company: "Google",
-    logoText: "G",
-    logoGradient: "from-[#6F2AE8] to-[#7C3AED]",
-    category: "Product Based",
-    roles: ["Software Engineer", "Backend Developer"],
-    location: "Bangalore",
-    ctc: "₹32 LPA",
-    deadline: "28 Jul 2026",
-    status: "Open",
-    applicants: 142,
-    rounds: 5,
-    eligibility: "CGPA 8.0+",
-    applied: false,
-  },
-  {
-    id: "2",
-    company: "Microsoft",
-    logoText: "M",
-    logoGradient: "from-[#6F2AE8] to-[#5400D6]",
-    category: "Product Based",
-    roles: ["Frontend Developer", "SDE Intern"],
-    location: "Hyderabad",
-    ctc: "₹28 LPA",
-    deadline: "26 Jul 2026",
-    status: "Closing Soon",
-    applicants: 198,
-    rounds: 4,
-    eligibility: "CGPA 7.5+",
-    applied: true,
-  },
-  {
-    id: "3",
-    company: "Amazon",
-    logoText: "A",
-    logoGradient: "from-orange-500 to-yellow-500",
-    category: "E-Commerce",
-    roles: ["SDE I", "Cloud Engineer"],
-    location: "Hyderabad",
-    ctc: "₹24 LPA",
-    deadline: "02 Aug 2026",
-    status: "Upcoming",
-    applicants: 0,
-    rounds: 5,
-    eligibility: "CGPA 7.0+",
-    applied: false,
-  },
-  {
-    id: "4",
-    company: "TCS",
-    logoText: "T",
-    logoGradient: "from-[#4500AD] to-[#8B5CF6]",
-    category: "Service Based",
-    roles: ["Java Developer", "Full Stack Developer"],
-    location: "Pune",
-    ctc: "₹7 LPA",
-    deadline: "20 Jul 2026",
-    status: "Closed",
-    applicants: 520,
-    rounds: 3,
-    eligibility: "60% Throughout",
-    applied: true,
-  },
-  {
-    id: "5",
-    company: "Infosys",
-    logoText: "I",
-    logoGradient: "from-[#5400D6] to-[#8B5CF6]",
-    category: "Service Based",
-    roles: ["System Engineer"],
-    location: "Mysore",
-    ctc: "₹6.5 LPA",
-    deadline: "30 Jul 2026",
-    status: "Open",
-    applicants: 310,
-    rounds: 3,
-    eligibility: "CGPA 6.5+",
-    applied: false,
-  },
-  {
-    id: "6",
-    company: "Accenture",
-    logoText: "A",
-    logoGradient: "from-purple-600 to-pink-500",
-    category: "Consulting",
-    roles: ["Associate Software Engineer"],
-    location: "Mumbai",
-    ctc: "₹6.8 LPA",
-    deadline: "01 Aug 2026",
-    status: "Open",
-    applicants: 275,
-    rounds: 3,
-    eligibility: "CGPA 6.5+",
-    applied: false,
-  },
-  {
-    id: "7",
-    company: "Flipkart",
-    logoText: "F",
-    logoGradient: "from-yellow-500 to-[#5400D6]",
-    category: "E-Commerce",
-    roles: ["Backend Engineer", "Data Engineer"],
-    location: "Bangalore",
-    ctc: "₹18 LPA",
-    deadline: "05 Aug 2026",
-    status: "Upcoming",
-    applicants: 0,
-    rounds: 4,
-    eligibility: "CGPA 7.5+",
-    applied: false,
-  },
-  {
-    id: "8",
-    company: "Zoho",
-    logoText: "Z",
-    logoGradient: "from-red-500 to-orange-500",
-    category: "Product Based",
-    roles: ["Software Developer"],
-    location: "Chennai",
-    ctc: "₹10 LPA",
-    deadline: "31 Jul 2026",
-    status: "Open",
-    applicants: 164,
-    rounds: 4,
-    eligibility: "No Active Backlogs",
-    applied: false,
-  },
-];
+// dummyHiringDrives removed, data fetched from backend
 
 const HiringCard = ({
   drive,
@@ -553,14 +424,27 @@ export const PlacementPrep = () => {
 
       if (!mounted) return;
 
-      /*
-       * Keep the existing mock hiring drives for now.
-       * This can later be replaced with the real hiring-drive API.
-       */
-      setHiringDrives(dummyHiringDrives);
-      setAppliedCount(2);
-      setShortlistedCount(1);
-
+      try {
+        const response = await studentApi.getHiringDrives();
+        const data = unwrapData<any>(response);
+        
+        const mappedDrives = (data.drives || []).map((d: any) => ({
+          ...d,
+          category: d.category || "General",
+          logoText: (d.company || d.title || "C").charAt(0).toUpperCase(),
+          logoGradient: "from-[#6F2AE8] to-[#5400D6]", // default gradient
+          ctc: d.packageLabel || "Not Disclosed",
+          roles: d.role ? [d.role] : d.skills || [],
+          applicants: 0,
+          rounds: d.rounds ? d.rounds.length : 3,
+        }));
+        
+        setHiringDrives(mappedDrives);
+      } catch (err) {
+        console.error(err);
+        setHiringDrives([]);
+      }
+      
       setLoading(false);
     };
 

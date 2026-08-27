@@ -132,7 +132,7 @@ interface SavedAssessmentState {
 // Dummy data (replace with real API data later)
 // ============================================================================
 
-const DRIVE = {
+let DRIVE = {
   company: 'Google',
   role: 'Software Engineer',
   location: 'Bangalore',
@@ -143,7 +143,7 @@ const DRIVE = {
   totalRounds: 4,
 };
 
-const INITIAL_TIMELINE_STEPS: TimelineStep[] = [
+let INITIAL_TIMELINE_STEPS: TimelineStep[] = [
   { id: 'applied', label: 'Application Submitted', status: 'completed' },
   { id: 'aptitude', label: 'Aptitude Test', status: 'current' },
   { id: 'tech1', label: 'Technical Round 1', status: 'upcoming' },
@@ -151,7 +151,7 @@ const INITIAL_TIMELINE_STEPS: TimelineStep[] = [
   { id: 'scorecard', label: 'Final Score & Feedback', status: 'upcoming' },
 ];
 
-const ACTIVE_ASSESSMENT = {
+let ACTIVE_ASSESSMENT = {
   title: 'Aptitude Assessment',
   duration: '45 Minutes',
   questions: '1',
@@ -182,7 +182,7 @@ const INSTRUCTIONS: string[] = [
   'Passing score is 70%.',
 ];
 
-const INITIAL_ROUND_OVERVIEW: RoundOverviewData[] = [
+let INITIAL_ROUND_OVERVIEW: RoundOverviewData[] = [
   {
     id: 'aptitude',
     name: 'Aptitude',
@@ -197,7 +197,7 @@ const INITIAL_ROUND_OVERVIEW: RoundOverviewData[] = [
   { id: 'scorecard', name: 'Final Score & Feedback', tag: 'Comprehensive Scorecard', status: 'pending' },
 ];
 
-const COMPANY_INFO = {
+let COMPANY_INFO = {
   company: 'Google',
   package: '₹32 LPA',
   location: 'Bangalore, India',
@@ -210,7 +210,7 @@ const COMPANY_INFO = {
 
 // Assessment engine constants -------------------------------------------------
 
-const ASSESSMENT_DURATION_SECONDS = 45 * 60;
+let ASSESSMENT_DURATION_SECONDS = 45 * 60;
 const PASSING_PERCENT = 70;
 const AUTOSAVE_KEY = 'hiring-process-assessment-autosave-v1';
 const STRIKE_DEBOUNCE_MS = 1500;
@@ -239,7 +239,7 @@ const VIOLATION_LABELS: Record<ViolationKey, string> = {
 };
 
 // Temporary test question
-const QUESTIONS: Question[] = [
+let QUESTIONS: Question[] = [
   // Temporary test question
   {
     id: 1,
@@ -534,29 +534,35 @@ export default function HiringProcess() {
   const { currentUser } = useAuth();
   const CANDIDATE_NAME = currentUser?.fullName || currentUser?.name || 'Student';
 
+  const [, forceRender] = useState({});
+
   useEffect(() => {
     if (!driveId) return;
 
     const loadDrive = async () => {
       try {
-        const response = await studentApi.getHiringDrives();
-        const drives = unwrapData<any[]>(response, 'drives') || [];
-        const selectedDrive = drives.find((item) => item.id === driveId || item._id === driveId);
+        const detailsRes = await studentApi.getHiringDriveDetails(driveId);
+        const driveDetails = unwrapData<any>(detailsRes, 'drive');
 
-        if (!selectedDrive) return;
+        const assessRes = await studentApi.getDriveAssessment(driveId);
+        const assessmentData = unwrapData<any>(assessRes, 'assessment');
 
-        Object.assign(DRIVE, {
-          company: selectedDrive.company || DRIVE.company,
-          role: selectedDrive.role || DRIVE.role,
-          location: selectedDrive.location || DRIVE.location,
-          packageLabel: selectedDrive.packageLabel || DRIVE.packageLabel,
-          deadline: selectedDrive.deadline || DRIVE.deadline,
-          status: selectedDrive.status || DRIVE.status,
-          currentRoundIndex: 0,
-          totalRounds: Math.max(selectedDrive.rounds?.length || 4, 4),
-        });
-      } catch {
-        // Keep the page working with the known default drive data if the backend call fails.
+        if (driveDetails) {
+          DRIVE = driveDetails;
+          COMPANY_INFO = driveDetails;
+          if (driveDetails.timelineSteps) INITIAL_TIMELINE_STEPS = driveDetails.timelineSteps;
+          if (driveDetails.roundOverview) INITIAL_ROUND_OVERVIEW = driveDetails.roundOverview;
+        }
+
+        if (assessmentData) {
+          ACTIVE_ASSESSMENT = assessmentData;
+          if (assessmentData.questions) QUESTIONS = assessmentData.questions;
+          if (assessmentData.durationSeconds) ASSESSMENT_DURATION_SECONDS = assessmentData.durationSeconds;
+        }
+
+        forceRender({});
+      } catch (err) {
+        console.error("Failed to fetch dynamic drive details", err);
       }
     };
 

@@ -13,6 +13,8 @@ import {
   deleteStudentSkill,
   getAssignments,
   getHiringDrives,
+  getHiringDriveDetails,
+  getDriveAssessment,
   getLearningModules,
   getLearningProgressHistory,
   getQuizzes,
@@ -24,6 +26,7 @@ import {
   getStudentNotifications,
   getStudentProfile,
   getStudentProjects,
+  getOpportunities,
   getStudentResumeBuilder,
   getStudentSettings,
   getStudentSkills,
@@ -92,6 +95,7 @@ router.patch("/profile/education", studentAuthMiddleware, updateStudentProfile);
  */
 
 router.get("/projects", studentAuthMiddleware, getStudentProjects);
+router.get("/opportunities", studentAuthMiddleware, getOpportunities);
 router.post("/projects/:projectId/apply", studentAuthMiddleware, applyToProject);
 
 router.get("/applications", studentAuthMiddleware, getStudentApplications);
@@ -201,6 +205,8 @@ router.post("/skill-score/calculate", studentAuthMiddleware, calculateAndStoreSk
  */
 
 router.get("/hiring/drives", studentAuthMiddleware, getHiringDrives);
+router.get("/hiring/drives/:driveId", studentAuthMiddleware, getHiringDriveDetails);
+router.get("/hiring/drives/:driveId/assessment", studentAuthMiddleware, getDriveAssessment);
 router.post(
   "/hiring/drives/:driveId/start",
   studentAuthMiddleware,

@@ -654,6 +654,7 @@ interface DashboardData {
   modules: DashboardModule[];
   performanceData: Array<{ month: string; score: number }>;
   upcomingActivities: DashboardActivity[];
+  badges?: any[];
 }
 
 // ─── Pulse dot ────────────────────────────────────────────────────────────────
@@ -1512,45 +1513,9 @@ export const AISkillGapAnalyzer = () => {
   );
 };
 
-const BadgesSection = () => {
-  const badges = [
-    {
-      title: "React Expert",
-      icon: "⚛️",
-      color: "from-blue-500 to-cyan-500",
-      earned: true,
-    },
-    {
-      title: "SQL Master",
-      icon: "🗄️",
-      color: "from-emerald-500 to-green-500",
-      earned: true,
-    },
-    {
-      title: "DSA Warrior",
-      icon: "⚔️",
-      color: "from-purple-500 to-indigo-500",
-      earned: true,
-    },
-    {
-      title: "Placement Ready",
-      icon: "🎯",
-      color: "from-orange-500 to-red-500",
-      earned: false,
-    },
-    {
-      title: "Top Performer",
-      icon: "🏆",
-      color: "from-yellow-400 to-orange-500",
-      earned: false,
-    },
-    {
-      title: "100 Day Streak",
-      icon: "🔥",
-      color: "from-pink-500 to-red-500",
-      earned: false,
-    },
-  ];
+const BadgesSection = ({ badges = [] }: { badges?: any[] }) => {
+  const earnedCount = badges.filter(b => b.earned).length;
+  const totalCount = badges.length || 6;
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -1567,7 +1532,7 @@ const BadgesSection = () => {
           </p>
         </div>
         <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
-          3 / 6 Earned
+          {earnedCount} / {totalCount} Earned
         </span>
       </div>
 
@@ -1606,7 +1571,7 @@ const BadgesSection = () => {
 // ═══════════════════════════════════════════════════════════════════════════
 // FEATURE 5 — Daily Streak
 // ═══════════════════════════════════════════════════════════════════════════
-const DailyStreak = () => (
+const DailyStreak = ({ streak, currentProject }: { streak: number, currentProject: string }) => (
   <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
     <div className="flex items-center justify-between">
       <div>
@@ -1625,12 +1590,12 @@ const DailyStreak = () => (
     <div className="mt-4 grid gap-3 sm:grid-cols-2">
       <div className="rounded-xl border border-slate-100 bg-orange-50/60 p-4">
         <p className="text-[11px] font-semibold text-slate-500">Daily Streak</p>
-        <p className="mt-1.5 text-2xl font-black text-orange-600">🔥 12 days</p>
+        <p className="mt-1.5 text-2xl font-black text-orange-600">🔥 {streak} days</p>
       </div>
       <div className="rounded-xl border border-slate-100 bg-blue-50/60 p-4">
         <p className="text-[11px] font-semibold text-slate-500">Current project</p>
-        <p className="mt-1.5 text-base font-bold text-slate-900">
-          AI Resume Analyzer
+        <p className="mt-1.5 text-base font-bold text-slate-900 truncate">
+          {currentProject}
         </p>
       </div>
     </div>
@@ -1639,15 +1604,15 @@ const DailyStreak = () => (
       <div className="flex items-center justify-between text-xs">
         <span className="text-slate-500">Today&apos;s goal</span>
         <span className="font-semibold text-slate-700">
-          Complete Module 4
+          Continue Learning
         </span>
       </div>
       <div className="mt-3 flex items-center justify-between text-[11px] text-slate-500">
         <span>Progress</span>
-        <span>2 / 3 tasks completed</span>
+        <span>In Progress</span>
       </div>
       <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
-        <div className="h-1.5 w-2/3 rounded-full bg-gradient-to-r from-violet-600 to-blue-500" />
+        <div className="h-1.5 w-1/3 rounded-full bg-gradient-to-r from-violet-600 to-blue-500" />
       </div>
     </div>
 
@@ -1656,7 +1621,7 @@ const DailyStreak = () => (
         <p className="text-xs font-bold text-slate-900">XP earned today</p>
         <p className="mt-0.5 text-[11px] text-slate-500">Keep your streak alive</p>
       </div>
-      <p className="text-2xl font-black text-emerald-600">+18 XP</p>
+      <p className="text-2xl font-black text-emerald-600">+{streak * 2 + 10} XP</p>
     </div>
   </section>
 );
@@ -1894,46 +1859,7 @@ export const StudentDashboard = () => {
   ];
   void _stats;
 
-  const recommendedItems = [
-    {
-      title: modules[0]?.title || "Modern UI Fundamentals",
-      category: modules[0]?.category || "DESIGN",
-      progress: modules[0]?.progress ?? 42,
-      description: "Build stronger frontend skills with practical, placement-focused learning.",
-      icon: "wand" as IconName,
-    },
-    {
-      title: modules[1]?.title || "Distributed Systems 101",
-      category: modules[1]?.category || "BACKEND",
-      progress: modules[1]?.progress ?? 25,
-      description: "Understand scalable systems, APIs, databases, and backend architecture.",
-      icon: "database" as IconName,
-    },
-  ];
 
-  const dashboardNotifications = [
-    {
-      title: "AI Review is ready!",
-      description: "Your AI profile review is available to check.",
-      tone: "purple",
-      icon: "sparkles" as IconName,
-      time: "2h ago",
-    },
-    {
-      title: "New Badge Unlocked",
-      description: "You completed a new learning milestone.",
-      tone: "blue",
-      icon: "award" as IconName,
-      time: "1 hour ago",
-    },
-    {
-      title: "Community Invite",
-      description: "You were invited to join a student community.",
-      tone: "slate",
-      icon: "users" as IconName,
-      time: "Yesterday",
-    },
-  ];
 
   return (
     <StudentLayout
@@ -1980,7 +1906,7 @@ export const StudentDashboard = () => {
 
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-2.5 py-1 text-[9px] font-bold text-purple-700 ring-1 ring-purple-100">
                     <Icon name="zap" className="h-3 w-3" />
-                    12 Day Streak
+                    {dashboard?.stats?.currentStreak || 0} Day Streak
                   </span>
                 </div>
 
@@ -2086,20 +2012,7 @@ export const StudentDashboard = () => {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                  {(modules.length > 0 ? modules.slice(0, 2) : [
-                    {
-                      title: "Full Stack Developer",
-                      category: "Next: Mastering Web Development",
-                      progress: 72,
-                      color: "#7c3aed",
-                    },
-                    {
-                      title: "DSA Mastery",
-                      category: "Next: Big O Notation and Array Manipulation",
-                      progress: 38,
-                      color: "#64748b",
-                    },
-                  ]).map((mod, index) => (
+                  {modules.length > 0 ? modules.slice(0, 2).map((mod, index) => (
                     <article
                       key={`${mod.title}-${index}`}
                       className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
@@ -2158,7 +2071,12 @@ export const StudentDashboard = () => {
                         <Icon name="chevron-right" className="h-3 w-3" />
                       </button>
                     </article>
-                  ))}
+                  )) : (
+                    <div className="col-span-2 rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+                      <p className="text-sm font-semibold text-slate-500">No active learning modules found.</p>
+                      <button onClick={() => navigate("/student/roadmap")} className="mt-3 rounded-lg bg-purple-50 px-4 py-2 text-xs font-bold text-purple-700">Explore Curriculum</button>
+                    </div>
+                  )}
                 </div>
               </section>
 
@@ -2181,7 +2099,7 @@ export const StudentDashboard = () => {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                  {recommendedItems.map((item) => (
+                  {(dashboard?.recommendations || []).map((item: any) => (
                     <article
                       key={item.title}
                       className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
@@ -2232,9 +2150,9 @@ export const StudentDashboard = () => {
                 </div>
               </section>
 
-              <DailyStreak />
+              <DailyStreak streak={dashboard?.stats?.currentStreak || 0} currentProject={modules[0]?.title || "No active projects"} />
 
-              <BadgesSection />
+              <BadgesSection badges={dashboard?.badges} />
 
               <section className="grid gap-5 xl:grid-cols-2">
                 {/* Existing AI components remain available without changing their implementation. */}
@@ -2372,7 +2290,7 @@ export const StudentDashboard = () => {
                 </div>
 
                 <div className="mt-3 space-y-2">
-                  {dashboardNotifications.map((notification) => (
+                  {(dashboard?.notifications || []).map((notification: any) => (
                     <button
                       type="button"
                       key={notification.title}
