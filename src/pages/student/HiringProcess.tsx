@@ -655,7 +655,7 @@ export default function HiringProcess() {
       setRoundOverview([
         { id: 'aptitude', name: 'Aptitude', tag: 'Online Test', duration: '45 mins', metric: 'Passed', passingPercent: 70, status: 'completed' },
         { id: 'tech1', name: 'Technical Round 1', tag: 'Coding Assessment', metric: 'Completed', status: 'completed' },
-        { id: 'hr', name: 'HR Interview', tag: 'Behavioral & Culture Fit', duration: '15 mins', metric: '5 Questions', status: 'ready' },
+        { id: 'hr', name: 'HR Interview', tag: 'Behavioral & Culture Fit', duration: '15 mins', metric: '2 Questions', status: 'ready' },
         { id: 'scorecard', name: 'Final Score & Feedback', tag: 'Comprehensive Scorecard', status: 'pending' },
       ]);
     }

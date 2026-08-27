@@ -100,7 +100,7 @@ const handleResponse = async <T>(
 export const startAIInterview = async ({
   driveId,
   role = "Software Engineer",
-  totalQuestions = 5,
+  totalQuestions = 2,
   interviewType = "technical",
 }: {
   driveId: string;

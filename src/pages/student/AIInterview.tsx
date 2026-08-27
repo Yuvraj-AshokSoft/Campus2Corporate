@@ -6,6 +6,7 @@ import {
   CameraOff,
   CheckCircle2,
   Loader2,
+  Maximize,
   Mic,
   Send,
   Sparkles,
@@ -100,6 +101,8 @@ export default function AIInterview() {
   const [cameraError, setCameraError] = useState("");
   const [textMode, setTextMode] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
+  const [hasEnteredFullscreen, setHasEnteredFullscreen] = useState(false);
+  const [fullscreenError, setFullscreenError] = useState("");
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
@@ -316,12 +319,13 @@ export default function AIInterview() {
   );
 
   const voice = useVoiceInterview(handleTranscriptComplete);
+  const { finishListening, speak, stop } = voice;
 
   const handleFinishAnswer = useCallback(() => {
     if (isSubmittingAnswerRef.current) return;
     isSubmittingAnswerRef.current = true;
-    void voice.finishListening();
-  }, [voice]);
+    void finishListening();
+  }, [finishListening]);
 
   const startInterview = useCallback(async () => {
     if (!driveId) {
@@ -345,7 +349,7 @@ export default function AIInterview() {
         body: JSON.stringify({
           driveId,
           role: "Software Engineer",
-          totalQuestions: 5,
+          totalQuestions: 2,
           interviewType: isHrRound ? "hr" : "technical",
         }),
       });
@@ -368,9 +372,36 @@ export default function AIInterview() {
     }
   }, [driveId, isHrRound]);
 
-  useEffect(() => {
-    void startInterview();
+  const enterFullscreenAndStart = useCallback(async () => {
+    try {
+      setFullscreenError("");
+      await document.documentElement.requestFullscreen();
+      setHasEnteredFullscreen(true);
+      await startInterview();
+    } catch (fullscreenErr) {
+      setHasEnteredFullscreen(false);
+      setFullscreenError(
+        fullscreenErr instanceof Error
+          ? fullscreenErr.message
+          : "Full screen permission is required to start the interview.",
+      );
+    }
   }, [startInterview]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFullscreen = Boolean(document.fullscreenElement);
+      setHasEnteredFullscreen(isFullscreen);
+
+      if (!isFullscreen && session && !result) {
+        stop();
+        setError("The interview is paused. Re-enter full screen to continue.");
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, [result, session, stop]);
 
   // Initialize camera preview on mount & when interview view is ready
   useEffect(() => {
@@ -386,15 +417,15 @@ export default function AIInterview() {
   // Speak question via browser TTS whenever a new question is ready
   useEffect(() => {
     if (question?.question && !processing) {
-      voice.speak(question.question);
+      speak(question.question);
     }
-  }, [question?.question, processing, voice]);
+  }, [question?.question, processing, speak]);
 
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
-      voice.stop();
+      stop();
       cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
       cameraStreamRef.current = null;
       if (videoRef.current) {
@@ -402,7 +433,41 @@ export default function AIInterview() {
       }
       setCameraReady(false);
     };
-  }, [voice]);
+  }, [stop]);
+
+  if (!hasEnteredFullscreen && !result) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f8f7fb] px-4 py-8">
+        <section className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm sm:p-12">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#f4efff] text-[#5400D6]">
+            <Maximize className="h-8 w-8" />
+          </div>
+          <p className="mt-6 text-[10px] font-black uppercase tracking-[0.25em] text-[#5400D6]">
+            {isHrRound ? "Round 3 · HR Interview" : "Round 2 · Technical Round 1"}
+          </p>
+          <h1 className="mt-3 text-3xl font-black tracking-tight text-slate-900">
+            Full screen is required
+          </h1>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500">
+            This {isHrRound ? "HR and behavioral" : "technical"} interview must be completed in full screen mode. Leaving full screen will pause the round.
+          </p>
+          {(fullscreenError || error) && (
+            <div className="mt-5 rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {fullscreenError || error}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => void enterFullscreenAndStart()}
+            className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#5400D6] px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-[#5400D6]/25 transition hover:bg-[#4500AD]"
+          >
+            <Maximize className="h-4 w-4" />
+            Enter Full Screen & Start
+          </button>
+        </section>
+      </main>
+    );
+  }
 
   if (loading) {
     return (
@@ -457,8 +522,33 @@ export default function AIInterview() {
   const listening = voice.state === "listening";
   const transcribing = voice.state === "transcribing";
 
+  const interviewPaused = !document.fullscreenElement;
+
   return (
-    <main className="min-h-screen bg-[#f8f7fb] px-4 py-6 text-slate-900 sm:px-6 lg:px-10">
+    <main className="relative min-h-screen bg-[#f8f7fb] px-4 py-6 text-slate-900 sm:px-6 lg:px-10">
+      {interviewPaused && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/80 px-4 backdrop-blur-sm">
+          <section className="w-full max-w-md rounded-2xl bg-white p-7 text-center shadow-2xl">
+            <Maximize className="mx-auto h-9 w-9 text-[#5400D6]" />
+            <h2 className="mt-4 text-xl font-black text-slate-900">Full screen required</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              The interview is paused until you return to full screen mode.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                void document.documentElement.requestFullscreen().catch(() => {
+                  setFullscreenError("Full screen permission is required to continue.");
+                });
+              }}
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#5400D6] px-5 py-3 text-sm font-bold text-white hover:bg-[#4500AD]"
+            >
+              <Maximize className="h-4 w-4" />
+              Return to Full Screen
+            </button>
+          </section>
+        </div>
+      )}
       <div className="mx-auto max-w-6xl">
         {/* Header */}
         <header className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
@@ -480,7 +570,7 @@ export default function AIInterview() {
             </h1>
             <p className="mt-1.5 text-xs font-medium text-slate-500 sm:text-sm">
               {session?.role || "Software Engineer"} · Question {session?.currentQuestion || 1} of{" "}
-              {session?.totalQuestions || 5}
+              {session?.totalQuestions || 2}
             </p>
           </div>
 

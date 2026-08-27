@@ -1,6 +1,6 @@
 const buildInterviewSystemPrompt = ({
   role = "Software Engineer",
-  totalQuestions = 5,
+  totalQuestions = 2,
   candidateContext = "",
   difficulty = "intermediate",
   topicsCovered = [],

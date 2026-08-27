@@ -1693,6 +1693,42 @@ export const startHiringDrive = async (req, res) => {
         stipend: 20000,
         status: "Open",
       },
+
+      "google-sde-drive": {
+        id: "google-sde-drive",
+        title: "Software Engineer - Campus Placement",
+        company: "Google",
+        recruiter: "Google Campus Recruiting",
+        location: "Bangalore / Hybrid",
+        mode: "Hybrid",
+        duration: "Full Time",
+        stipend: 3200000,
+        status: "Open",
+      },
+
+      "microsoft-swe-drive": {
+        id: "microsoft-swe-drive",
+        title: "Full Stack Engineer - Early Career",
+        company: "Microsoft",
+        recruiter: "Microsoft Campus Recruiting",
+        location: "Hyderabad / Remote",
+        mode: "Remote",
+        duration: "Full Time",
+        stipend: 2800000,
+        status: "Open",
+      },
+
+      "amazon-sde-drive": {
+        id: "amazon-sde-drive",
+        title: "SDE-1 - Cloud & Distributed Systems",
+        company: "Amazon",
+        recruiter: "Amazon Campus Recruiting",
+        location: "Bangalore",
+        mode: "On-site",
+        duration: "Full Time",
+        stipend: 3400000,
+        status: "Open",
+      },
     };
 
     const drive = dummyDrives[String(driveId)];

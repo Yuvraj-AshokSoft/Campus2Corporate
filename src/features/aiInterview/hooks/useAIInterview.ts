@@ -26,7 +26,7 @@ export function useAIInterview() {
     useState(1);
 
   const [totalQuestions, setTotalQuestions] =
-    useState(5);
+    useState(2);
 
   const [loading, setLoading] = useState(false);
 
@@ -66,7 +66,7 @@ export function useAIInterview() {
       setSession(response.session);
 
       setTotalQuestions(
-        response.session.totalQuestions || 5,
+        response.session.totalQuestions || 2,
       );
 
       setQuestionNumber(1);

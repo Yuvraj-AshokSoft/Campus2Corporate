@@ -10,7 +10,7 @@ import {
   buildFinalEvaluationPrompt,
 } from "../utils/interviewPrompt.js";
 
-const DEFAULT_TOTAL_QUESTIONS = 5;
+const DEFAULT_TOTAL_QUESTIONS = 2;
 const MIN_TOTAL_QUESTIONS = 1;
 const MAX_TOTAL_QUESTIONS = 10;
 

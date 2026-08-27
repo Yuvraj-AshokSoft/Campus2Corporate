@@ -254,8 +254,16 @@ export function useVoiceInterview(
         return;
       }
 
+      if (!window.speechSynthesis || !("SpeechSynthesisUtterance" in window)) {
+        setErrorMessage("Voice playback is not supported by this browser.");
+        setState("error");
+        return;
+      }
+
       lastSpokenQuestionRef.current = question;
-      window.speechSynthesis.cancel();
+      const speechSynthesis = window.speechSynthesis;
+      speechSynthesis.cancel();
+      speechSynthesis.resume();
       setState("speaking");
 
       const utterance = new SpeechSynthesisUtterance(
@@ -270,7 +278,7 @@ export function useVoiceInterview(
       utterance.onend = () => setState("idle");
       utterance.onerror = () => setState("error");
 
-      window.speechSynthesis.speak(utterance);
+      speechSynthesis.speak(utterance);
     },
     [],
   );

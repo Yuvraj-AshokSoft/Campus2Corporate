@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Lock, Mail, AlertCircle, Loader2, ArrowRight, Building2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import axios from 'axios';
+import API from '../../services/api';
 
 export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ export const AdminLogin: React.FC = () => {
       let apiErrorMessage = '';
 
       try {
-        const response = await axios.post('/api/v1/admin/login', {
+        const response = await API.post('/v1/admin/login', {
           email: email.trim(),
           password,
         });
