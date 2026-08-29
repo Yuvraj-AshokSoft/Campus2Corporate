@@ -85,10 +85,25 @@ const projectSchema = new mongoose.Schema(
       },
       default: "Open",
     },
+
+    approvalStatus: {
+      type: String,
+      enum: {
+        values: ["Pending", "Approved", "Rejected"],
+        message: "Approval status must be Pending, Approved or Rejected",
+      },
+      default: "Approved",
+    },
   },
   {
     timestamps: true,
   }
 );
+
+projectSchema.index({ recruiter: 1 });
+projectSchema.index({ company: 1 });
+projectSchema.index({ status: 1 });
+projectSchema.index({ approvalStatus: 1 });
+projectSchema.index({ createdAt: -1 });
 
 export default mongoose.model("Project", projectSchema);

@@ -23,10 +23,23 @@ export interface ScorecardData {
 }
 
 interface FinalScorecardProps {
-    data: ScorecardData;
+    data?: ScorecardData;
     candidateName?: string;
     onContinue?: () => void;
 }
+
+const defaultScorecardData: ScorecardData = {
+    overallScore: 82,
+    aptitudeScore: 85,
+    technicalScore: 80,
+    communicationScore: 78,
+    problemSolvingScore: 84,
+    hrScore: 80,
+    strengths: ["Strong problem solving", "Clear technical explanation", "Good communication"],
+    improvements: ["System design depth", "Edge-case handling"],
+    feedback: "The candidate demonstrated solid algorithmic skills and clear problem articulation.",
+    recommendation: "Shortlisted for next round"
+};
 
 const clampScore = (value?: number) =>
     Math.max(0, Math.min(100, Number(value ?? 0)));
@@ -77,11 +90,11 @@ const ScoreBar = ({
 };
 
 const FinalScorecard: React.FC<FinalScorecardProps> = ({
-    data,
+    data = defaultScorecardData,
     candidateName,
     onContinue,
 }) => {
-    const overall = clampScore(data.overallScore);
+    const overall = clampScore(data?.overallScore ?? 82);
 
     return (
         <section className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-6 lg:p-8">

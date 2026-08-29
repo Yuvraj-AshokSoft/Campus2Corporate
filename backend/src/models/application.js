@@ -51,4 +51,10 @@ const applicationSchema = new mongoose.Schema(
   }
 );
 
+applicationSchema.index({ student: 1 });
+applicationSchema.index({ company: 1 });
+applicationSchema.index({ project: 1 });
+applicationSchema.index({ status: 1 });
+applicationSchema.index({ createdAt: -1 });
+
 export default mongoose.model("Application", applicationSchema);

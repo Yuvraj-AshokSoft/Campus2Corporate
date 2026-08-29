@@ -85,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: user.primaryEmailAddress?.emailAddress || '',
         phone: (user.unsafeMetadata?.phone as string) || user.primaryPhoneNumber?.phoneNumber || '',
         role: userRole.toLowerCase() as any,
-        isVerified: user.emailAddresses.find(e => e.emailAddress === user.primaryEmailAddress?.emailAddress)?.verification.status === 'verified',
+        isVerified: user.emailAddresses.find((e: any) => e.emailAddress === user.primaryEmailAddress?.emailAddress)?.verification?.status === 'verified',
         branch: 'Computer Science',
         semester: 'Sem 6',
       });

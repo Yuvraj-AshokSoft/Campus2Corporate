@@ -26,7 +26,7 @@ export type PlatformRole = 'student' | 'recruiter' | 'college' | 'mentor' | 'adm
 
 export interface SidebarNavItem {
   title: string;
-  icon: LucideIcon;
+  icon: any;
   active?: boolean;
   badge?: string | number;
   href?: string;

@@ -54,10 +54,29 @@ const recruiterSchema = new mongoose.Schema(
       },
       default: "Active",
     },
+
+    verificationStatus: {
+      type: String,
+      enum: {
+        values: ["Pending", "Verified", "Rejected"],
+        message: "Verification status must be Pending, Verified or Rejected",
+      },
+      default: "Verified",
+    },
+
+    verificationNote: {
+      type: String,
+      trim: true,
+      default: "",
+    },
   },
   {
     timestamps: true,
   }
 );
+
+recruiterSchema.index({ company: 1 });
+recruiterSchema.index({ status: 1 });
+recruiterSchema.index({ verificationStatus: 1 });
 
 export default mongoose.model("Recruiter", recruiterSchema);

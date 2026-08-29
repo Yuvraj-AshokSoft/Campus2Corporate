@@ -41,6 +41,13 @@ const collegeSchema = new mongoose.Schema(
       trim: true,
     },
 
+    code: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      default: "",
+    },
+
     website: {
       type: String,
       trim: true,
@@ -71,10 +78,40 @@ const collegeSchema = new mongoose.Schema(
       default: "",
     },
 
+    placementOfficerName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    placementOfficerEmail: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    placementOfficerPhone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     status: {
       type: String,
       enum: ["Active", "Inactive"],
       default: "Active",
+    },
+
+    verificationStatus: {
+      type: String,
+      enum: ["Pending", "Verified", "Rejected"],
+      default: "Verified",
+    },
+
+    verificationNote: {
+      type: String,
+      trim: true,
+      default: "",
     },
 
     students: [
@@ -89,20 +126,22 @@ const collegeSchema = new mongoose.Schema(
   }
 );
 
+collegeSchema.index({ status: 1 });
+collegeSchema.index({ verificationStatus: 1 });
+
 // Hash Password Before Saving
-collegeSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return ;
+collegeSchema.pre("save", async function () {
+  if (!this.isModified("password") || !this.password) {
+    return;
   }
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-
-  
 });
 
 // Compare Password
 collegeSchema.methods.comparePassword = async function (enteredPassword) {
+  if (!this.password) return false;
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

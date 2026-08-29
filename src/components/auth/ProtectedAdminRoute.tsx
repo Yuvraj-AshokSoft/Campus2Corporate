@@ -1,21 +1,61 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
 
 export const ProtectedAdminRoute: React.FC = () => {
-  const { currentUser } = useAuth();
+  const [isValidating, setIsValidating] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check if current logged-in user role is admin
-  const isAuthUserAdmin =
-    currentUser && currentUser.role && currentUser.role.toLowerCase() === 'admin';
+  useEffect(() => {
+    const verifyAdminToken = async () => {
+      const token = localStorage.getItem('c2c_admin_token');
 
-  // Check if local storage admin token or active session exists
-  const hasAdminSession =
-    typeof window !== 'undefined' &&
-    (Boolean(localStorage.getItem('c2c_admin_token')) ||
-      localStorage.getItem('c2c_admin_session') === 'true');
+      if (!token) {
+        setIsAuthenticated(false);
+        setIsValidating(false);
+        return;
+      }
 
-  if (!isAuthUserAdmin && !hasAdminSession) {
+      try {
+        // Validate with backend profile endpoint
+        const response = await axios.get('/api/admin/profile', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.data && response.data.success) {
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem('c2c_admin_token');
+          localStorage.removeItem('c2c_admin_session');
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        // Token is invalid, expired, or admin is deactivated
+        localStorage.removeItem('c2c_admin_token');
+        localStorage.removeItem('c2c_admin_session');
+        setIsAuthenticated(false);
+      } finally {
+        setIsValidating(false);
+      }
+    };
+
+    verifyAdminToken();
+  }, []);
+
+  if (isValidating) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-[#7C3AED] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs font-bold text-slate-500">Verifying Administrative Privileges...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return <Navigate replace to="/admin/login" />;
   }
 
