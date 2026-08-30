@@ -371,17 +371,6 @@ export const registerStudent = async (
       );
     }
 
-    if (
-      college &&
-      !isValidObjectId(college)
-    ) {
-      return errorResponse(
-        res,
-        "Invalid college id",
-        400,
-      );
-    }
-
     const existingStudent =
       await Student.findOne({
         email: normalizedEmail,
@@ -624,6 +613,7 @@ export const updateStudentProfile =
       const allowedFields = [
         "name",
         "fullName",
+        "email",
         "phone",
         "college",
         "branch",
@@ -653,23 +643,17 @@ export const updateStudentProfile =
                 req.body[field],
               );
           } else if (
-            field === "college"
+            field === "email"
           ) {
-            if (
-              req.body[field] &&
-              !isValidObjectId(
-                req.body[field],
-              )
-            ) {
-              return errorResponse(
-                res,
-                "Invalid college id",
-                400,
-              );
+            const normalizedEmail = normalizeEmail(req.body[field]);
+            if (!emailRegex.test(normalizedEmail)) {
+              return errorResponse(res, "Please provide a valid email address", 400);
             }
-
-            student.college =
-              req.body[field] || undefined;
+            const existingStudent = await Student.findOne({ email: normalizedEmail });
+            if (existingStudent && String(existingStudent._id) !== String(student._id)) {
+                return errorResponse(res, "Email already in use", 409);
+            }
+            student.email = normalizedEmail;
           } else {
             student[field] =
               req.body[field];

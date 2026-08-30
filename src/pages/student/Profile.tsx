@@ -194,27 +194,33 @@ interface EditableField {
   key: string; label: string; icon: IconName; value: string; type?: string; disabled?: boolean;
 }
 
-const InputRow = ({ field, editing, onChange, error }: {
-  field: EditableField; editing: boolean; onChange: (key: string, value: string) => void; error?: string;
+const InputRow = ({ field, editing, onChange, error, onStartEdit }: {
+  field: EditableField; editing: boolean; onChange: (key: string, value: string) => void; error?: string; onStartEdit?: () => void;
 }) => (
   <div>
     <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
       <Icon name={field.icon} className="h-3.5 w-3.5 text-slate-400" />
       {field.label}
     </label>
-    <input
-      type={field.type || "text"}
-      value={field.value}
-      disabled={!editing || field.disabled}
-      onChange={(e) => onChange(field.key, e.target.value)}
-      className={`w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition ${
-        error
-          ? "border-rose-300 bg-rose-50 text-rose-800 focus:border-rose-400 focus:ring-2 focus:ring-rose-50"
-          : editing && !field.disabled
-          ? "border-slate-200 bg-white text-slate-800 focus:border-purple-300 focus:ring-2 focus:ring-purple-50"
-          : "border-slate-100 bg-slate-50 text-slate-500"
-        }`}
-    />
+    <div className="relative" onClick={() => { if (!editing && !field.disabled && onStartEdit) onStartEdit(); }}>
+      <input
+        type={field.type || "text"}
+        value={field.value}
+        readOnly={!editing}
+        disabled={field.disabled}
+        onChange={(e) => onChange(field.key, e.target.value)}
+        className={`w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition ${
+          error
+            ? "border-rose-300 bg-rose-50 text-rose-800 focus:border-rose-400 focus:ring-2 focus:ring-rose-50"
+            : editing && !field.disabled
+            ? "border-slate-200 bg-white text-slate-800 focus:border-purple-300 focus:ring-2 focus:ring-purple-50"
+            : "border-slate-100 bg-slate-50 text-slate-500 cursor-text hover:bg-slate-100"
+          }`}
+      />
+      {!editing && !field.disabled && (
+        <div className="absolute inset-0 cursor-pointer rounded-xl hover:bg-slate-500/5 transition" title="Click to edit" />
+      )}
+    </div>
     {error && <p className="mt-1 text-[10px] font-semibold text-rose-500">{error}</p>}
   </div>
 );
@@ -235,7 +241,7 @@ export const StudentProfile = () => {
 
   const [personal, setPersonal] = useState<EditableField[]>([
     { key: "fullName", label: "Full Name", icon: "user-check", value: fullName },
-    { key: "email", label: "Email Address", icon: "mail", value: email, disabled: true },
+    { key: "email", label: "Email Address", icon: "mail", value: email },
     { key: "phone", label: "Phone Number", icon: "phone", value: phone },
     { key: "college", label: "College", icon: "graduation", value: "" },
     { key: "branch", label: "Branch", icon: "book", value: "" },
@@ -271,7 +277,7 @@ export const StudentProfile = () => {
         setProfile(student);
         setPersonal([
           { key: "fullName", label: "Full Name", icon: "user-check", value: student.fullName || student.name || "" },
-          { key: "email", label: "Email Address", icon: "mail", value: student.email || "", disabled: true },
+          { key: "email", label: "Email Address", icon: "mail", value: student.email || "" },
           { key: "phone", label: "Phone Number", icon: "phone", value: student.phone || "" },
           { key: "college", label: "College", icon: "graduation", value: String(student.college || "") },
           { key: "branch", label: "Branch", icon: "book", value: student.branch || "" },
@@ -304,15 +310,17 @@ export const StudentProfile = () => {
     setList(list.map((f) => (f.key === key ? { ...f, value } : f)));
   };
 
-  const addSkill = () => {
-    const s = newSkill.trim();
+  const addSkill = (skillToAdd?: string) => {
+    const s = (typeof skillToAdd === 'string' ? skillToAdd : newSkill).trim();
     if (!s) return;
     if (skills.includes(s)) {
       setValidationErrors(prev => ({ ...prev, skills: `"${s}" is already added.` }));
       return;
     }
     setSkills([...skills, s]);
-    setNewSkill("");
+    if (typeof skillToAdd !== 'string') {
+      setNewSkill("");
+    }
     setValidationErrors(prev => { const n = { ...prev }; delete n.skills; return n; });
   };
 
@@ -348,7 +356,9 @@ export const StudentProfile = () => {
     try {
       const payload = {
         fullName: fieldValue(personal, "fullName"),
+        email: fieldValue(personal, "email"),
         phone: fieldValue(personal, "phone"),
+        college: fieldValue(personal, "college"),
         branch: fieldValue(personal, "branch"),
         semester: fieldValue(personal, "semester"),
         location: fieldValue(personal, "location"),
@@ -464,6 +474,16 @@ export const StudentProfile = () => {
                   >
                     <Icon name="camera" className="h-3.5 w-3.5" />
                   </label>
+                  {avatarPreview && (
+                    <button
+                      type="button"
+                      onClick={() => setAvatarPreview(null)}
+                      className="absolute top-1 right-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-slate-900/50 text-white transition hover:bg-rose-500"
+                      title="Remove profile picture"
+                    >
+                      <Icon name="trash" className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
 
                 <div className="min-w-0 pb-1">
@@ -572,6 +592,7 @@ export const StudentProfile = () => {
                   key={field.key}
                   field={field}
                   editing={editing}
+                  onStartEdit={() => setEditing(true)}
                   error={validationErrors[field.key]}
                   onChange={(key, value) =>
                     updateField(personal, setPersonal, key, value)
@@ -590,18 +611,23 @@ export const StudentProfile = () => {
               iconColor="#5400D6"
             />
 
-            <textarea
-              value={bio}
-              disabled={!editing}
-              onChange={(e) => setBio(e.target.value)}
-              rows={8}
-              placeholder="Tell recruiters about your interests, technical strengths and career goals..."
-              className={`mt-5 w-full resize-none rounded-xl border px-4 py-3 text-xs leading-6 outline-none transition ${
-                editing
-                  ? "border-slate-200 bg-white text-slate-700 focus:border-[#5400D6]/30 focus:ring-2 focus:ring-[#5400D6]/10"
-                  : "border-slate-100 bg-slate-50 text-slate-500"
-              }`}
-            />
+            <div className="relative mt-5" onClick={() => { if (!editing) setEditing(true); }}>
+              <textarea
+                value={bio}
+                readOnly={!editing}
+                onChange={(e) => setEditing(true) || setBio(e.target.value)}
+                rows={8}
+                placeholder="Tell recruiters about your interests, technical strengths and career goals..."
+                className={`w-full resize-none rounded-xl border px-4 py-3 text-xs leading-6 outline-none transition ${
+                  editing
+                    ? "border-slate-200 bg-white text-slate-700 focus:border-[#5400D6]/30 focus:ring-2 focus:ring-[#5400D6]/10"
+                    : "border-slate-100 bg-slate-50 text-slate-500 cursor-text hover:bg-slate-100"
+                }`}
+              />
+              {!editing && (
+                <div className="absolute inset-0 cursor-pointer rounded-xl hover:bg-slate-500/5 transition" title="Click to edit" />
+              )}
+            </div>
 
             <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#5400D6]/5 px-3 py-2.5">
               <Icon name="sparkles" className="h-3.5 w-3.5 text-[#5400D6]" />
@@ -666,7 +692,7 @@ export const StudentProfile = () => {
                   />
                   <button
                     type="button"
-                    onClick={addSkill}
+                    onClick={() => addSkill()}
                     className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#5400D6] text-white transition hover:bg-[#4500ad]"
                   >
                     <Icon name="plus" className="h-4 w-4" />
@@ -675,6 +701,22 @@ export const StudentProfile = () => {
                 {validationErrors.skills && (
                   <p className="mt-2 text-[10px] font-semibold text-rose-500">{validationErrors.skills}</p>
                 )}
+                <div className="mt-4">
+                  <p className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wider">Suggested Skills</p>
+                  <div className="flex flex-wrap gap-2">
+                    {["JavaScript", "React", "Node.js", "Python", "Java", "C++", "HTML/CSS", "SQL", "MongoDB", "Git", "Docker", "AWS"].filter(s => !skills.includes(s)).slice(0, 8).map(skill => (
+                      <button
+                        key={skill}
+                        type="button"
+                        onClick={() => addSkill(skill)}
+                        className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-[#5400D6]/5 hover:text-[#5400D6] hover:border-[#5400D6]/20 transition"
+                      >
+                        <Icon name="plus" className="h-3 w-3 mr-1" />
+                        {skill}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </>
             )}
           </div>
@@ -694,6 +736,7 @@ export const StudentProfile = () => {
                   key={field.key}
                   field={field}
                   editing={editing}
+                  onStartEdit={() => setEditing(true)}
                   error={validationErrors[field.key]}
                   onChange={(key, value) =>
                     updateField(links, setLinks, key, value)
@@ -764,6 +807,19 @@ export const StudentProfile = () => {
                     }
                   />
                 </label>
+                {resumeName && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResumeName("");
+                      setEditing(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-[10px] font-bold text-rose-600 hover:bg-rose-100 transition"
+                  >
+                    <Icon name="trash" className="h-3 w-3" />
+                    Remove
+                  </button>
+                )}
               </div>
             </div>
           </div>

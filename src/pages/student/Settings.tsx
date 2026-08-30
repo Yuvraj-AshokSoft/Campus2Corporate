@@ -344,8 +344,10 @@ export const StudentSettings = () => {
       setPrivacy(rowsFromSettings(privacyRows, next.settings?.privacy));
       setTheme(next.settings?.theme || theme);
       showSaved();
+      return true;
     } catch (saveError) {
       setError(getApiErrorMessage(saveError));
+      return false;
     } finally {
       setSaving(false);
     }
@@ -372,19 +374,22 @@ export const StudentSettings = () => {
       },
     });
 
-  const updatePassword = () => {
+  const updatePassword = async () => {
     if (newPwd !== confirmPwd) {
       setError("New password and confirmation do not match.");
       return;
     }
 
-    void persistSettings({
+    const success = await persistSettings({
       currentPassword: currentPwd,
       newPassword: newPwd,
     } as any);
-    setCurrentPwd("");
-    setNewPwd("");
-    setConfirmPwd("");
+    
+    if (success !== false) {
+      setCurrentPwd("");
+      setNewPwd("");
+      setConfirmPwd("");
+    }
   };
 
   const updateTheme = (nextTheme: typeof theme) => {

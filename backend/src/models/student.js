@@ -179,8 +179,8 @@ const studentSchema = new mongoose.Schema(
       trim: true,
     },
     college: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "College",
+      type: String,
+      trim: true,
     },
     branch: {
       type: String,
