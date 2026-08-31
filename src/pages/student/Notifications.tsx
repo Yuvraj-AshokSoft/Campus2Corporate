@@ -894,9 +894,8 @@ export const StudentNotifications = () => {
 
   return (
     <StudentLayout
-      sidebarItems={sidebarItems}
+      sidebarItems={sidebarItemsWithBadge}
       sidebarHighlight="Notifications"
-        sidebarItems={sidebarItemsWithBadge}
       userSummary={{
         fullName,
         role: "Student",

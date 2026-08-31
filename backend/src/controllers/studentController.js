@@ -71,6 +71,33 @@ const publicStudent = (student) => ({
   github: student.github,
   portfolio: student.portfolio,
   status: student.status,
+  projects:
+    Array.isArray(student.resumeBuilder?.projects)
+      ? student.resumeBuilder.projects
+      : Array.isArray(student.projects)
+        ? student.projects
+        : [],
+  resumeBuilder: student.resumeBuilder || {
+    personalInfo: {
+      name: student.name,
+      email: student.email,
+      phone: student.phone || "",
+      location: student.location || "",
+      linkedIn: student.linkedIn || "",
+      github: student.github || "",
+      bio: student.bio || "",
+    },
+    education: student.education || [],
+    skills: student.skills || [],
+    experience: [],
+    projects: Array.isArray(student.resumeBuilder?.projects)
+      ? student.resumeBuilder.projects
+      : [],
+    certifications: student.certificates || [],
+    summary: student.bio || "",
+    templateId: "modern",
+    lastSaved: student.updatedAt || new Date(),
+  },
   createdAt: student.createdAt,
   updatedAt: student.updatedAt,
 });

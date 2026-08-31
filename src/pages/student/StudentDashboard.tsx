@@ -650,10 +650,13 @@ interface DashboardData {
     unreadNotifications: number;
     closingThisWeek: number;
     learningScore: number;
+    currentStreak?: number;
   };
   modules: DashboardModule[];
   performanceData: Array<{ month: string; score: number }>;
   upcomingActivities: DashboardActivity[];
+  recommendations?: any[];
+  notifications?: any[];
   badges?: any[];
 }
 

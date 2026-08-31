@@ -140,7 +140,7 @@ const StudentProjects = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string>("");
   const [query, setQuery] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [toast, setToast] = useState("");
@@ -302,7 +302,7 @@ const StudentProjects = () => {
 
               <div className="mt-5">
                 <label className="mb-2 block text-xs font-bold text-slate-500">Analyze this project for</label>
-                <select value={selectedJobId} onChange={(e) => setSelectedJobId(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#5400D6]/30">
+                <select value={selectedJobId || jobs[0]?.id || ""} onChange={(e) => setSelectedJobId(e.target.value || "")} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 outline-none focus:border-[#5400D6]/30">
                   {jobs.map((job) => <option key={job.id} value={job.id}>{job.company} — {job.role}</option>)}
                 </select>
               </div>
@@ -324,11 +324,17 @@ const StudentProjects = () => {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 p-4">
-                <p className="text-sm font-black text-slate-900">{selectedJob.role}</p>
-                <p className="mt-1 text-xs font-bold text-[#5400D6]">{selectedJob.company}</p>
-                <p className="mt-2 text-xs leading-5 text-slate-500">{selectedJob.description}</p>
-              </div>
+              {selectedJob ? (
+                <div className="rounded-2xl border border-slate-200 p-4">
+                  <p className="text-sm font-black text-slate-900">{selectedJob.role}</p>
+                  <p className="mt-1 text-xs font-bold text-[#5400D6]">{selectedJob.company}</p>
+                  <p className="mt-2 text-xs leading-5 text-slate-500">{selectedJob.description}</p>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs text-slate-500">
+                  No job opportunity selected yet.
+                </div>
+              )}
 
               <div>
                 <div className="flex items-center justify-between">
@@ -374,7 +380,7 @@ const StudentProjects = () => {
                 </div>
               </div>
 
-              <button type="button" onClick={() => notify(`AI analysis generated for ${selectedProject ? selectedProject.title : 'project'}.`)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#5400D6] py-3 text-sm font-bold text-white hover:bg-[#4500ad]">
+              <button type="button" onClick={() => notify(`AI analysis generated for ${selectedProject?.title ?? 'project'}.`)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#5400D6] py-3 text-sm font-bold text-white hover:bg-[#4500ad]">
                 <Icon name="sparkles" className="h-4 w-4" />
                 Run AI Analysis
               </button>

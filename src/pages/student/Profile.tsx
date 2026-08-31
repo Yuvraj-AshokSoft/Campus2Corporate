@@ -615,7 +615,10 @@ export const StudentProfile = () => {
               <textarea
                 value={bio}
                 readOnly={!editing}
-                onChange={(e) => setEditing(true) || setBio(e.target.value)}
+                onChange={(e) => {
+                  setEditing(true);
+                  setBio(e.target.value);
+                }}
                 rows={8}
                 placeholder="Tell recruiters about your interests, technical strengths and career goals..."
                 className={`w-full resize-none rounded-xl border px-4 py-3 text-xs leading-6 outline-none transition ${
