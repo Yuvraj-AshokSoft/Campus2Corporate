@@ -19,11 +19,7 @@ const sidebarItems: Array<{
     icon: "dashboard",
     route: "/student-dashboard",
   },
-  {
-    label: "My Profile",
-    icon: "user-check",
-    route: "/student/profile",
-  },
+  
   {
     label: "My Projects",
     icon: "briefcase",
@@ -61,16 +57,8 @@ const sidebarItems: Array<{
     icon: "resume",
     route: "/student/ai-resume",
   },
-  {
-    label: "Career Roadmap",
-    icon: "map",
-    route: "/student/roadmap",
-  },
-  {
-    label: "Career Updates",
-    icon: "megaphone",
-    route: "/student/broadcast",
-  },
+  
+  
 ];
 
 export default function ApplicationSubmission() {

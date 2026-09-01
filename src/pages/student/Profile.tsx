@@ -136,11 +136,7 @@ const sidebarItems: Array<{
     icon: "dashboard",
     route: "/student-dashboard",
   },
-  {
-    label: "My Profile",
-    icon: "user-check",
-    route: "/student/profile",
-  },
+  
   {
     label: "My Projects",
     icon: "briefcase",
@@ -178,16 +174,8 @@ const sidebarItems: Array<{
     icon: "resume",
     route: "/student/ai-resume",
   },
-  {
-    label: "Career Roadmap",
-    icon: "map",
-    route: "/student/roadmap",
-  },
-  {
-    label: "Career Updates",
-    icon: "megaphone",
-    route: "/student/broadcast",
-  },
+  
+  
 ];
 
 interface EditableField {
@@ -340,7 +328,7 @@ export const StudentProfile = () => {
     const portfolio = fieldValue(links, "portfolio").trim();
 
     if (!name) errs.fullName = "Full name is required.";
-    if (phone && !/^[+\d][\d\s\-()]{7,14}$/.test(phone)) errs.phone = "Enter a valid phone number.";
+    if (phone && !/^\d{10}$/.test(phone)) errs.phone = "Phone number must be exactly 10 digits.";
     if (github && !/^https?:\/\//.test(github)) errs.github = "GitHub URL must start with http:// or https://";
     if (linkedIn && !/^https?:\/\//.test(linkedIn)) errs.linkedIn = "LinkedIn URL must start with http:// or https://";
     if (portfolio && !/^https?:\/\//.test(portfolio)) errs.portfolio = "Portfolio URL must start with http:// or https://";
@@ -594,9 +582,16 @@ export const StudentProfile = () => {
                   editing={editing}
                   onStartEdit={() => setEditing(true)}
                   error={validationErrors[field.key]}
-                  onChange={(key, value) =>
-                    updateField(personal, setPersonal, key, value)
-                  }
+                  onChange={(key, value) => {
+                    if (key === "phone") {
+                      const numericValue = value.replace(/\D/g, "");
+                      if (numericValue.length <= 10) {
+                        updateField(personal, setPersonal, key, numericValue);
+                      }
+                    } else {
+                      updateField(personal, setPersonal, key, value);
+                    }
+                  }}
                 />
               ))}
             </div>
@@ -804,10 +799,19 @@ export const StudentProfile = () => {
                     type="file"
                     accept=".pdf,.doc,.docx"
                     className="hidden"
-                    onChange={(e) =>
-                      e.target.files?.[0] &&
-                      setResumeName(e.target.files[0].name)
-                    }
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const validExtensions = ['.pdf', '.doc', '.docx'];
+                        const isDoc = validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
+                        if (!isDoc) {
+                          alert("Please upload a valid PDF or Word Document (.pdf, .doc, .docx). Images are not allowed.");
+                          e.target.value = "";
+                          return;
+                        }
+                        setResumeName(file.name);
+                      }
+                    }}
                   />
                 </label>
                 {resumeName && (
