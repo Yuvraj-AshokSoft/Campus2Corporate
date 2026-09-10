@@ -133,6 +133,18 @@ const studentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "College",
     },
+    collegeName: {
+      type: String,
+      trim: true,
+    },
+    rollNumber: {
+      type: String,
+      trim: true,
+    },
+    department: {
+      type: String,
+      trim: true,
+    },
     branch: {
       type: String,
       trim: true,
@@ -166,6 +178,11 @@ const studentSchema = new mongoose.Schema(
     },
     graduationYear: {
       type: Number,
+    },
+    placementStatus: {
+      type: String,
+      trim: true,
+      default: "Needs Improvement",
     },
     skills: [
       {
@@ -218,6 +235,12 @@ const studentSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+studentSchema.index({ college: 1 });
+studentSchema.index({ status: 1 });
+studentSchema.index({ rollNumber: 1 });
+studentSchema.index({ placementStatus: 1 });
+
 
 studentSchema.pre("save", async function () {
   if (!this.isModified("password") || !this.password) {

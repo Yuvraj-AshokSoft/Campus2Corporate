@@ -3,14 +3,20 @@ import {
   registerCollege,
   loginCollege,
   getCollegeProfile,
+  updateCollegeProfile,
   getCollegeDashboard,
   getCollegeDashboardStats,
   createStudent,
+  bulkImportStudents,
+  exportStudentsCSV,
+  bulkUpdateStudents,
   getAllStudents,
   getStudentById,
   updateStudent,
   deleteStudent,
   createApplication,
+  getApplicationSummary,
+  getApplicationStatusHistory,
   getAllApplications,
   getApplicationById,
   updateApplication,
@@ -54,82 +60,155 @@ import {
   getCollegeActivityLogs,
   getCampusVisits,
   getCompanyPlacementSummary,
-  getRecruiterPlacementSummary
+  getRecruiterPlacementSummary,
 } from "../controllers/collegeController.js";
 
 import collegeAuth from "../middleware/collegeAuth.js";
 
 const router = express.Router();
 
-// Public Routes
+// ==========================
+// Public Auth Routes
+// ==========================
 router.post("/register", registerCollege);
+router.post("/auth/register", registerCollege);
 router.post("/login", loginCollege);
+router.post("/auth/login", loginCollege);
 
-// Protected Routes
+// ==========================
+// Protected Profile & Dashboard
+// ==========================
 router.get("/profile", collegeAuth, getCollegeProfile);
+router.put("/profile", collegeAuth, updateCollegeProfile);
+router.patch("/profile", collegeAuth, updateCollegeProfile);
 router.get("/dashboard", collegeAuth, getCollegeDashboardStats);
 
-// Student Management
+// ==========================
+// Student Management (Ordered: bulk/export before :id)
+// ==========================
+router.post("/students/bulk-import", collegeAuth, bulkImportStudents);
+router.get("/students/export", collegeAuth, exportStudentsCSV);
+router.patch("/students/bulk", collegeAuth, bulkUpdateStudents);
 router.post("/students", collegeAuth, createStudent);
 router.get("/students", collegeAuth, getAllStudents);
 router.get("/students/eligible", collegeAuth, getEligibleStudents);
 router.get("/students/:id", collegeAuth, getStudentById);
 router.put("/students/:id", collegeAuth, updateStudent);
+router.patch("/students/:id", collegeAuth, updateStudent);
 router.delete("/students/:id", collegeAuth, deleteStudent);
 
-// Application Management
+// ==========================
+// Application Management (Ordered: summary & history before :id)
+// ==========================
+router.get("/applications/summary", collegeAuth, getApplicationSummary);
+router.get("/applications/:id/history", collegeAuth, getApplicationStatusHistory);
 router.post("/applications", collegeAuth, createApplication);
 router.get("/applications", collegeAuth, getAllApplications);
 router.get("/applications/:id", collegeAuth, getApplicationById);
 router.put("/applications/:id", collegeAuth, updateApplication);
+router.patch("/applications/:id", collegeAuth, updateApplication);
 router.delete("/applications/:id", collegeAuth, deleteApplication);
 
+// ==========================
 // Project Management
+// ==========================
 router.post("/projects", collegeAuth, createCollegeProject);
 router.get("/projects", collegeAuth, getCollegeProjects);
 router.get("/projects/:id", collegeAuth, getCollegeProjectById);
 router.put("/projects/:id", collegeAuth, updateCollegeProject);
 router.delete("/projects/:id", collegeAuth, deleteCollegeProject);
 
+// ==========================
 // Placement Drive Management
+// ==========================
 router.post("/drives", collegeAuth, createPlacementDrive);
 router.get("/drives", collegeAuth, getPlacementDrives);
 router.get("/drives/:id", collegeAuth, getPlacementDriveById);
 router.put("/drives/:id", collegeAuth, updatePlacementDrive);
 router.delete("/drives/:id", collegeAuth, deletePlacementDrive);
 router.get("/drives/:driveId/participants", collegeAuth, getDriveParticipants);
-router.patch("/drives/:driveId/participants/:participantId", collegeAuth, updateParticipantStatus);
-router.get("/drives/:driveId/eligible-students", collegeAuth, evaluateDriveEligibleStudents);
+router.patch(
+  "/drives/:driveId/participants/:participantId",
+  collegeAuth,
+  updateParticipantStatus
+);
+router.get(
+  "/drives/:driveId/eligible-students",
+  collegeAuth,
+  evaluateDriveEligibleStudents
+);
 
+// ==========================
 // Broadcast / Announcement Management
+// ==========================
 router.post("/broadcasts", collegeAuth, createBroadcast);
 router.get("/broadcasts", collegeAuth, getBroadcasts);
 router.get("/broadcasts/:id", collegeAuth, getBroadcastById);
 router.put("/broadcasts/:id", collegeAuth, updateBroadcast);
 router.delete("/broadcasts/:id", collegeAuth, deleteBroadcast);
 
+// ==========================
 // Recruiter & Company Coordination
+// ==========================
 router.get("/companies", collegeAuth, getCoordinatingCompanies);
 router.get("/companies/:id", collegeAuth, getCompanyDetailsForCollege);
 router.get("/recruiters", collegeAuth, getCoordinatingRecruiters);
 router.get("/coordination/visits", collegeAuth, getCampusVisits);
-router.get("/coordination/company-summary", collegeAuth, getCompanyPlacementSummary);
-router.get("/coordination/recruiter-summary", collegeAuth, getRecruiterPlacementSummary);
+router.get(
+  "/coordination/company-summary",
+  collegeAuth,
+  getCompanyPlacementSummary
+);
+router.get(
+  "/coordination/recruiter-summary",
+  collegeAuth,
+  getRecruiterPlacementSummary
+);
 
+// ==========================
 // Eligibility Presets Management
+// ==========================
 router.post("/eligibility-presets", collegeAuth, createEligibilityPreset);
 router.get("/eligibility-presets", collegeAuth, getEligibilityPresets);
-router.get("/eligibility-presets/:id", collegeAuth, getEligibilityPresetById);
-router.put("/eligibility-presets/:id", collegeAuth, updateEligibilityPreset);
-router.delete("/eligibility-presets/:id", collegeAuth, deleteEligibilityPreset);
+router.get(
+  "/eligibility-presets/:id",
+  collegeAuth,
+  getEligibilityPresetById
+);
+router.put(
+  "/eligibility-presets/:id",
+  collegeAuth,
+  updateEligibilityPreset
+);
+router.delete(
+  "/eligibility-presets/:id",
+  collegeAuth,
+  deleteEligibilityPreset
+);
 
+// ==========================
 // College Notifications Management
+// ==========================
 router.get("/notifications", collegeAuth, getCollegeNotifications);
-router.patch("/notifications/read-all", collegeAuth, markAllNotificationsAsRead);
-router.patch("/notifications/:id/read", collegeAuth, markNotificationAsRead);
-router.delete("/notifications/:id", collegeAuth, deleteCollegeNotification);
+router.patch(
+  "/notifications/read-all",
+  collegeAuth,
+  markAllNotificationsAsRead
+);
+router.patch(
+  "/notifications/:id/read",
+  collegeAuth,
+  markNotificationAsRead
+);
+router.delete(
+  "/notifications/:id",
+  collegeAuth,
+  deleteCollegeNotification
+);
 
+// ==========================
 // Activity & Audit Logs Management
+// ==========================
 router.get("/activity-logs", collegeAuth, getCollegeActivityLogs);
 
 export default router;

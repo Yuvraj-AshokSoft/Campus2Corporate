@@ -1,14 +1,27 @@
 import dotenv from "dotenv";
 import app from "./app.js";
 import connectDB from "./config/db.js";
+import seedAdmin from "./utils/seedAdmin.js";
 
 dotenv.config();
 
-// Connect Database
-connectDB();
-
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(` Server running on port ${PORT}`);
-});
+const startServer = async () => {
+  try {
+    // Connect Database
+    await connectDB();
+
+    // Idempotent Admin Seeding (runs after successful DB connection)
+    await seedAdmin();
+
+    app.listen(PORT, () => {
+      console.log(` Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("❌ Server startup failed:", error.message);
+    process.exit(1);
+  }
+};
+
+startServer();

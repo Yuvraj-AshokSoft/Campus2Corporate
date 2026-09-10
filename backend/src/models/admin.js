@@ -34,6 +34,7 @@ const adminSchema = new mongoose.Schema(
       type: String,
       required: [true, "Password is required"],
       minlength: [8, "Password must be at least 8 characters long"],
+      select: false,
     },
 
     role: {
@@ -68,14 +69,18 @@ const adminSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+adminSchema.index({ status: 1 });
+adminSchema.index({ role: 1 });
+
 adminSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
+  if (!this.isModified("password") || !this.password) return;
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
 adminSchema.methods.comparePassword = async function (enteredPassword) {
+  if (!this.password) return false;
   return await bcrypt.compare(
     enteredPassword,
     this.password
@@ -83,3 +88,5 @@ adminSchema.methods.comparePassword = async function (enteredPassword) {
 };
 
 export default mongoose.model("Admin", adminSchema);
+
+

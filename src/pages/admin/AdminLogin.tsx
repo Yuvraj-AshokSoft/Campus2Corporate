@@ -6,7 +6,7 @@ import axios from 'axios';
 
 export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { updateCurrentUser } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,7 +17,8 @@ export const AdminLogin: React.FC = () => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!email.trim() || !password) {
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password) {
       setErrorMsg('Please enter both administrative email and password.');
       return;
     }
@@ -25,56 +26,50 @@ export const AdminLogin: React.FC = () => {
     setIsLoading(true);
 
     try {
-      let authSuccessful = false;
-      let apiErrorMessage = '';
+      // Direct real backend login request
+      const response = await axios.post('/api/admin/login', {
+        email: cleanEmail,
+        password,
+      });
 
-      try {
-        const response = await axios.post('/api/v1/admin/login', {
-          email: email.trim(),
-          password,
+      const responseData = response.data;
+      const token =
+        responseData?.data?.token ||
+        responseData?.token ||
+        (responseData?.data && typeof responseData.data === 'string' ? responseData.data : null);
+
+      const adminUser = responseData?.data?.admin || responseData?.admin;
+
+      if (!token) {
+        throw new Error('Authentication succeeded but no authorization token was returned.');
+      }
+
+      // Store real verified JWT in localStorage
+      localStorage.setItem('c2c_admin_token', token);
+      localStorage.setItem('c2c_admin_session', 'true');
+
+      if (adminUser && updateCurrentUser) {
+        updateCurrentUser({
+          id: adminUser.id || adminUser._id,
+          fullName: adminUser.name || 'Platform Administrator',
+          name: adminUser.name || 'Platform Administrator',
+          email: adminUser.email || cleanEmail,
+          phone: adminUser.phone || '',
+          role: 'admin',
+          isVerified: true,
         });
-
-        if (response.data && (response.data.token || response.data.success)) {
-          if (response.data.token) {
-            localStorage.setItem('c2c_admin_token', response.data.token);
-          }
-          authSuccessful = true;
-        }
-      } catch (axiosErr: any) {
-        if (axiosErr.response?.data?.error) {
-          apiErrorMessage = axiosErr.response.data.error;
-        } else if (axiosErr.response?.data?.message) {
-          apiErrorMessage = axiosErr.response.data.message;
-        }
       }
 
-      // Fallback auth check via context or local session if API server wasn't reachable or returned error
-      if (!authSuccessful) {
-        const contextAuth = await login(email.trim(), password, 'admin');
-        if (contextAuth.success) {
-          authSuccessful = true;
-          apiErrorMessage = '';
-        } else if (!apiErrorMessage) {
-          apiErrorMessage = contextAuth.message || 'Invalid administrative credentials.';
-        }
-      }
-
-      if (authSuccessful) {
-        localStorage.setItem('c2c_admin_session', 'true');
-        if (!localStorage.getItem('c2c_admin_token')) {
-          localStorage.setItem('c2c_admin_token', 'admin_local_jwt_session_token_2026');
-        }
-        navigate('/admin/dashboard', { replace: true });
-      } else {
-        setErrorMsg(apiErrorMessage || 'Invalid administrative credentials.');
-      }
-    } catch (err: unknown) {
-      const errorObj = err as { response?: { data?: { error?: string; message?: string } } };
-      setErrorMsg(
-        errorObj.response?.data?.error ||
-        errorObj.response?.data?.message ||
-        'Invalid administrative credentials.'
-      );
+      // Navigate securely to dashboard
+      navigate('/admin/dashboard', { replace: true });
+    } catch (err: any) {
+      console.error('Admin authentication failed:', err);
+      const apiError =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        'Invalid administrative credentials or server unreachable.';
+      setErrorMsg(apiError);
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +86,7 @@ export const AdminLogin: React.FC = () => {
           </div>
           <div>
             <h1 className="text-xl font-black text-slate-900 tracking-tight">
-              {"Campus2Corporate \u2014 Admin Control Portal"}
+              Campus2Corporate — Admin Control Portal
             </h1>
             <p className="text-xs font-semibold text-[#7C3AED] uppercase tracking-wider mt-1">
               Restricted Administrative Authorization
@@ -169,7 +164,7 @@ export const AdminLogin: React.FC = () => {
             <span>256-Bit Encrypted Session</span>
           </div>
           <span className="font-mono text-[#7C3AED] bg-purple-50 px-2 py-0.5 rounded border border-purple-100 text-[10px]">
-            admin@2026
+            Production RBAC
           </span>
         </div>
       </div>
