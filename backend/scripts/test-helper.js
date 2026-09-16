@@ -22,9 +22,19 @@ export function isStrictMode() {
 
 export function resolveTestDbUri() {
   if (process.env.MONGO_TEST_URI) {
+    if (process.env.MONGO_TEST_URI.startsWith("mongodb+srv://")) {
+      try {
+        dns.setServers(["8.8.8.8", "1.1.1.1"]);
+      } catch (e) {}
+    }
     return process.env.MONGO_TEST_URI;
   }
   if (process.env.TEST_MONGO_URI) {
+    if (process.env.TEST_MONGO_URI.startsWith("mongodb+srv://")) {
+      try {
+        dns.setServers(["8.8.8.8", "1.1.1.1"]);
+      } catch (e) {}
+    }
     return process.env.TEST_MONGO_URI;
   }
 
